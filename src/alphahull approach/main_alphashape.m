@@ -104,9 +104,9 @@ zlabel('z')
 
 %% Plot leaf distributions
 return
-plot_LADD_h(Leaves,TargetDistributions);
-plot_LADD_d(Leaves,TargetDistributions);
-plot_LADD_c(Leaves,TargetDistributions);
+plot_LADD_h(aShape.Points,Leaves,TargetDistributions);
+plot_LADD_d(aShape.Points,Leaves,TargetDistributions);
+plot_LADD_c(aShape.Points,Leaves,TargetDistributions);
 
 % plot_LOD_inc(Leaves,fType_inc,p_inc,6)%,'HeightBins',3);
 % plot_LOD_az(Leaves,fType_az,p_az,5);
