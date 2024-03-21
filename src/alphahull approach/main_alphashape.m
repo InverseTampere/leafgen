@@ -54,13 +54,19 @@ TargetDistributions.fun_az_params = @(h,d,c) [3.3, 0.25];
 TargetDistributions.dType_size = 'uniform';
 TargetDistributions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
 
+
+%% Stem coordinates
+stemCoordinates = [   0,      0,                  0;
+                   0.47, -0.125,               11.5;
+                      0,      0,   max(pCloud(:,3))];
 %% Generate foliage
 
 totalLeafArea = 50;
 
 [Leaves,aShape] = generate_foliage_alphashape(pCloud,TargetDistributions, ...
                                      totalLeafArea,vertices,tris, ...
-                                     'alpha',1);
+                                     'alpha',1, ...
+                                     'StemCoordinates',stemCoordinates);
 
 %% Visualize the foliage
 

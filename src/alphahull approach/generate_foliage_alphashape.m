@@ -18,6 +18,9 @@ while i <= NArg
         switch lower(varargin{i})
             case 'alpha'
                 alpha = varargin{i+1};
+            case 'stemcoordinates'
+                stemCoordinates = varargin{i+1};
+                flagStemCoordinates = true;
         end
     end
     i = i + 1;
@@ -181,6 +184,15 @@ while leafArea < candidateArea
             initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
             probePoints = (rotation_matrix([0 0 1],cProposal)*initPP')' ...
                 + [zeros(nPP,2) maxHeight*hProposal*ones(nPP,1)];
+            if flagStemCoordinates
+                iSC = find(stemCoordinates(:,3) > maxHeight*hProposal,1);
+                relPos = (maxHeight*hProposal-stemCoordinates(iSC-1,3)) ...
+                        /(stemCoordinates(iSC,3)-stemCoordinates(iSC-1,3));
+                stemCen = relPos*(stemCoordinates(iSC,:) ...
+                                  -stemCoordinates(iSC-1,:)) ...
+                          + stemCoordinates(iSC-1,:);
+                probePoints = probePoints + [stemCen(1:2) 0];
+            end
             tf = inShape(shp,probePoints);
             edgeIndex = find(~tf,1,'first') - 1;
             if edgeIndex < 2
