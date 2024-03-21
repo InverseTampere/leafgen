@@ -81,7 +81,12 @@ if 1
     hold on, grid on
     plot(aShape,'FaceColor','m','FaceAlpha',0.2)
     pcTop = max(pc(:,3));
-    plot3([0 0],[0 0],[0 pcTop],'c-','LineWidth',3)
+    if exist('stemCoordinates','var')
+        plot3(stemCoordinates(:,1),stemCoordinates(:,2), ...
+              stemCoordinates(:,3),'c-','LineWidth',3);
+    else
+        plot3([0 0],[0 0],[0 pcTop],'c-','LineWidth',3)
+    end
     ax2 = nexttile;
     Link = linkprop([ax1, ax2],{'CameraUpVector', 'CameraPosition', 'CameraTarget', 'XLim', 'YLim', 'ZLim'});
     setappdata(gcf, 'StoreTheLink', Link);
