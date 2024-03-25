@@ -1,7 +1,8 @@
-function f = plot_LADD_h(pCloud,Leaves,TargetDistributions,varargin)
+function f = plot_LADD_h(aShape,Leaves,TargetDistributions,varargin)
 
 % Initialize values
 nBins = 10;
+pCloud = aShape.Points;
 
 % Check additional parameters
 i = 1;
@@ -17,18 +18,19 @@ while i <= NArg
 end
 
 % Initialize figure object
-f = figure; clf
+f = figure; clf, hold on
 
-% Read distribution function type
+% Check validity of distribution function type
 dType = TargetDistributions.dType_h;
 if dType ~= "poly3" && dType ~= "weibull" && dType ~= "beta" && ...
    dType ~= "none"
     error("LADD height distribution type not recognized.")
 end
+
+% Read target distribution parameters
 p = TargetDistributions.p_h;
 
 % Functions
-fun_poly3 = @(p,x) p(1)*x.^3 + p(2)*x.^2 + p(3)*x + p(4);
 fun_weibull = @(p,x) (p(2)/p(1))*(x/p(1)).^(p(2)-1).*exp(-(x/p(1)).^p(2));
 fun_beta = @(p,x) (1/beta(p(1),p(2)))*x.^(p(1)-1).*(1-x).^(p(2)-1);
 
@@ -36,48 +38,23 @@ fun_beta = @(p,x) (1/beta(p(1),p(2)))*x.^(p(1)-1).*(1-x).^(p(2)-1);
 xx = 0:0.001:1;
 
 % Bins for the histogram of accepted leaves
-switch dType
-    case "poly3"
-        fun_bins = @(x) fun_poly3(p,x);
-    case "weibull"
-        fun_bins = @(x) fun_weibull(p,x);
-    case "beta"
-        fun_bins = @(x) fun_beta(p,x);
-end
 binEdges = linspace(0,1,nBins+1);
-
-%% Plot the side view of accepted leaves
-subplot(1,2,1)
-% Plot leaves
-hLeaf = Leaves.plot_leaves();
-% Set leaf color
-set(hLeaf,'FaceColor',[0,150,0]./255,'EdgeColor','none');
-axis equal;
-view(0,0)
 
 %% Plot the target distribution function
 if dType ~= "none"
-    subplot(1,2,2), hold on
     if dType == "poly3"
-        fun_values = fun_poly3;
         % Normalization
         q = polyint(p);
         yy = polyval(p,xx)/diff(polyval(q,[0,1]));
         % Plotting the curve
-        plot(yy,xx,'r-','LineWidth',2,'DisplayName',"Target distribution")
-        xlabel("leaf area density [m^2/m^3]")
-        ylabel("relative height")
+        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
     elseif dType == "weibull"
-        fun_values = fun_weibull;
         yy = fun_weibull(p,xx);
         % Normalization
         yy = yy/trapz(xx,yy);
         % Plotting the curve
-        plot(yy,xx,'r-','LineWidth',2,'DisplayName',"Target distribution")
-        xlabel("leaf area density [m^2/m^3]")
-        ylabel("relative height")
+        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
     elseif dType == "beta"
-        fun_values = fun_beta;
         yy = fun_beta(p,xx);
         % Prevent infinite values at the edges of the interval
         if yy(1) == Inf
@@ -90,12 +67,10 @@ if dType ~= "none"
         yy = yy/trapz(xx,yy);
         % Plotting the curve
         plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
-        xlabel("leaf area density [m^2/m^3]")
-        ylabel("relative height")
     end
 end
 
-%% Histogram based on accepted leaves
+%% Plot the histogram of accepted leaves
 
 % Extracting leaf information
 leafCount = Leaves.leaf_count;
@@ -128,8 +103,6 @@ for iLeaf = 1:leafCount
         end
     end
 end
-% Normalization
-leafHist = leafHist/sum(leafHist);
 
 % Calculate accepted leaf area frequency density in bins
 leafHistFD = zeros(nBins,1);

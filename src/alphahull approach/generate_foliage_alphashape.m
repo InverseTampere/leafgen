@@ -7,6 +7,7 @@ function [Leaves,shp] = generate_foliage_alphashape(treePointCloud, ...
                                                     )
 %% Initialize values
 alpha = 1;
+flagStemCoordinates = false;
 
 %% Read inputs
 

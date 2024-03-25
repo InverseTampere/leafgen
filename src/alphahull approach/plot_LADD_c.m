@@ -1,0 +1,144 @@
+function f = plot_LADD_c(aShape,Leaves,TargetDistributions,varargin)
+
+% Initialize values
+nBins = 10;
+pCloud = aShape.Points;
+flagStemCoordinates = false;
+
+% Check additional parameters
+i = 1;
+NArg = numel(varargin);
+while i <= NArg
+    if ischar(varargin{i})
+        switch lower(varargin{i})
+            case 'nbins'
+                nBins = varargin{i+1};
+            case 'stemcoordinates'
+                stemCoordinates = varargin{i+1};
+                flagStemCoordinates = true;
+        end
+    end
+    i = i + 1;
+end
+
+% Issue warning if there is no stem coordinate information
+if flagStemCoordinates == false
+    warning("No stem coordinate information supplied, assuming z-axis as the stem.")
+end
+
+% Initialize figure object
+f = figure; clf, hold on
+
+% Check validity of distribution function type
+dType = TargetDistributions.dType_c;
+if lower(dType) ~= "vonmises" && lower(dType) ~= "none"
+    error("LADD compass direction distribution type not recognized.")
+end
+
+% Read target distribution parameters
+p = TargetDistributions.p_c;
+
+% Functions
+fun_vonmises = @(p,x) exp(p(2)*cos(x-p(1)))./(2*pi*besseli(0,p(2)));
+
+% Compass direction discretization
+xx = 0:0.001:2*pi;
+
+% Bins for the histogram of accepted leaves
+binEdges = linspace(0,2*pi,nBins+1);
+
+%% Plot the target distribution function
+if dType ~= "none"
+    if dType == "vonmises"
+        yy = fun_vonmises(p,xx);
+        % Normalization
+        yy = yy/trapz(xx,yy);
+        % Plotting the curve
+        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
+    end
+end
+
+%% Plot the histogram of accepted leaves
+
+% Extracting leaf information
+leafCount = Leaves.leaf_count;
+leafScale = Leaves.leaf_scale;
+leafBaseArea = Leaves.base_area;
+leafStartPoints = Leaves.leaf_start_point;
+
+% Area of each leaf (leaf scaling identical in every dimension)
+leafAreas = (leafScale(:,1).^2)*leafBaseArea;
+
+% initialize variable for compass direction wrt. the stem
+compassDir = zeros(leafCount,1);
+
+if flagStemCoordinates == true
+    for iLeaf = 1:leafCount
+        % Index of stem coordinate with z-value below the leaf height
+        iSC = find(stemCoordinates(:,3) > leafStartPoints(iLeaf,3),1);
+        % Relative z-position of leaf between the stem coordinate nodes
+        relPos = (leafStartPoints(iLeaf,3)- stemCoordinates(iSC-1,3)) ...
+                 /(stemCoordinates(iSC,3) - stemCoordinates(iSC-1,3));
+        % Location of the stem center on the height of the leaf
+        stemCen = relPos*(stemCoordinates(iSC,:) ...
+                          -stemCoordinates(iSC-1,:)) ...
+                  + stemCoordinates(iSC-1,:);
+        % Horizontal distance from stem to leaf
+        stemToLeaf = [leafStartPoints(iLeaf,1:2) 0] - [stemCen(1:2) 0];
+        distStemToLeaf = norm(stemToLeaf); 
+        % Counter-clockwise angle between north and leaf direction wrt. the
+        % stem
+        unitStemToLeaf = stemToLeaf/distStemToLeaf;
+        if unitStemToLeaf(1) < 0
+            compassDir(iLeaf) = acos(dot(unitStemToLeaf,[0 1 0]));
+        else 
+            compassDir(iLeaf) = 2*pi - acos(dot(unitStemToLeaf,[0 1 0]));
+        end
+    end
+else
+    for iLeaf = 1:leafCount
+        % Unit horizontal direction vector from the stem to leaf
+        stemToLeaf = [leafStartPoints(iLeaf,1:2) 0];
+        unitStemToLeaf = stemToLeaf/norm(stemToLeaf);
+        % Counter-clockwise compass direction with respect to north 
+        % direction
+        if unitStemToLeaf(1) < 0
+            compassDir(iLeaf) = acos(dot(unitStemToLeaf,[0 1 0]));
+        else 
+            compassDir(iLeaf) = 2*pi - acos(dot(unitStemToLeaf,[0 1 0]));
+        end
+    end
+end
+
+% Calculate weighted histogram for the leaf area wrt. height
+leafHist = zeros(nBins,1);
+for iLeaf = 1:leafCount
+    for iBin = 1:nBins
+        if compassDir(iLeaf) > binEdges(iBin) && ...
+            compassDir(iLeaf) <= binEdges(iBin+1)
+               leafHist(iBin) = leafHist(iBin) + leafAreas(iLeaf);
+        end
+    end
+end
+
+% Calculate accepted leaf area frequency density in bins
+leafHistFD = zeros(nBins,1);
+for iBin = 1:nBins
+    leafHistFD(iBin) = leafHist(iBin)/(binEdges(iBin+1)-binEdges(iBin));
+end
+% Normalization
+leafHistFD = leafHistFD/sum(leafHistFD);
+
+% Divide with bin widths so that total bar area equals to 1
+leafHistFD = leafHistFD./diff(binEdges);
+
+% Plotting the histogram 
+custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.5,...
+                'DisplayName','Accepted leaf area')
+xlabel("compass direction")
+ylabel("leaf area frequency density [m^2]")
+axis tight
+legend('Location','southeast')
+
+
+end

@@ -88,7 +88,8 @@ if 1
         plot3([0 0],[0 0],[0 pcTop],'c-','LineWidth',3)
     end
     ax2 = nexttile;
-    Link = linkprop([ax1, ax2],{'CameraUpVector', 'CameraPosition', 'CameraTarget', 'XLim', 'YLim', 'ZLim'});
+    Link = linkprop([ax1, ax2],{'CameraUpVector', 'CameraPosition', ...
+                    'CameraTarget', 'XLim', 'YLim', 'ZLim'});
     setappdata(gcf, 'StoreTheLink', Link);
 end
 
@@ -103,10 +104,12 @@ ylabel('y')
 zlabel('z')
 
 %% Plot leaf distributions
-return
-plot_LADD_h(aShape.Points,Leaves,TargetDistributions);
-plot_LADD_d(aShape.Points,Leaves,TargetDistributions);
-plot_LADD_c(aShape.Points,Leaves,TargetDistributions);
+
+plot_LADD_h(aShape,Leaves,TargetDistributions);
+plot_LADD_d(aShape,Leaves,TargetDistributions, ...
+            'StemCoordinates',stemCoordinates);
+plot_LADD_c(aShape,Leaves,TargetDistributions, ...
+            'StemCoordinates',stemCoordinates);
 
 % plot_LOD_inc(Leaves,fType_inc,p_inc,6)%,'HeightBins',3);
 % plot_LOD_az(Leaves,fType_az,p_az,5);
