@@ -117,7 +117,7 @@ leafHistFD = leafHistFD./diff(binEdges);
 
 % Plotting the histogram 
 custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.5,...
-                'DisplayName','Accepted leaf area','flipxy',1)
+                'DisplayName','Accepted leaf area','flipxy',0)
 xlabel("relative height")
 ylabel("leaf area frequency density [m^2]")
 axis tight

@@ -164,6 +164,7 @@ leafScaleFactors = zeros(nInit,3);
 %% Sample leaf positions and orientations
 iLeaf = 0;
 leafArea = 0;
+iVarExt = 0;
 while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
@@ -177,15 +178,15 @@ while leafArea < candidateArea
         % LADD value on propsal point
         funValues = [fDist_h(hProposal),fDist_d(dProposal), ...
                      fDist_c(cProposal)];
-        vertValues = rand(1)*[maxfDist_h,maxfDist_d,maxfDist_c];
+        vertValues = rand(1,3).*[maxfDist_h,maxfDist_d,maxfDist_c];
         if all(vertValues < funValues)
             % Probing the edge of alpha shape
-            nPP = 100;
-            yCoord = maxHorzDist*linspace(0,1,nPP)';
-            initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
-            probePoints = (rotation_matrix([0 0 1],cProposal)*initPP')' ...
-                + [zeros(nPP,2) maxHeight*hProposal*ones(nPP,1)];
             if flagStemCoordinates
+                nPP = 2*100;
+                yCoord = 2*maxHorzDist*linspace(0,1,nPP)';
+                initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
+                probePoints = (rotation_matrix([0 0 1],cProposal)*initPP')' ...
+                    + [zeros(nPP,2) maxHeight*hProposal*ones(nPP,1)];
                 iSC = find(stemCoordinates(:,3) > maxHeight*hProposal,1);
                 relPos = (maxHeight*hProposal-stemCoordinates(iSC-1,3)) ...
                         /(stemCoordinates(iSC,3)-stemCoordinates(iSC-1,3));
@@ -193,6 +194,12 @@ while leafArea < candidateArea
                                   -stemCoordinates(iSC-1,:)) ...
                           + stemCoordinates(iSC-1,:);
                 probePoints = probePoints + [stemCen(1:2) 0];
+            else
+                nPP = 100;
+                yCoord = maxHorzDist*linspace(0,1,nPP)';
+                initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
+                probePoints = (rotation_matrix([0 0 1],cProposal)*initPP')' ...
+                    + [zeros(nPP,2) maxHeight*hProposal*ones(nPP,1)];
             end
             tf = inShape(shp,probePoints);
             edgeIndex = find(~tf,1,'first') - 1;
@@ -205,8 +212,14 @@ while leafArea < candidateArea
             hLeaf = maxHeight*hProposal;
             dLeaf = edgeValue*dProposal;
             cLeaf = cProposal;
-            leafStartPoints(iLeaf,:) = (rotation_matrix([0 0 1],cLeaf) ...
-                                        *[0 1 0]')'*dLeaf + [0 0 hLeaf];
+            if flagStemCoordinates
+                leafStartPoints(iLeaf,:) = (rotation_matrix([0 0 1],cLeaf) ...
+                                           *[0 1 0]')'*dLeaf ...
+                                           +[stemCen(1:2) hLeaf];
+            else
+                leafStartPoints(iLeaf,:) = (rotation_matrix([0 0 1],cLeaf) ...
+                                           *[0 1 0]')'*dLeaf + [0 0 hLeaf];
+            end
             accepted = 1;
         end
     end
@@ -282,13 +295,14 @@ while leafArea < candidateArea
                        *dirVec')';
 
     % Extend preallocated variables if needed
-    if iLeaf > length(leafStartPoints(:,1))
+    if (iLeaf+1) > (iVarExt+1)*nInit
         leafStartPoints  = [leafStartPoints;  zeros(nInit,3)]; %#ok<AGROW>
         incAngles        = [incAngles;        zeros(nInit,1)]; %#ok<AGROW>
         azAngles         = [azAngles;         zeros(nInit,1)]; %#ok<AGROW>
         leafNormal       = [leafNormal;       zeros(nInit,3)]; %#ok<AGROW>
         leafDir          = [leafDir;          zeros(nInit,3)]; %#ok<AGROW>
         leafScaleFactors = [leafScaleFactors; zeros(nInit,3)]; %#ok<AGROW>
+        iVarExt = iVarExt + 1;
     end
 end
 

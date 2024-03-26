@@ -1,6 +1,7 @@
 clear, close all
 addpath("C:\Users\bppimo\Documents\GitHub\foliage-generation-repo\src")
 addpath("C:\Users\bppimo\Documents\GitHub\foliage-generation-repo\src\classes")
+addpath("debug codes\")
 
 %% Point cloud
 
@@ -61,7 +62,7 @@ stemCoordinates = [   0,      0,                  0;
                       0,      0,   max(pCloud(:,3))];
 %% Generate foliage
 
-totalLeafArea = 50;
+totalLeafArea = 20;
 
 [Leaves,aShape] = generate_foliage_alphashape(pCloud,TargetDistributions, ...
                                      totalLeafArea,vertices,tris, ...
