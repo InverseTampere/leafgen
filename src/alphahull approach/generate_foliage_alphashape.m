@@ -26,45 +26,52 @@ while i <= NArg
     end
     i = i + 1;
 end
+%% Function definitions
+fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
+fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
+fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
+fun_dewit = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
 %% Leaf area density distribution functions
 % Distribution function and parameters for relative height
 dType_h = TargetDistributions.dType_h;
 p_h     = TargetDistributions.p_h;
 % nBins_h = TargetDistributions.nBins_h;
 switch dType_h
-    case 'poly3'
-        fDist_h = @(h) p_h(1)*h.^3 + p_h(2)*h.^2 + p_h(3)*h + p_h(4);
-        [~,maxfDist_h] = fminbnd(-fDist_h,0,1);
+    case 'uniform'
+        fDist_h = @(h) 1;
+        maxfDist_h = 1;
+    case 'polynomial'
+        fDist_h = @(h) polyval(p_h,h);
+        maxfDist_h = polynomial_upper_limit(p_h);
+    case 'polynomialmixturemodel'
+        nP = (length(p_h)-1)/2; % order of polynomial
+        p1 = p_h(1:nP); % coefficients of the first polynomial
+        p2 = p_h((nP+1):(2*nP)); % coefficients of the second polynomial
+        w = p_h(end); % mixture model weight
+        fDist_h = @(h) w*polyval(p1,h) + (1-w)*polyval(p2,h);
+        maxfDist_h = polynomial_upper_limit(w*p1+(1-w)*p2);
     case 'weibull'
-        % p = [scale, shape]
-        sc = p_h(1);
-        sh = p_h(2);
-        fDist_h = @(h) (sh/sc)*(h/sc).^(sh-1).*exp(-(h/sc).^sh);
-        if sh <= 1
-            maxfDist_h = 5; % infinite mode at 0
-        elseif sc*((sh-1)/sh).^(1/sh) < 1
-            maxfDist_h = fDist_h(sc*((sh-1)/sh).^(1/sh)); % mode between 0 and 1
-        else
-            maxfDist_h = fDist_h(1); % mode at 1
-        end
+        l = p_h(1); % scale parameter
+        k = p_h(2); % shape parameter
+        fDist_h = @(h) fun_weibull(h,l,k);
+        maxfDist_h = weibull_upper_limit(l,k);
+    case 'weibullmixturemodel'
+        l1 = p_h(1); k1 = p_h(2); % parameters of the first distribution
+        l2 = p_h(3); k2 = p_h(4); % parameters of the second distribution
+        w = p_h(5); % mixture model weight
+        fDist_h = @(h) w*fun_weibull(h,l1,k1) + (1-w)*fun_weibull(h,l2,k2);
+        maxfDist_h = weibull_mm_upper_limit(p_h);
     case 'beta'
         a = p_h(1);
         b = p_h(2);
-        fDist_h = @(h) (1/beta(a,b))*h.^(a-1).*(1-h).^(b-1);
-        if a == b
-            maxfDist_h = fDist_h(0.5);
-        elseif a > 1 && b > 1
-            maxfDist_h = fDist_h((a-1)/(a+b-2));
-        elseif a < 1 && b < 1
-            maxfDist_h = 10; % bimodal with infinite modes
-        elseif a == 1 && b > 1
-            maxfDist_h = fDist_h(0);
-        elseif a > 1 && b == 1
-            maxfDist_h = fDist_h(1);
-        else
-            maxfDist_h = 10; % infinite mode at 0 or 1
-        end
-        maxfDist_h = min(maxfDist_h,10);
+        fDist_h = @(h) fun_beta(h,a,b);
+        maxfDist_h = beta_upper_limit(a,b);
+    case 'betamixturemodel'
+        a1 = p_h(1); b1 = p_h(2); % parameters of the first distribution
+        a2 = p_h(3); b2 = p_h(4); % parameters of the second distribution
+        w = p_h(5); % mixture model weight
+        fDist_h = @(h) w*fun_beta(h,a1,b1) + (1-w)*fun_beta(h,a2,b2);
+        maxfDist_h = beta_mm_upper_limit(p_h);
 end
 % Distribution function and parameters for relative distance along
 % sub-branch
@@ -72,39 +79,62 @@ dType_d = TargetDistributions.dType_d;
 p_d     = TargetDistributions.p_d;
 % nBins_d = TargetDistributions.nBins_d;
 switch dType_d
-    case 'poly4'
-        fDist_d = @(d) p_d(1)*d.^4 + p_d(2)*d.^3 + p_d(3)*d.^2 ...
-                       + p_d(4)*d + p_d(5);
-        [~,maxfDist_d] = fminbnd(-fDist_d,0,1);
+    case 'uniform'
+        fDist_d = @(d) 1;
+        maxfDist_d = 1;
+    case 'polynomial'
+        fDist_d = @(d) polyval(p_d,d);
+        maxfDist_d = polynomial_upper_limit(p_d);
+    case 'polynomialmixturemodel'
+        nP = (length(p_d)-1)/2; % order of polynomial
+        p1 = p_d(1:nP); % coefficients of the first polynomial
+        p2 = p_d((nP+1):(2*nP)); % coefficients of the second polynomial
+        w = p_d(end); % mixture model weight
+        fDist_d = @(d) w*polyval(p1,d) + (1-w)*polyval(p2,d);
+        maxfDist_d = polynomial_upper_limit(w*p1+(1-w)*p2);
+    case 'weibull'
+        l = p_d(1); % scale parameter
+        k = p_d(2); % shape parameter
+        fDist_d = @(d) fun_weibull(d,l,k);
+        maxfDist_d = weibull_upper_limit(l,k);
+    case 'weibullmixturemodel'
+        l1 = p_d(1); k1 = p_d(2); % parameters of the first distribution
+        l2 = p_d(3); k2 = p_d(4); % parameters of the second distribution
+        w = p_d(5); % mixture model weight
+        fDist_d = @(d) w*fun_weibull(d,l1,k1) + (1-w)*fun_weibull(d,l2,k2);
+        maxfDist_d = weibull_mm_upper_limit(p_d);
     case 'beta'
         a = p_d(1);
         b = p_d(2);
-        fDist_d = @(d) (1/beta(a,b))*d.^(a-1).*(1-d).^(b-1);
-        if a == b
-            maxfDist_d = fDist_d(0.5);
-        elseif a > 1 && b > 1
-            maxfDist_d = fDist_d((a-1)/(a+b-2));
-        elseif a < 1 && b < 1
-            maxfDist_d = 10; % bimodal with infinite modes
-        elseif a == 1 && b > 1
-            maxfDist_d = fDist_d(0);
-        elseif a > 1 && b == 1
-            maxfDist_d = fDist_d(1);
-        else
-            maxfDist_d = 10; % infinite mode at 0 or 1
-        end
-        maxfDist_d = min(maxfDist_d,10);
+        fDist_d = @(d) fun_beta(d,a,b);
+        maxfDist_d = beta_upper_limit(a,b);
+    case 'betamixturemodel'
+        a1 = p_d(1); b1 = p_d(2); % parameters of the first distribution
+        a2 = p_d(3); b2 = p_d(4); % parameters of the second distribution
+        w = p_d(5); % mixture model weight
+        fDist_d = @(d) w*fun_beta(d,a1,b1) + (1-w)*fun_beta(d,a2,b2);
+        maxfDist_d = beta_mm_upper_limit(p_d);
 end
 % Distribution function and parameters for compass direction
 dType_c = TargetDistributions.dType_c;
 p_c     = TargetDistributions.p_c;
 % nBins_c = TargetDistributions.nBins_c;
 switch dType_c
+    case 'uniform'
+        fDist_c = @(c) 1;
+        maxfDist_c = 1;
     case 'vonmises'
         m = p_c(1); % mean
         k = p_c(2); % measure of concentration
-        fDist_c = @(c) exp(k*cos(c-m))./(2*pi*besseli(0,k));
+        fDist_c = @(c) fun_vonmises(c,m,k);
         maxfDist_c = fDist_c(m);
+    case 'vonmisesmixturemodel'
+        m1 = p_c(1); k1 = p_c(2); % parameters of the first distribution
+        m2 = p_c(3); k2 = p_c(4); % parameters of the second distribution
+        w = p_c(5); % mixture model weight
+        fDist_c = @(c) w*fun_vonmises(c,m1,k1) ...
+                       + (1-w)*fun_vonmises(c,m2,k2);
+        maxfDist_c = vonmises_mm_upper_limit(p_c);
 end
 
 %% Leaf orientation distribution functions
