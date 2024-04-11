@@ -1,7 +1,6 @@
 %% Clear variables and add necessary paths
 clear, close all
 addpath('classes/');
-addpath('allcomb/');
 
 %% Leaf distribution types
 
@@ -71,14 +70,15 @@ tris = [
 %% Generate leaf-cylinder library
 % LeafCylinderLibrary = load('LeafCyliderLibraryExample.mat');
 % return
+tic
 LeafCylinderLibrary = generate_leaf_cylinder_library(Nodes, ...
                         LeafDistributions, ...
                         twigLengthLimits, ...
                         vertices, ...
                         tris, ...
-                        'nLeafObjectsPerNode',1); % , ...
-                        % 'PreventIntersections',1);
-
+                        'nLeafObjectsPerNode',1, ...
+                        'PreventIntersections',true);
+toc
 
 %% Initialize QSM object.
 % QSM = QSMBCylindrical('example');

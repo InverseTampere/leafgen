@@ -28,8 +28,8 @@ tris = [1, 2, 3];
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dType_h = 'beta';
-TargetDistributions.p_h = [4.5 1];
+TargetDistributions.dType_h = 'uniform';
+TargetDistributions.p_h = [];
 TargetDistributions.nBins_h = 10;
 
 % LADD relative distance from stem
@@ -38,8 +38,8 @@ TargetDistributions.p_d = [2 1];
 TargetDistributions.nBins_d = 10;
 
 % LADD compass direction
-TargetDistributions.dType_c = 'vonmises';
-TargetDistributions.p_c = [pi 0.1];
+TargetDistributions.dType_c = 'vonmisesmixturemodel';
+TargetDistributions.p_c = [pi 0.1 6/5*pi 0.1 0.6];
 TargetDistributions.nBins_c = 10;
 
 % LOD inclination angle
@@ -62,23 +62,24 @@ stemCoordinates = [   0,      0,                  0;
                       0,      0,   max(pCloud(:,3))];
 %% Generate foliage
 
-totalLeafArea = 20;
+totalLeafArea = 50;
 
 [Leaves,aShape] = generate_foliage_alphashape(pCloud,TargetDistributions, ...
                                      totalLeafArea,vertices,tris, ...
                                      'alpha',1, ...
-                                     'StemCoordinates',stemCoordinates);
+                                     'StemCoordinates',stemCoordinates, ...
+                                     'PCPositionSampling',1);
 
 %% Visualize the foliage
 
 figure(1), clf
 
 if 1
-    % Plot alphashape
+    % Plot point cloud, alphashape and stem
     tiledlayout(1,2)
     ax1 = nexttile;
     pc = aShape.Points;
-    plot3(pc(:,1),pc(:,2),pc(:,3),'g.','MarkerSize',3)
+    plot3(pc(:,1),pc(:,2),pc(:,3),'k.','MarkerSize',1)
     hold on, grid on
     plot(aShape,'FaceColor','m','FaceAlpha',0.2)
     pcTop = max(pc(:,3));
@@ -107,6 +108,7 @@ zlabel('z')
 %% Plot leaf distributions
 
 plot_LADD_h(aShape,Leaves,TargetDistributions);
+error("PÄIVITÄ ALLA OLEVAT KUNTOON")
 plot_LADD_d(aShape,Leaves,TargetDistributions, ...
             'StemCoordinates',stemCoordinates);
 plot_LADD_c(aShape,Leaves,TargetDistributions, ...

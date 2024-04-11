@@ -8,6 +8,9 @@ function [Leaves,shp] = generate_foliage_alphashape(treePointCloud, ...
 %% Initialize values
 alpha = 1;
 flagStemCoordinates = false;
+nBinsPC_h = 100;
+nBinsPC_d = 100;
+nBinsPC_c = 100;
 
 %% Read inputs
 
@@ -22,6 +25,9 @@ while i <= NArg
             case 'stemcoordinates'
                 stemCoordinates = varargin{i+1};
                 flagStemCoordinates = true;
+            case 'pcpositionsampling'
+                pcSamplingWeight = varargin{i+1};
+                flagPCPositionSampling = true;
         end
     end
     i = i + 1;
@@ -42,14 +48,14 @@ switch dType_h
         maxfDist_h = 1;
     case 'polynomial'
         fDist_h = @(h) polyval(p_h,h);
-        maxfDist_h = polynomial_upper_limit(p_h);
+        maxfDist_h = max([0,polynomial_upper_limit(p_h)]);
     case 'polynomialmixturemodel'
-        nP = (length(p_h)-1)/2; % order of polynomial
+        nP = (length(p_h)-1)/2; % number of polynomial coefficients
         p1 = p_h(1:nP); % coefficients of the first polynomial
         p2 = p_h((nP+1):(2*nP)); % coefficients of the second polynomial
         w = p_h(end); % mixture model weight
         fDist_h = @(h) w*polyval(p1,h) + (1-w)*polyval(p2,h);
-        maxfDist_h = polynomial_upper_limit(w*p1+(1-w)*p2);
+        maxfDist_h = max([0,polynomial_upper_limit(w*p1+(1-w)*p2)]);
     case 'weibull'
         l = p_h(1); % scale parameter
         k = p_h(2); % shape parameter
@@ -84,14 +90,14 @@ switch dType_d
         maxfDist_d = 1;
     case 'polynomial'
         fDist_d = @(d) polyval(p_d,d);
-        maxfDist_d = polynomial_upper_limit(p_d);
+        maxfDist_d = max([0,polynomial_upper_limit(p_d)]);
     case 'polynomialmixturemodel'
         nP = (length(p_d)-1)/2; % order of polynomial
         p1 = p_d(1:nP); % coefficients of the first polynomial
         p2 = p_d((nP+1):(2*nP)); % coefficients of the second polynomial
         w = p_d(end); % mixture model weight
         fDist_d = @(d) w*polyval(p1,d) + (1-w)*polyval(p2,d);
-        maxfDist_d = polynomial_upper_limit(w*p1+(1-w)*p2);
+        maxfDist_d = max([0,polynomial_upper_limit(w*p1+(1-w)*p2)]);
     case 'weibull'
         l = p_d(1); % scale parameter
         k = p_d(2); % shape parameter
@@ -166,6 +172,8 @@ end
 dType_size = TargetDistributions.dType_size;
 fun_size_params = TargetDistributions.fun_size_params;
 %% Generate alpha shape on the point cloud
+disp('---------------------------------------')
+disp('Generating alphashape on point cloud')
 tic
 shp = alphaShape(treePointCloud,alpha);
 toc
@@ -176,6 +184,76 @@ maxHorzDist = max(horzDistances);
 
 % Maximum height of the point cloud members
 maxHeight = max(treePointCloud(:,3));
+
+%% Point cloud probability voxelization
+disp('Calculating point cloud voxel densities')
+tic
+if flagPCPositionSampling == true
+    
+    % Bin edges for each cylindrical variable
+    binEdgesH = linspace(0,maxHeight,nBinsPC_h+1);
+    binEdgesD = log(linspace(exp(0),exp(maxHorzDist),nBinsPC_d+1));
+    binEdgesC = linspace(0,2*pi,nBinsPC_c+1);
+
+    pcDensityInVolume = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,1); %zeros(nBinsPC_h,nBinsPC_d,nBinsPC_c);
+    volumeInd = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,3);
+    k = 0;
+    for i_h = 1:nBinsPC_h
+        % Part of point cloud within the height bin
+        inHeightBin = all([(treePointCloud(:,3)<binEdgesH(i_h+1)) ...
+                           (treePointCloud(:,3)>=binEdgesH(i_h))],2);
+        pcHBin = treePointCloud(inHeightBin,:);
+
+        for i_d = 1:nBinsPC_d
+            % Part of point cloud within the height and distance bin
+            pointDist = sqrt(pcHBin(:,1).^2+pcHBin(:,2).^2);
+            inDistanceBin = all([(pointDist<binEdgesD(i_d+1)) ...
+                                 (pointDist>=binEdgesD(i_d))],2);
+            pcHDBin = pcHBin(inDistanceBin,:);
+
+            for i_c = 1:nBinsPC_c
+                % Increment loop counter
+                k = k + 1;
+                % Volume of cylinder slice
+                hSlice = binEdgesH(i_h+1) - binEdgesH(i_h);
+                cRatio = (binEdgesC(i_c+1)-binEdgesC(i_c))/(2*pi);
+                if i_d == 1
+                    vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2);
+                else
+                    vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2 ...
+                          - pi*binEdgesD(i_d).^2);
+                end
+                % Volume indices
+                volumeInd(k,:) = [i_h i_d i_c];
+                % Find all point cloud elements within the slice
+                hPoints = pcHDBin(:,3);
+                dPoints = sqrt(pcHDBin(:,1).^2+pcHDBin(:,2).^2);
+                cPoints = zeros(size(pcHDBin,1),1);
+                xNeg = pcHDBin(:,1) <= 0;
+                xPos = pcHDBin(:,1) >  0;
+                xNegDir = [pcHDBin(xNeg,1:2) zeros(sum(xNeg),1)];
+                xNegDir = xNegDir./sqrt(sum(xNegDir.^2,2));
+                xPosDir = [pcHDBin(xPos,1:2) zeros(sum(xPos),1)];
+                xPosDir = xPosDir./sqrt(sum(xPosDir.^2,2));
+                cPoints(xNeg) = acos(xNegDir*[0 1 0]');
+                cPoints(xPos) = 2*pi - acos(xPosDir*[0 1 0]');
+                pointsInSlice = all([hPoints<binEdgesH(i_h+1) ...
+                                     hPoints>=binEdgesH(i_h) ...
+                                     dPoints<binEdgesD(i_d+1) ...
+                                     dPoints>=binEdgesD(i_d) ...
+                                     cPoints<binEdgesC(i_c+1) ...
+                                     cPoints>=binEdgesC(i_c)] ...
+                                     ,2);
+                % Calculate the point density in slice
+                pcDensityInVolume(k) = sum(pointsInSlice)/vol;
+            end
+        end
+    end
+    cumulativePCD = cumsum(pcDensityInVolume);
+    cumulativeDistPCD = cumulativePCD./cumulativePCD(end);
+    
+end
+toc
 
 %% Initialize leaf object and candidate leaf area
 Leaves = LeafModelTriangle(vertices,tris);
@@ -191,16 +269,77 @@ leafNormal       = zeros(nInit,3);
 leafDir          = zeros(nInit,3);
 leafScaleFactors = zeros(nInit,3);
 
-%% Sample leaf positions and orientations
+%% Sample leaf positions, orientations and sizes
+disp('Sampling leaves from leaf distributions')
+tic
 iLeaf = 0;
 leafArea = 0;
 iVarExt = 0;
 while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
-    % Sampling leaf position with LADD
+    % Sampling leaf position
     accepted = 0;
     while accepted == 0
+        if flagPCPositionSampling == true
+            % Based on the point cloud sampling weight, draw wether the
+            % position is sampled with point cloud density or LADD
+            if rand(1) <= pcSamplingWeight
+                % acceptedPCS = 0;
+                % while acceptedPCS == 0
+                %     % Proposal values for cylinder coordinates
+                %     proposals = rand(1,3).*[maxHeight maxHorzDist 2*pi];
+                %     % Bin indexes for the proposal coordinates
+                %     ih = find((binEdgesH>=proposals(1)),1,'first') - 1;
+                %     id = find((binEdgesD>=proposals(2)),1,'first') - 1;
+                %     ic = find((binEdgesC>=proposals(3)),1,'first') - 1;
+                %     % xyz-coordinates of the proposal point
+                %     xyzProposal = rotation_matrix([0 0 1],proposals(3)) ...
+                %                   *(proposals(2)*[0 1 0]') ... 
+                %                   + [0 0 proposals(1)]';
+                %     % Rejection sampling
+                %     if inShape(shp,xyzProposal) && ...
+                %        rand(1)*maxPCDensity < pcDensityInVolume(ih,id,ic)
+                %         leafStartPoints(iLeaf,:) = proposals;
+                %         acceptedPCS = 1;
+                %     end
+                % end
+                % Sampling a volume block based on point cloud density
+                u = rand(1);
+                iPCD = find(cumulativeDistPCD>u,1,'first');
+                inds = volumeInd(iPCD,:);
+                hBin = binEdgesH(inds(1):(inds(1)+1));
+                dBin = binEdgesD(inds(2):(inds(2)+1));
+                cBin = binEdgesC(inds(3):(inds(3)+1));
+                pointInShape = 0;
+                while pointInShape == 0
+                    proposals = rand(1,3) ...
+                                .*[hBin(2)-hBin(1),dBin(2)-dBin(1), ...
+                                   cBin(2)-cBin(1)] ...
+                                + [hBin(1) dBin(1) cBin(1)];
+                    xyzProposal = rotation_matrix([0 0 1],proposals(3)) ...
+                                  *(proposals(2)*[0 1 0]') ... 
+                                  + [0 0 proposals(1)]';
+                    if inShape(shp,xyzProposal')
+                        leafStartPoints(iLeaf,:) = xyzProposal';
+                        pointInShape = 1;
+                    end
+                end
+                % Calculate the structural variables of the sampled point
+                hProposal = proposals(1)/maxHeight;
+                cProposal = proposals(3);
+                edgeDistance = stem_to_alphashape_edge(shp,hProposal, ...
+                                                       cProposal, ...
+                                                       maxHorzDist, ...
+                                                       maxHeight, ...
+                                                       stemCoordinates);
+                dProposal = proposals(2)/edgeDistance;
+                % Set the leaf acceptance flag to positive
+                accepted = 1;
+                % Skip the sampling of LADD
+                continue
+            end
+        end
         % Proposal values for the variables
         hProposal = rand(1);
         dProposal = rand(1);
@@ -211,29 +350,20 @@ while leafArea < candidateArea
         vertValues = rand(1,3).*[maxfDist_h,maxfDist_d,maxfDist_c];
         if all(vertValues < funValues)
             % Probing the edge of alpha shape
-            if flagStemCoordinates
-                nPP = 2*100;
-                yCoord = 2*maxHorzDist*linspace(0,1,nPP)';
-                initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
-                probePoints = (rotation_matrix([0 0 1],cProposal)*initPP')' ...
-                    + [zeros(nPP,2) maxHeight*hProposal*ones(nPP,1)];
-                iSC = find(stemCoordinates(:,3) > maxHeight*hProposal,1);
-                relPos = (maxHeight*hProposal-stemCoordinates(iSC-1,3)) ...
-                        /(stemCoordinates(iSC,3)-stemCoordinates(iSC-1,3));
-                stemCen = relPos*(stemCoordinates(iSC,:) ...
-                                  -stemCoordinates(iSC-1,:)) ...
-                          + stemCoordinates(iSC-1,:);
-                probePoints = probePoints + [stemCen(1:2) 0];
+            if flagStemCoordinates == true
+                edgeValue = stem_to_alphashape_edge(shp,hProposal, ...
+                                                    cProposal, ...
+                                                    maxHorzDist, ...
+                                                    maxHeight, ...
+                                                    stemCoordinates);
             else
-                nPP = 100;
-                yCoord = maxHorzDist*linspace(0,1,nPP)';
-                initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
-                probePoints = (rotation_matrix([0 0 1],cProposal)*initPP')' ...
-                    + [zeros(nPP,2) maxHeight*hProposal*ones(nPP,1)];
+                edgeValue = stem_to_alphashape_edge(shp,hProposal, ...
+                                                    cProposal, ...
+                                                    maxHorzDist, ...
+                                                    maxHeight);
             end
-            tf = inShape(shp,probePoints);
-            edgeIndex = find(~tf,1,'first') - 1;
-            if edgeIndex < 2
+            % Check the if the distance to edge is nonzero
+            if edgeValue == 0
                 % The first two probe points are not inside the shape
                 continue
             end
@@ -242,7 +372,7 @@ while leafArea < candidateArea
             hLeaf = maxHeight*hProposal;
             dLeaf = edgeValue*dProposal;
             cLeaf = cProposal;
-            if flagStemCoordinates
+            if flagStemCoordinates == true
                 leafStartPoints(iLeaf,:) = (rotation_matrix([0 0 1],cLeaf) ...
                                            *[0 1 0]')'*dLeaf ...
                                            +[stemCen(1:2) hLeaf];
@@ -341,8 +471,11 @@ leafStartPoints = leafStartPoints(1:iLeaf,:);
 leafNormal = leafNormal(1:iLeaf,:);
 leafDir = leafDir(1:iLeaf,:);
 leafScaleFactors = leafScaleFactors(1:iLeaf,:);
+toc
 
 %% Add leaves to the shape without intersections
+disp('Adding leaves to the model without intersections')
+tic
 Leaves = add_leaves_to_alphashape(shp, ...
                                   Leaves, ...
                                   totalLeafArea, ....
@@ -350,3 +483,5 @@ Leaves = add_leaves_to_alphashape(shp, ...
                                   leafNormal, ...
                                   leafDir, ...
                                   leafScaleFactors);
+toc
+disp('Foliage generation finished')

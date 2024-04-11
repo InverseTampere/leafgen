@@ -22,8 +22,8 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dType_h;
-if dType ~= "poly3" && dType ~= "weibull" && dType ~= "beta" && ...
-   dType ~= "none"
+if ~any(strcmp(dType,{'uniform','polynomial','polynomialmixturemodel', ...
+        'weibull','weibullmixturemodel','beta','betamixturemodel'}))
     error("LADD height distribution type not recognized.")
 end
 
@@ -31,8 +31,8 @@ end
 p = TargetDistributions.p_h;
 
 % Functions
-fun_weibull = @(p,x) (p(2)/p(1))*(x/p(1)).^(p(2)-1).*exp(-(x/p(1)).^p(2));
-fun_beta = @(p,x) (1/beta(p(1),p(2)))*x.^(p(1)-1).*(1-x).^(p(2)-1);
+fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
+fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
 
 % Relative height discretization
 xx = 0:0.001:1;
@@ -41,33 +41,48 @@ xx = 0:0.001:1;
 binEdges = linspace(0,1,nBins+1);
 
 %% Plot the target distribution function
+
 if dType ~= "none"
-    if dType == "poly3"
-        % Normalization
-        q = polyint(p);
-        yy = polyval(p,xx)/diff(polyval(q,[0,1]));
-        % Plotting the curve
-        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
-    elseif dType == "weibull"
-        yy = fun_weibull(p,xx);
-        % Normalization
-        yy = yy/trapz(xx,yy);
-        % Plotting the curve
-        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
-    elseif dType == "beta"
-        yy = fun_beta(p,xx);
-        % Prevent infinite values at the edges of the interval
-        if yy(1) == Inf
-            yy(1) = yy(2) + (yy(2)-yy(3));
-        end
-        if yy(end) == Inf
-            yy(end) = yy(end-1) + (yy(end-1)-yy(end-2));
-        end
-        % Normalization
-        yy = yy/trapz(xx,yy);
-        % Plotting the curve
-        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
+    switch dType
+        case 'uniform'
+            yy = ones(size(xx));
+        case  'polynomial'
+            yy = polyval(p,xx);
+        case 'polynomialmixturemodel'
+            nP = (length(p)-1)/2; % number of polynomial coefficients
+            p1 = p(1:nP); % coefficients of the first polynomial
+            p2 = p((nP+1):(2*nP)); % coefficients of the second polynomial
+            w = p(end); % mixture model weight
+            yy = w*polyval(p1,xx) + (1-w)*polyval(p2,xx);
+        case 'weibull'
+            l = p(1); % scale parameter
+            k = p(2); % shape parameter
+            yy = fun_weibull(xx,l,k);
+        case 'weibullmixturemodel'
+            l1 = p(1); k1 = p(2); % parameters of the first distribution
+            l2 = p(3); k2 = p(4); % parameters of the second distribution
+            w = p(5); % mixture model weight
+            yy = w*fun_weibull(xx,l1,k1) + (1-w)*fun_weibull(xx,l2,k2);
+        case 'beta'
+            a = p(1);
+            b = p(2);
+            yy = fun_beta(xx,a,b);
+        case 'betamixturemodel'
+            a1 = p(1); b1 = p(2); % parameters of the first distribution
+            a2 = p(3); b2 = p(4); % parameters of the second distribution
+            w = p(5); % mixture model weight
+            yy = w*fun_beta(xx,a1,b1) + (1-w)*fun_beta(xx,a2,b2);
     end
+    % Prevent infinite values at the edges of the interval
+    if yy(1) == Inf
+        yy(1) = yy(2) + (yy(2)-yy(3));
+    end
+    if yy(end) == Inf
+        yy(end) = yy(end-1) + (yy(end-1)-yy(end-2));
+    end
+    % Normalization
+    yy = yy/trapz(xx,yy);
+    plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
 end
 
 %% Plot the histogram of accepted leaves

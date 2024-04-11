@@ -1,7 +1,7 @@
 function fMax = beta_upper_limit(a,b)
 % Gives maximum value of beta distribution limited to value 10 on closed 
 % interval [0,1]
-fun_beta = @(x,a,b) (1/beta(a,b))*h.^(a-1).*(1-h).^(b-1);
+fun_beta = @(x) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
 if a == b
     fMax = fun_beta(0.5);
 elseif a > 1 && b > 1
