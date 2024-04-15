@@ -127,8 +127,8 @@ p_c     = TargetDistributions.p_c;
 % nBins_c = TargetDistributions.nBins_c;
 switch dType_c
     case 'uniform'
-        fDist_c = @(c) 1;
-        maxfDist_c = 1;
+        fDist_c = @(c) 1/(2*pi);
+        maxfDist_c = 1/(2*pi);
     case 'vonmises'
         m = p_c(1); % mean
         k = p_c(2); % measure of concentration

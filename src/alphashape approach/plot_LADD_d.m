@@ -31,17 +31,17 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dType_d;
-if lower(dType) ~= "poly4" && lower(dType) ~= "beta" && ...
-   lower(dType) ~= "none"
-    error("LADD distance distribution type not recognized.")
+if ~any(strcmp(dType,{'uniform','polynomial','polynomialmixturemodel', ...
+        'weibull','weibullmixturemodel','beta','betamixturemodel'}))
+    error("LADD distance from stem distribution type not recognized.")
 end
 
 % Read target distribution parameters
 p = TargetDistributions.p_d;
 
 % Functions
-fun_poly4 = @(p,x) p(1)*x.^4 + p(2)*x.^3 + p(3)*x.^2 + p(4)*x + p(5);
-fun_beta = @(p,x) (1/beta(p(1),p(2)))*x.^(p(1)-1).*(1-x).^(p(2)-1);
+fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
+fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
 
 % Relative distance discretization
 xx = 0:0.001:1;
@@ -50,27 +50,48 @@ xx = 0:0.001:1;
 binEdges = linspace(0,1,nBins+1);
 
 %% Plot the target distribution function
+
 if dType ~= "none"
-    if dType == "poly4"
-        % Normalization
-        q = polyint(p);
-        yy = polyval(p,xx)/diff(polyval(q,[0,1]));
-        % Plotting the curve
-        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
-    elseif dType == "beta"
-        yy = fun_beta(p,xx);
-        % Prevent infinite values at the edges of the interval
-        if yy(1) == Inf
-            yy(1) = yy(2) + (yy(2)-yy(3));
-        end
-        if yy(end) == Inf
-            yy(end) = yy(end-1) + (yy(end-1)-yy(end-2));
-        end
-        % Normalization
-        yy = yy/trapz(xx,yy);
-        % Plotting the curve
-        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
+    switch dType
+        case 'uniform'
+            yy = ones(size(xx));
+        case  'polynomial'
+            yy = polyval(p,xx);
+        case 'polynomialmixturemodel'
+            nP = (length(p)-1)/2; % number of polynomial coefficients
+            p1 = p(1:nP); % coefficients of the first polynomial
+            p2 = p((nP+1):(2*nP)); % coefficients of the second polynomial
+            w = p(end); % mixture model weight
+            yy = w*polyval(p1,xx) + (1-w)*polyval(p2,xx);
+        case 'weibull'
+            l = p(1); % scale parameter
+            k = p(2); % shape parameter
+            yy = fun_weibull(xx,l,k);
+        case 'weibullmixturemodel'
+            l1 = p(1); k1 = p(2); % parameters of the first distribution
+            l2 = p(3); k2 = p(4); % parameters of the second distribution
+            w = p(5); % mixture model weight
+            yy = w*fun_weibull(xx,l1,k1) + (1-w)*fun_weibull(xx,l2,k2);
+        case 'beta'
+            a = p(1);
+            b = p(2);
+            yy = fun_beta(xx,a,b);
+        case 'betamixturemodel'
+            a1 = p(1); b1 = p(2); % parameters of the first distribution
+            a2 = p(3); b2 = p(4); % parameters of the second distribution
+            w = p(5); % mixture model weight
+            yy = w*fun_beta(xx,a1,b1) + (1-w)*fun_beta(xx,a2,b2);
     end
+    % Prevent infinite values at the edges of the interval
+    if yy(1) == Inf
+        yy(1) = yy(2) + (yy(2)-yy(3));
+    end
+    if yy(end) == Inf
+        yy(end) = yy(end-1) + (yy(end-1)-yy(end-2));
+    end
+    % Normalization
+    yy = yy/trapz(xx,yy);
+    plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
 end
 
 %% Plot the histogram of accepted leaves
@@ -89,6 +110,12 @@ maxHorzDist = max(sqrt(sum(pCloud(:,1:2).^2,2)));
 
 % Initialize variable for relative distance from stem
 relDistFromStem = zeros(leafCount,1);
+
+% Variables for missed leaves due to problems in defining distance to the
+% alphashape edge
+nMissed = 0;
+indMissed = [];
+areaMissed = 0;
 
 if flagStemCoordinates == true % Stem coordinates supplied as input
     for iLeaf = 1:leafCount
@@ -121,7 +148,12 @@ if flagStemCoordinates == true % Stem coordinates supplied as input
         tf = inShape(aShape,probePoints);
         edgeIndex = find(~tf,1,'first') - 1;
         if edgeIndex < 1
-            error("The the stem based on supplied coordinates is partially outside the alpha shape. Thus the relative distance to stem cannot be calculated.")
+            % The stem is outside alphashape
+            nMissed = nMissed + 1;
+            indMissed = [indMissed, iLeaf];
+            areaMissed = areaMissed ...
+                         + Leaves.base_area*Leaves.leaf_scale(iLeaf,2).^2;
+            continue
         end
         edgeValue = yCoord(edgeIndex);
         % The relative horizontal distance from the stem
@@ -140,13 +172,24 @@ else % Assuming stem to be the z-axis
         tf = inShape(aShape,probePoints);
         edgeIndex = find(~tf,1,'first') - 1;
         if edgeIndex < 1
-            error("The assumed z-axis stem is partially outside the alpha shape. Thus the relative distance to stem cannot be calculated.")
+            % The stem is outside alphashape
+            nMissed = nMissed + 1;
+            indMissed = [indMissed, iLeaf];
+            areaMissed = areaMissed ...
+                         + Leaves.base_area*Leaves.leaf_scale(iLeaf,2).^2;
+            continue
         end
         edgeValue = norm(probePoints(edgeIndex,:));
         % The relative horizontal distance from the stem
         stemToLeaf = [leafStartPoints(iLeaf,1:2) 0];
         relDistFromStem(iLeaf) = norm(stemToLeaf)/edgeValue;
     end
+end
+
+if nMissed > 0
+    warning('%d leaves not included in the \"relative distance from stem\" histogram due to the defined stem being outside alphashape. (Total missed area %.2f m^2)',nMissed,areaMissed)
+    leafCount = leafCount - nMissed;
+    relDistFromStem(indMissed) = [];
 end
 
 % Calculate weighted histogram for the leaf area wrt. height

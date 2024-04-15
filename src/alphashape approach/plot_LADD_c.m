@@ -2,7 +2,6 @@ function f = plot_LADD_c(aShape,Leaves,TargetDistributions,varargin)
 
 % Initialize values
 nBins = 10;
-pCloud = aShape.Points;
 flagStemCoordinates = false;
 
 % Check additional parameters
@@ -31,7 +30,7 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dType_c;
-if lower(dType) ~= "vonmises" && lower(dType) ~= "none"
+if ~any(strcmp(dType,{'uniform','vonmises','vonmisesmixturemodel'}))
     error("LADD compass direction distribution type not recognized.")
 end
 
@@ -39,7 +38,7 @@ end
 p = TargetDistributions.p_c;
 
 % Functions
-fun_vonmises = @(p,x) exp(p(2)*cos(x-p(1)))./(2*pi*besseli(0,p(2)));
+fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 
 % Compass direction discretization
 xx = 0:0.001:2*pi;
@@ -49,13 +48,29 @@ binEdges = linspace(0,2*pi,nBins+1);
 
 %% Plot the target distribution function
 if dType ~= "none"
-    if dType == "vonmises"
-        yy = fun_vonmises(p,xx);
-        % Normalization
-        yy = yy/trapz(xx,yy);
-        % Plotting the curve
-        plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
+    switch dType
+        case 'uniform'
+            yy = 1/(2*pi);
+        case 'vonmises'
+            m = p(1); % mean
+            k = p(2); % measure of concentration
+            yy = fun_vonmises(xx,m,k);
+        case 'vonmisesmixturemodel'
+            m1 = p(1); k1 = p(2); % parameters of the first distribution
+            m2 = p(3); k2 = p(4); % parameters of the second distribution
+            w = p(5); % mixture model weight
+            yy = w*fun_vonmises(xx,m1,k1) + (1-w)*fun_vonmises(xx,m2,k2);
     end
+    % Prevent infinite values at the edges of the interval
+    if yy(1) == Inf
+        yy(1) = yy(2) + (yy(2)-yy(3));
+    end
+    if yy(end) == Inf
+        yy(end) = yy(end-1) + (yy(end-1)-yy(end-2));
+    end
+    % Normalization
+    yy = yy/trapz(xx,yy);
+    plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
 end
 
 %% Plot the histogram of accepted leaves

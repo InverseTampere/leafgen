@@ -108,7 +108,6 @@ zlabel('z')
 %% Plot leaf distributions
 
 plot_LADD_h(aShape,Leaves,TargetDistributions);
-error("PÄIVITÄ ALLA OLEVAT KUNTOON")
 plot_LADD_d(aShape,Leaves,TargetDistributions, ...
             'StemCoordinates',stemCoordinates);
 plot_LADD_c(aShape,Leaves,TargetDistributions, ...
