@@ -1,21 +1,46 @@
 function relAreas = fun_leaf_area_density(CylinderParameters, ...
                                           TargetDistributions)
 
+%% Function definitions
+fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
+fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
+fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
+
+%% Distribution functions and parameters 
+
 % Distribution function and parameters for relative height
 dType_h = TargetDistributions.dType_h;
 p_h     = TargetDistributions.p_h;
 nBins_h = TargetDistributions.nBins_h;
 switch dType_h
-    case 'poly3'
-        fDist_h = @(h) p_h(1)*h.^3 + p_h(2)*h.^2 + p_h(3)*h + p_h(4);
+    case 'uniform'
+        fDist_h = @(h) 1;
+    case 'polynomial'
+        fDist_h = @(h) polyval(p_h,h);
+    case 'polynomialmixturemodel'
+        nP = (length(p_h)-1)/2; % number of polynomial coefficients
+        p1 = p_h(1:nP); % coefficients of the first polynomial
+        p2 = p_h((nP+1):(2*nP)); % coefficients of the second polynomial
+        w = p_h(end); % mixture model weight
+        fDist_h = @(h) w*polyval(p1,h) + (1-w)*polyval(p2,h);
     case 'weibull'
-        % p = [scale, shape]
-        sc = p_h(1);
-        sh = p_h(2);
-        fDist_h = @(h) (sh/sc)*(h/sc).^(sh-1).*exp(-(h/sc).^sh);
+        l = p_h(1); % scale parameter
+        k = p_h(2); % shape parameter
+        fDist_h = @(h) fun_weibull(h,l,k);
+    case 'weibullmixturemodel'
+        l1 = p_h(1); k1 = p_h(2); % parameters of the first distribution
+        l2 = p_h(3); k2 = p_h(4); % parameters of the second distribution
+        w = p_h(5); % mixture model weight
+        fDist_h = @(h) w*fun_weibull(h,l1,k1) + (1-w)*fun_weibull(h,l2,k2);
     case 'beta'
-        fDist_h = @(h) (1/beta(p_h(1),p_h(2)))*h.^(p_h(1)-1) ...
-                       .*(1-h).^(p_h(2)-1);
+        a = p_h(1);
+        b = p_h(2);
+        fDist_h = @(h) fun_beta(h,a,b);
+    case 'betamixturemodel'
+        a1 = p_h(1); b1 = p_h(2); % parameters of the first distribution
+        a2 = p_h(3); b2 = p_h(4); % parameters of the second distribution
+        w = p_h(5); % mixture model weight
+        fDist_h = @(h) w*fun_beta(h,a1,b1) + (1-w)*fun_beta(h,a2,b2);
 end
 
 % Distribution function and parameters for relative distance along
@@ -24,12 +49,34 @@ dType_d = TargetDistributions.dType_d;
 p_d     = TargetDistributions.p_d;
 nBins_d = TargetDistributions.nBins_d;
 switch dType_d
-    case 'poly4'
-        fDist_d = @(d) p_d(1)*d.^4 + p_d(2)*d.^3 + p_d(3)*d.^2 ...
-                       + p_d(4)*d + p_d(5);
+    case 'uniform'
+        fDist_d = @(d) 1;
+    case 'polynomial'
+        fDist_d = @(d) polyval(p_d,d);
+    case 'polynomialmixturemodel'
+        nP = (length(p_d)-1)/2; % order of polynomial
+        p1 = p_d(1:nP); % coefficients of the first polynomial
+        p2 = p_d((nP+1):(2*nP)); % coefficients of the second polynomial
+        w = p_d(end); % mixture model weight
+        fDist_d = @(d) w*polyval(p1,d) + (1-w)*polyval(p2,d);
+    case 'weibull'
+        l = p_d(1); % scale parameter
+        k = p_d(2); % shape parameter
+        fDist_d = @(d) fun_weibull(d,l,k);
+    case 'weibullmixturemodel'
+        l1 = p_d(1); k1 = p_d(2); % parameters of the first distribution
+        l2 = p_d(3); k2 = p_d(4); % parameters of the second distribution
+        w = p_d(5); % mixture model weight
+        fDist_d = @(d) w*fun_weibull(d,l1,k1) + (1-w)*fun_weibull(d,l2,k2);
     case 'beta'
-        fDist_d = @(d) (1/beta(p_d(1),p_d(2)))*d.^(p_d(1)-1) ...
-                       .*(1-d).^(p_d(2)-1);
+        a = p_d(1);
+        b = p_d(2);
+        fDist_d = @(d) fun_beta(d,a,b);
+    case 'betamixturemodel'
+        a1 = p_d(1); b1 = p_d(2); % parameters of the first distribution
+        a2 = p_d(3); b2 = p_d(4); % parameters of the second distribution
+        w = p_d(5); % mixture model weight
+        fDist_d = @(d) w*fun_beta(d,a1,b1) + (1-w)*fun_beta(d,a2,b2);
 end
 
 % Distribution function and parameters for compass direction
@@ -37,8 +84,18 @@ dType_c = TargetDistributions.dType_c;
 p_c     = TargetDistributions.p_c;
 nBins_c = TargetDistributions.nBins_c;
 switch dType_c
+    case 'uniform'
+        fDist_c = @(c) 1/(2*pi);
     case 'vonmises'
-        fDist_c = @(c) exp(p_c(2)*cos(c-p_c(1)))./(2*pi*besseli(0,p_c(2)));
+        m = p_c(1); % mean
+        k = p_c(2); % measure of concentration
+        fDist_c = @(c) fun_vonmises(c,m,k);
+    case 'vonmisesmixturemodel'
+        m1 = p_c(1); k1 = p_c(2); % parameters of the first distribution
+        m2 = p_c(3); k2 = p_c(4); % parameters of the second distribution
+        w = p_c(5); % mixture model weight
+        fDist_c = @(c) w*fun_vonmises(c,m1,k1) ...
+                       + (1-w)*fun_vonmises(c,m2,k2);
 end
 
 %% QSM cylinder properties
