@@ -1,4 +1,4 @@
-function [Leaves,shp] = generate_foliage_alphashape(treePointCloud, ...
+function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
                                                     TargetDistributions, ...
                                                     totalLeafArea, ...
                                                     vertices, ...
@@ -7,7 +7,7 @@ function [Leaves,shp] = generate_foliage_alphashape(treePointCloud, ...
                                                     )
 %% Initialize values
 alpha = 1;
-flagStemCoordinates = false;
+stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
 nBinsPC_h = 100;
 nBinsPC_d = 100;
 nBinsPC_c = 100;
@@ -24,7 +24,6 @@ while i <= NArg
                 alpha = varargin{i+1};
             case 'stemcoordinates'
                 stemCoordinates = varargin{i+1};
-                flagStemCoordinates = true;
             case 'pcpositionsampling'
                 pcSamplingWeight = varargin{i+1};
                 flagPCPositionSampling = true;
@@ -175,7 +174,7 @@ fun_size_params = TargetDistributions.fun_size_params;
 disp('---------------------------------------')
 disp('Generating alphashape on point cloud')
 tic
-shp = alphaShape(treePointCloud,alpha);
+aShape = alphaShape(treePointCloud,alpha);
 toc
 %% Extreme points of point cloud
 % Maximum horizontal distance from origin to point cloud member
@@ -186,75 +185,143 @@ maxHorzDist = max(horzDistances);
 maxHeight = max(treePointCloud(:,3));
 
 %% Point cloud probability voxelization
-disp('Calculating point cloud voxel densities')
+disp('Calculating point cloud voxelization')
+% tic
+% if flagPCPositionSampling == true
+% 
+%     % Bin edges for each cylindrical variable
+%     binEdgesH = linspace(0,maxHeight,nBinsPC_h+1);
+%     binEdgesD = log(linspace(exp(0),exp(maxHorzDist),nBinsPC_d+1));
+%     binEdgesC = linspace(0,2*pi,nBinsPC_c+1);
+% 
+%     pcDensityInVolume = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,1); %zeros(nBinsPC_h,nBinsPC_d,nBinsPC_c);
+%     volumeInd = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,3);
+%     k = 0;
+%     for i_h = 1:nBinsPC_h
+%         % Part of point cloud within the height bin
+%         inHeightBin = all([(treePointCloud(:,3)<binEdgesH(i_h+1)) ...
+%                            (treePointCloud(:,3)>=binEdgesH(i_h))],2);
+%         pcHBin = treePointCloud(inHeightBin,:);
+% 
+%         for i_d = 1:nBinsPC_d
+%             % Part of point cloud within the height and distance bin
+%             pointDist = sqrt(pcHBin(:,1).^2+pcHBin(:,2).^2);
+%             inDistanceBin = all([(pointDist<binEdgesD(i_d+1)) ...
+%                                  (pointDist>=binEdgesD(i_d))],2);
+%             pcHDBin = pcHBin(inDistanceBin,:);
+% 
+%             for i_c = 1:nBinsPC_c
+%                 % Increment loop counter
+%                 k = k + 1;
+%                 % Volume of cylinder slice
+%                 hSlice = binEdgesH(i_h+1) - binEdgesH(i_h);
+%                 cRatio = (binEdgesC(i_c+1)-binEdgesC(i_c))/(2*pi);
+%                 if i_d == 1
+%                     vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2);
+%                 else
+%                     vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2 ...
+%                           - pi*binEdgesD(i_d).^2);
+%                 end
+%                 % Volume indices
+%                 volumeInd(k,:) = [i_h i_d i_c];
+%                 % Find all point cloud elements within the slice
+%                 hPoints = pcHDBin(:,3);
+%                 dPoints = sqrt(pcHDBin(:,1).^2+pcHDBin(:,2).^2);
+%                 cPoints = zeros(size(pcHDBin,1),1);
+%                 xNeg = pcHDBin(:,1) <= 0;
+%                 xPos = pcHDBin(:,1) >  0;
+%                 xNegDir = [pcHDBin(xNeg,1:2) zeros(sum(xNeg),1)];
+%                 xNegDir = xNegDir./sqrt(sum(xNegDir.^2,2));
+%                 xPosDir = [pcHDBin(xPos,1:2) zeros(sum(xPos),1)];
+%                 xPosDir = xPosDir./sqrt(sum(xPosDir.^2,2));
+%                 cPoints(xNeg) = acos(xNegDir*[0 1 0]');
+%                 cPoints(xPos) = 2*pi - acos(xPosDir*[0 1 0]');
+%                 pointsInSlice = all([hPoints<binEdgesH(i_h+1) ...
+%                                      hPoints>=binEdgesH(i_h) ...
+%                                      dPoints<binEdgesD(i_d+1) ...
+%                                      dPoints>=binEdgesD(i_d) ...
+%                                      cPoints<binEdgesC(i_c+1) ...
+%                                      cPoints>=binEdgesC(i_c)] ...
+%                                      ,2);
+%                 % Calculate the point density in slice
+%                 pcDensityInVolume(k) = sum(pointsInSlice)/vol;
+%             end
+%         end
+%     end
+%     cumulativePCD = cumsum(pcDensityInVolume);
+%     cumulativeDistPCD = cumulativePCD./cumulativePCD(end);
+% 
+% end
+% toc
+
+%% Caculating voxel array and finding which voxels contain points
 tic
-if flagPCPositionSampling == true
-    
-    % Bin edges for each cylindrical variable
-    binEdgesH = linspace(0,maxHeight,nBinsPC_h+1);
-    binEdgesD = log(linspace(exp(0),exp(maxHorzDist),nBinsPC_d+1));
-    binEdgesC = linspace(0,2*pi,nBinsPC_c+1);
+voxelEdge = 0.15;
+xMin = min(treePointCloud(:,1));
+xMax = max(treePointCloud(:,1));
+yMin = min(treePointCloud(:,2));
+yMax = max(treePointCloud(:,2));
+zMin = min(treePointCloud(:,3));
+zMax = max(treePointCloud(:,3));
+nx = ceil((xMax-xMin)/voxelEdge);
+ny = ceil((yMax-yMin)/voxelEdge);
+nz = ceil((zMax-zMin)/voxelEdge);
+xEdges = [xMin xMin+cumsum(voxelEdge*ones(1,nx))];
+yEdges = [yMin yMin+cumsum(voxelEdge*ones(1,ny))];
+zEdges = [zMin zMin+cumsum(voxelEdge*ones(1,nz))];
 
-    pcDensityInVolume = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,1); %zeros(nBinsPC_h,nBinsPC_d,nBinsPC_c);
-    volumeInd = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,3);
-    k = 0;
-    for i_h = 1:nBinsPC_h
-        % Part of point cloud within the height bin
-        inHeightBin = all([(treePointCloud(:,3)<binEdgesH(i_h+1)) ...
-                           (treePointCloud(:,3)>=binEdgesH(i_h))],2);
-        pcHBin = treePointCloud(inHeightBin,:);
+protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 1 0 1];
+voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
+% voxelBottom = [1 4 3 2 1]';
+% voxelTop = [5 8 7 6 5]';
+% sideVert00 = [1 5]';
+% sideVert10 = [4 8]';
+% sideVert01 = [2 6]';
+% sideVert11 = [3 7]';
 
-        for i_d = 1:nBinsPC_d
-            % Part of point cloud within the height and distance bin
-            pointDist = sqrt(pcHBin(:,1).^2+pcHBin(:,2).^2);
-            inDistanceBin = all([(pointDist<binEdgesD(i_d+1)) ...
-                                 (pointDist>=binEdgesD(i_d))],2);
-            pcHDBin = pcHBin(inDistanceBin,:);
-
-            for i_c = 1:nBinsPC_c
-                % Increment loop counter
-                k = k + 1;
-                % Volume of cylinder slice
-                hSlice = binEdgesH(i_h+1) - binEdgesH(i_h);
-                cRatio = (binEdgesC(i_c+1)-binEdgesC(i_c))/(2*pi);
-                if i_d == 1
-                    vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2);
-                else
-                    vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2 ...
-                          - pi*binEdgesD(i_d).^2);
-                end
-                % Volume indices
-                volumeInd(k,:) = [i_h i_d i_c];
-                % Find all point cloud elements within the slice
-                hPoints = pcHDBin(:,3);
-                dPoints = sqrt(pcHDBin(:,1).^2+pcHDBin(:,2).^2);
-                cPoints = zeros(size(pcHDBin,1),1);
-                xNeg = pcHDBin(:,1) <= 0;
-                xPos = pcHDBin(:,1) >  0;
-                xNegDir = [pcHDBin(xNeg,1:2) zeros(sum(xNeg),1)];
-                xNegDir = xNegDir./sqrt(sum(xNegDir.^2,2));
-                xPosDir = [pcHDBin(xPos,1:2) zeros(sum(xPos),1)];
-                xPosDir = xPosDir./sqrt(sum(xPosDir.^2,2));
-                cPoints(xNeg) = acos(xNegDir*[0 1 0]');
-                cPoints(xPos) = 2*pi - acos(xPosDir*[0 1 0]');
-                pointsInSlice = all([hPoints<binEdgesH(i_h+1) ...
-                                     hPoints>=binEdgesH(i_h) ...
-                                     dPoints<binEdgesD(i_d+1) ...
-                                     dPoints>=binEdgesD(i_d) ...
-                                     cPoints<binEdgesC(i_c+1) ...
-                                     cPoints>=binEdgesC(i_c)] ...
-                                     ,2);
-                % Calculate the point density in slice
-                pcDensityInVolume(k) = sum(pointsInSlice)/vol;
+voxelPointTreshold = 5;
+pcVoxels = zeros(nx,ny,nz);
+k = 0;
+figure, clf, hold on, grid on, axis equal, view(3)
+plot3(treePointCloud(:,1),treePointCloud(:,2),treePointCloud(:,3), ...
+      'g.','MarkerSize',0.5)
+pcRemaining = treePointCloud;
+voxelInd = cell(nx,ny,nz);
+for ix = 1:nx
+    % Slice of point cloud corrseponding to the x voxel coordinates
+    inXslice = all([(pcRemaining(:,1) < xEdges(ix+1)) ...
+                    (pcRemaining(:,1) >= xEdges(ix))],2);
+    pcXslice = pcRemaining(inXslice,:);
+    pcRemaining(inXslice,:) = [];
+    for iy = 1:ny
+        % Column of point cloud corresponding to the x and y voxel
+        % coordinates
+        inXYcolumn = all([(pcXslice(:,2) < yEdges(iy+1)) ...
+                          (pcXslice(:,2) >= yEdges(iy))],2);
+        pcXYcolumn = pcXslice(inXYcolumn,:);
+        for iz = 1:nz
+            % Increment loop counter
+            k = k + 1;
+            % Cell for voxel indices
+            voxelInd{ix,iy,iz} = [ix iy iz];
+            % Find the number of points inside the voxel
+            inXYZvoxel = all([(pcXYcolumn(:,3) < zEdges(iz+1)) ...
+                              (pcXYcolumn(:,3) >= zEdges(iz))],2);
+            % If the number of points surpasses voxel point treshold, set
+            % voxel value to 1, otherwise 0
+            if sum(inXYZvoxel) >= voxelPointTreshold
+                pcVoxels(ix,iy,iz) = 1;
+                % Visualize the voxel
+                voxelVertices = voxelEdge*protoVertices ...
+                                + [xEdges(ix) yEdges(iy) zEdges(iz)];
+                patch('vertices', voxelVertices, 'faces', voxelFaces, ...
+                      'facecolor', 'r', 'facealpha', 0.0);
             end
+            
         end
     end
-    cumulativePCD = cumsum(pcDensityInVolume);
-    cumulativeDistPCD = cumulativePCD./cumulativePCD(end);
-    
 end
 toc
-
 %% Initialize leaf object and candidate leaf area
 Leaves = LeafModelTriangle(vertices,tris);
 baseArea = Leaves.base_area;
@@ -278,111 +345,26 @@ iVarExt = 0;
 while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
-    % Sampling leaf position
-    accepted = 0;
-    while accepted == 0
-        if flagPCPositionSampling == true
-            % Based on the point cloud sampling weight, draw wether the
-            % position is sampled with point cloud density or LADD
-            if rand(1) <= pcSamplingWeight
-                % acceptedPCS = 0;
-                % while acceptedPCS == 0
-                %     % Proposal values for cylinder coordinates
-                %     proposals = rand(1,3).*[maxHeight maxHorzDist 2*pi];
-                %     % Bin indexes for the proposal coordinates
-                %     ih = find((binEdgesH>=proposals(1)),1,'first') - 1;
-                %     id = find((binEdgesD>=proposals(2)),1,'first') - 1;
-                %     ic = find((binEdgesC>=proposals(3)),1,'first') - 1;
-                %     % xyz-coordinates of the proposal point
-                %     xyzProposal = rotation_matrix([0 0 1],proposals(3)) ...
-                %                   *(proposals(2)*[0 1 0]') ... 
-                %                   + [0 0 proposals(1)]';
-                %     % Rejection sampling
-                %     if inShape(shp,xyzProposal) && ...
-                %        rand(1)*maxPCDensity < pcDensityInVolume(ih,id,ic)
-                %         leafStartPoints(iLeaf,:) = proposals;
-                %         acceptedPCS = 1;
-                %     end
-                % end
-                % Sampling a volume block based on point cloud density
-                u = rand(1);
-                iPCD = find(cumulativeDistPCD>u,1,'first');
-                inds = volumeInd(iPCD,:);
-                hBin = binEdgesH(inds(1):(inds(1)+1));
-                dBin = binEdgesD(inds(2):(inds(2)+1));
-                cBin = binEdgesC(inds(3):(inds(3)+1));
-                pointInShape = 0;
-                while pointInShape == 0
-                    proposals = rand(1,3) ...
-                                .*[hBin(2)-hBin(1),dBin(2)-dBin(1), ...
-                                   cBin(2)-cBin(1)] ...
-                                + [hBin(1) dBin(1) cBin(1)];
-                    xyzProposal = rotation_matrix([0 0 1],proposals(3)) ...
-                                  *(proposals(2)*[0 1 0]') ... 
-                                  + [0 0 proposals(1)]';
-                    if inShape(shp,xyzProposal')
-                        leafStartPoints(iLeaf,:) = xyzProposal';
-                        pointInShape = 1;
-                    end
-                end
-                % Calculate the structural variables of the sampled point
-                hProposal = proposals(1)/maxHeight;
-                cProposal = proposals(3);
-                edgeDistance = stem_to_alphashape_edge(shp,hProposal, ...
-                                                       cProposal, ...
-                                                       maxHorzDist, ...
-                                                       maxHeight, ...
-                                                       stemCoordinates);
-                dProposal = proposals(2)/edgeDistance;
-                % Set the leaf acceptance flag to positive
-                accepted = 1;
-                % Skip the sampling of LADD
-                continue
-            end
-        end
-        % Proposal values for the variables
-        hProposal = rand(1);
-        dProposal = rand(1);
-        cProposal = 2*pi*rand(1);
-        % LADD value on propsal point
-        funValues = [fDist_h(hProposal),fDist_d(dProposal), ...
-                     fDist_c(cProposal)];
-        vertValues = rand(1,3).*[maxfDist_h,maxfDist_d,maxfDist_c];
-        if all(vertValues < funValues)
-            % Probing the edge of alpha shape
-            if flagStemCoordinates == true
-                edgeValue = stem_to_alphashape_edge(shp,hProposal, ...
-                                                    cProposal, ...
-                                                    maxHorzDist, ...
-                                                    maxHeight, ...
-                                                    stemCoordinates);
-            else
-                edgeValue = stem_to_alphashape_edge(shp,hProposal, ...
-                                                    cProposal, ...
-                                                    maxHorzDist, ...
-                                                    maxHeight);
-            end
-            % Check the if the distance to edge is nonzero
-            if edgeValue == 0
-                % The first two probe points are not inside the shape
-                continue
-            end
-            edgeValue = yCoord(edgeIndex);
-            % Position coordinates of the leaf start point
-            hLeaf = maxHeight*hProposal;
-            dLeaf = edgeValue*dProposal;
-            cLeaf = cProposal;
-            if flagStemCoordinates == true
-                leafStartPoints(iLeaf,:) = (rotation_matrix([0 0 1],cLeaf) ...
-                                           *[0 1 0]')'*dLeaf ...
-                                           +[stemCen(1:2) hLeaf];
-            else
-                leafStartPoints(iLeaf,:) = (rotation_matrix([0 0 1],cLeaf) ...
-                                           *[0 1 0]')'*dLeaf + [0 0 hLeaf];
-            end
-            accepted = 1;
-        end
+    % Sampling leaf position   
+    if 0
+        leafStartPoints(iLeaf,:) = sample_leaf_position_LADD(fDist_h, ...
+                                       fDist_d,fDist_c,maxfDist_h, ...
+                                       maxfDist_d,maxfDist_c, ...
+                                       maxHorzDist,maxHeight, ...
+                                       stemCoordinates);
+    else
+        leafStartPoints(iLeaf,:) = leaf_position_LADD_and_pc(aShape, ...
+                                       fDist_h,maxfDist_h,xEdges, ...
+                                       yEdges,zEdges,pcVoxels,voxelInd, ...
+                                       maxHeight);
     end
+    % Leaf height value
+    hLeaf = leafStartPoints(iLeaf,3)/maxHeight;
+    % Leaf compass direction value
+    cLeaf = xyz_to_compass_dir(leafStartPoints(iLeaf,:),stemCoordinates);
+    % Leaf distance from stem value
+    dLeaf = stem_to_alphashape_edge(aShape,hLeaf,cLeaf,maxHorzDist, ...
+                                    maxHeight,stemCoordinates);
 
     % Sampling leaf normal orientation with LOD
     % Leaf inclination angle
@@ -393,7 +375,7 @@ while leafArea < candidateArea
             accepted = 0;
             while accepted == 0
                 incProposal = rand(1)*pi/2;
-                dParams = fun_inc_params(hProposal,dProposal,cProposal);
+                dParams = fun_inc_params(hLeaf,dLeaf,cLeaf);
                 funValue = f_inc(incProposal,dParams(1),dParams(2));
                 vertValue = 1.5*rand(1); % all de Wit values are below 1.5
                 if vertValue < funValue
@@ -404,7 +386,7 @@ while leafArea < candidateArea
         case 'beta'
             % Sample inclination angle by inverse transform sampling
             u = rand(1);
-            dParams = fun_inc_params(hProposal,dProposal,cProposal);
+            dParams = fun_inc_params(hLeaf,dLeaf,cLeaf);
             incAngles(iLeaf) = F_inc_inv(u,dParams(1),dParams(2));
     end
     % Leaf azimuth angle
@@ -415,7 +397,7 @@ while leafArea < candidateArea
             accepted = 0;
             while accepted == 0
                 azProposal = rand(1)*2*pi;
-                dParams = fun_az_params(hProposal,dProposal,cProposal);
+                dParams = fun_az_params(hLeaf,dLeaf,cLeaf);
                 funValue = f_az(azProposal,dParams(1),dParams(2));
                 vertValue = f_az(dParams(1),dParams(1),dParams(2))*rand(1);
                 if vertValue < funValue
@@ -428,10 +410,10 @@ while leafArea < candidateArea
     % Sampling leaf surface area with LSD
     switch dType_size
         case 'uniform'
-            dParams = fun_size_params(hProposal,dProposal,cProposal);
+            dParams = fun_size_params(hLeaf,dLeaf,cLeaf);
             sampledArea = (dParams(2)-dParams(1))*rand(1) + dParams(1);
         case'normal'
-            dParams = fun_size_params(hProposal,dProposal,cProposal);
+            dParams = fun_size_params(hLeaf,dLeaf,cLeaf);
             sampledArea = sqrt(dParams(2))*randn(1) + dParams(1);
     end
     leafArea = leafArea + sampledArea;
@@ -476,7 +458,7 @@ toc
 %% Add leaves to the shape without intersections
 disp('Adding leaves to the model without intersections')
 tic
-Leaves = add_leaves_to_alphashape(shp, ...
+Leaves = add_leaves_to_alphashape(aShape, ...
                                   Leaves, ...
                                   totalLeafArea, ....
                                   leafStartPoints, ...

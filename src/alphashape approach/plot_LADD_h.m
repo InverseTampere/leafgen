@@ -22,8 +22,9 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dType_h;
-if ~any(strcmp(dType,{'uniform','polynomial','polynomialmixturemodel', ...
-        'weibull','weibullmixturemodel','beta','betamixturemodel'}))
+if ~any(strcmp(dType,{'none','uniform','polynomial', ...
+        'polynomialmixturemodel','weibull','weibullmixturemodel', ...
+        'beta','betamixturemodel'}))
     error("LADD height distribution type not recognized.")
 end
 

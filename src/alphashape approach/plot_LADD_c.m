@@ -30,7 +30,7 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dType_c;
-if ~any(strcmp(dType,{'uniform','vonmises','vonmisesmixturemodel'}))
+if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixturemodel'}))
     error("LADD compass direction distribution type not recognized.")
 end
 

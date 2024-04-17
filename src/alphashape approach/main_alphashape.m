@@ -28,8 +28,8 @@ tris = [1, 2, 3];
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dType_h = 'uniform';
-TargetDistributions.p_h = [];
+TargetDistributions.dType_h = 'betamixturemodel';
+TargetDistributions.p_h = [22 3 41 50 0.85];
 TargetDistributions.nBins_h = 10;
 
 % LADD relative distance from stem
@@ -62,7 +62,7 @@ stemCoordinates = [   0,      0,                  0;
                       0,      0,   max(pCloud(:,3))];
 %% Generate foliage
 
-totalLeafArea = 50;
+totalLeafArea = 20;
 
 [Leaves,aShape] = generate_foliage_alphashape(pCloud,TargetDistributions, ...
                                      totalLeafArea,vertices,tris, ...
@@ -72,7 +72,7 @@ totalLeafArea = 50;
 
 %% Visualize the foliage
 
-figure(1), clf
+figure, clf
 
 if 1
     % Plot point cloud, alphashape and stem
@@ -80,7 +80,7 @@ if 1
     ax1 = nexttile;
     pc = aShape.Points;
     plot3(pc(:,1),pc(:,2),pc(:,3),'k.','MarkerSize',1)
-    hold on, grid on
+    hold on, grid on, axis equal
     plot(aShape,'FaceColor','m','FaceAlpha',0.2)
     pcTop = max(pc(:,3));
     if exist('stemCoordinates','var')
@@ -89,6 +89,9 @@ if 1
     else
         plot3([0 0],[0 0],[0 pcTop],'c-','LineWidth',3)
     end
+    xl = xlim;
+    yl = ylim;
+    zl = zlim;
     ax2 = nexttile;
     Link = linkprop([ax1, ax2],{'CameraUpVector', 'CameraPosition', ...
                     'CameraTarget', 'XLim', 'YLim', 'ZLim'});
@@ -99,13 +102,15 @@ end
 hLeaf = Leaves.plot_leaves();
 % Set leaf color
 set(hLeaf,'FaceColor',[0,150,0]./255,'EdgeColor','none');
-grid on
-axis equal;
+grid on, axis equal, xlim(ax2,xl), ylim(ax2,yl), zlim(ax2,zl)
 xlabel('x')
 ylabel('y')
 zlabel('z')
 
 %% Plot leaf distributions
+
+TargetDistributions.dType_d = 'none';
+TargetDistributions.dType_c = 'none';
 
 plot_LADD_h(aShape,Leaves,TargetDistributions);
 plot_LADD_d(aShape,Leaves,TargetDistributions, ...
