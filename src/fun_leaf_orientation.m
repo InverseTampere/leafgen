@@ -9,28 +9,64 @@ function [leafDir,leafNormal,twigStart,twigEnd] = fun_leaf_orientation( ...
                                                     TwigDirDistribution,...
                                                     Phyllotaxis)
 
+% Function definitions
+fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
+fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
+fun_dewit = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
+
 % Define the distribution function for leaf inclination angle
 switch dTypeLodInc
 
+    case 'uniform'
+        % Uniform distribution
+        f_inc = @(x,p) 2/pi;
+        max_f_inc = @(p) 2/pi;
+        % Set sampling type to rejection sampling
+        lod_inc_sampling = 'rejection sampling';
+
+    case 'spherical'
+        % Spherical distribution function
+        f_inc = @(x,p) sin(x);
+        % Inverse of cumulative density function
+        F_inc_inv = @(y,p) acos(1-y);
+        % Set sampling type to inverse sampling
+        lod_inc_sampling = 'inverse sampling';
+
     case 'dewit'
-        % de Wit distribution function
-        f_inc = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
+        % Generalized de Wit's distribution function
+        f_inc = @(x,p) fun_dewit(x,p(1),p(2));
+        % Upper limit for the distribution
+        max_f_inc = @(p) max(f_inc([0 1 2 3]*(pi/p(2)),p(1),p(2)));
+        % Set sampling type to rejection sampling
+        lod_inc_sampling = 'rejection sampling';
 
     case 'beta'
         % Beta distribution density function
-        f_inc = @(x,a,b) (1/beta(a,b))*(x/(pi/2)).^(a-1) ...
-                         .*(1-(x/(pi/2))).^(b-1);
+        f_inc = @(x,p) fun_beta(2*x/pi,p(1),p(2));
         % Inverse of cumulative density function
-        F_inc_inv = @(y,a,b) (pi/2)*betaincinv(y,a,b);
+        F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p(1),p(2));
+        % Set sampling type to inverse sampling
+        lod_inc_sampling = 'inverse sampling';
 
 end
 
 % Define the distribution function for leaf azimuth angle
 switch dTypeLodAz
 
+    case 'uniform'
+        % Uniform distribution
+        f_az = @(x,p) 1/(2*pi);
+        max_f_inc = @(p) 1/(2*pi);
+        % Set sampling type to rejection sampling
+        lod_az_sampling = 'rejection sampling';
+
     case 'vonmises'
         % Von Mises distribution density function
-        f_az = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
+        f_az = @(x,p) fun_vonmises(x,p(1),p(2));
+        % Upper limit for the distribution
+        max_f_az = @(p) fun_vonmises(p(1),p(1),p(2));
+        % Set sampling type to rejection sampling
+        lod_az_sampling = 'rejection sampling';
 
 end
 
@@ -71,51 +107,44 @@ for iLeaf = 1:nLeaves
         
 
     % Sample the leaf inclination angle
-    switch dTypeLodInc
+    switch lod_inc_sampling
 
-        case 'dewit'
+        case 'rejection sampling'
             % Sample inclination angle value with acceptance-rejection
             % sampling
             accepted = 0;
             while accepted == 0
-                proposal = rand(1)*pi/2;
-                funValue = f_inc(proposal,dParametersLodInc(1), ...
-                                 dParametersLodInc(2));
-                vertValue = 1.5*rand(1); % all de Wit values are below 1.5
+                incProposal = rand(1)*pi/2;
+                funValue = f_inc(incProposal,dParametersLodInc);
+                vertValue = rand(1)*max_f_inc(dParametersLodInc);
                 if vertValue < funValue
-                    incAngles(iLeaf) = proposal;
+                    incAngles(iLeaf) = incProposal;
                     accepted = 1;
                 end
             end
-            
-        case 'beta'
+
+        case 'inverse sampling'
             % Sample inclination angle by inverse transform sampling
             u = rand(1);
-            incAngles(iLeaf) = F_inc_inv(u,dParametersLodInc(1), ...
-                                         dParametersLodInc(2));
+            incAngles(iLeaf) = F_inc_inv(u,dParametersLodInc);
 
     end
 
     % Sample the leaf azimuth angle
-    switch dTypeLodAz
-
-        case 'vonmises'
+    switch lod_az_sampling
+        case 'rejection sampling'
             % Sample azimuth angle value with acceptance-rejection
             % sampling
             accepted = 0;
             while accepted == 0
-                proposal = rand(1)*2*pi;
-                funValue = f_az(proposal,dParametersLodAz(1), ...
-                                dParametersLodAz(2));
-                vertValue = f_az(dParametersLodAz(1), ...
-                                 dParametersLodAz(1), ...
-                                 dParametersLodAz(2))*rand(1);
+                azProposal = rand(1)*2*pi;
+                funValue = f_az(azProposal,dParametersLodAz);
+                vertValue = rand(1)*max_f_az(dParametersLodAz);
                 if vertValue < funValue
-                    azAngles(iLeaf) = proposal;
+                    azAngles(iLeaf) = azProposal;
                     accepted = 1;
                 end
             end
-
     end
 
     % Unit vector of the leaf normal (y-axis assumed as north direction)

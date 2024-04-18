@@ -8,9 +8,7 @@ function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
 %% Initialize values
 alpha = 1;
 stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
-nBinsPC_h = 100;
-nBinsPC_d = 100;
-nBinsPC_c = 100;
+voxelEdge = 0.15;
 
 %% Read inputs
 
@@ -24,9 +22,8 @@ while i <= NArg
                 alpha = varargin{i+1};
             case 'stemcoordinates'
                 stemCoordinates = varargin{i+1};
-            case 'pcpositionsampling'
-                pcSamplingWeight = varargin{i+1};
-                flagPCPositionSampling = true;
+            case 'voxelsize'
+                voxelEdge = varargin{i+1};
         end
     end
     i = i + 1;
@@ -148,24 +145,52 @@ end
 dType_inc = TargetDistributions.dType_inc;
 fun_inc_params = TargetDistributions.fun_inc_params;
 switch dType_inc
+    case 'uniform'
+        % Uniform distribution
+        f_inc = @(x,p) 2/pi;
+        max_f_inc = @(p) 2/pi;
+        % Set sampling type to rejection sampling
+        lod_inc_sampling = 'rejection sampling';
+    case 'spherical'
+        % Spherical distribution function
+        f_inc = @(x,p) sin(x);
+        % Inverse of cumulative density function
+        F_inc_inv = @(y,p) acos(1-y);
+        % Set sampling type to inverse sampling
+        lod_inc_sampling = 'inverse sampling';
     case 'dewit'
-        % de Wit distribution function
-        f_inc = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
+        % Generalized de Wit's distribution function
+        f_inc = @(x,p) fun_dewit(x,p(1),p(2));
+        % Upper limit for the distribution
+        max_f_inc = @(p) max(f_inc([0 1 2 3]*(pi/p(2)),p(1),p(2)));
+        % Set sampling type to rejection sampling
+        lod_inc_sampling = 'rejection sampling';
     case 'beta'
         % Beta distribution density function
-        f_inc = @(x,a,b) (1/beta(a,b))*(x/(pi/2)).^(a-1) ...
-                         .*(1-(x/(pi/2))).^(b-1);
+        f_inc = @(x,p) fun_beta(2*x/pi,p(1),p(2));
         % Inverse of cumulative density function
-        F_inc_inv = @(y,a,b) (pi/2)*betaincinv(y,a,b);
+        F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p(1),p(2));
+        % Set sampling type to inverse sampling
+        lod_inc_sampling = 'inverse sampling';
 end
 % Distribution function and parameter value function for leaf azimuth angle
 % distribution
 dType_az = TargetDistributions.dType_az;
 fun_az_params = TargetDistributions.fun_az_params;
 switch dType_az
+    case 'uniform'
+        % Uniform distribution
+        f_az = @(x,p) 1/(2*pi);
+        max_f_inc = @(p) 1/(2*pi);
+        % Set sampling type to rejection sampling
+        lod_az_sampling = 'rejection sampling';
     case 'vonmises'
         % Von Mises distribution density function
-        f_az = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
+        f_az = @(x,p) fun_vonmises(x,p(1),p(2));
+        % Upper limit for the distribution
+        max_f_az = @(p) fun_vonmises(p(1),p(1),p(2));
+        % Set sampling type to rejection sampling
+        lod_az_sampling = 'rejection sampling';
 end
 %% Leaf size distriubtion functions
 dType_size = TargetDistributions.dType_size;
@@ -184,79 +209,9 @@ maxHorzDist = max(horzDistances);
 % Maximum height of the point cloud members
 maxHeight = max(treePointCloud(:,3));
 
-%% Point cloud probability voxelization
-disp('Calculating point cloud voxelization')
-% tic
-% if flagPCPositionSampling == true
-% 
-%     % Bin edges for each cylindrical variable
-%     binEdgesH = linspace(0,maxHeight,nBinsPC_h+1);
-%     binEdgesD = log(linspace(exp(0),exp(maxHorzDist),nBinsPC_d+1));
-%     binEdgesC = linspace(0,2*pi,nBinsPC_c+1);
-% 
-%     pcDensityInVolume = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,1); %zeros(nBinsPC_h,nBinsPC_d,nBinsPC_c);
-%     volumeInd = zeros(nBinsPC_h*nBinsPC_d*nBinsPC_c,3);
-%     k = 0;
-%     for i_h = 1:nBinsPC_h
-%         % Part of point cloud within the height bin
-%         inHeightBin = all([(treePointCloud(:,3)<binEdgesH(i_h+1)) ...
-%                            (treePointCloud(:,3)>=binEdgesH(i_h))],2);
-%         pcHBin = treePointCloud(inHeightBin,:);
-% 
-%         for i_d = 1:nBinsPC_d
-%             % Part of point cloud within the height and distance bin
-%             pointDist = sqrt(pcHBin(:,1).^2+pcHBin(:,2).^2);
-%             inDistanceBin = all([(pointDist<binEdgesD(i_d+1)) ...
-%                                  (pointDist>=binEdgesD(i_d))],2);
-%             pcHDBin = pcHBin(inDistanceBin,:);
-% 
-%             for i_c = 1:nBinsPC_c
-%                 % Increment loop counter
-%                 k = k + 1;
-%                 % Volume of cylinder slice
-%                 hSlice = binEdgesH(i_h+1) - binEdgesH(i_h);
-%                 cRatio = (binEdgesC(i_c+1)-binEdgesC(i_c))/(2*pi);
-%                 if i_d == 1
-%                     vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2);
-%                 else
-%                     vol = cRatio*hSlice*(pi*binEdgesD(i_d+1).^2 ...
-%                           - pi*binEdgesD(i_d).^2);
-%                 end
-%                 % Volume indices
-%                 volumeInd(k,:) = [i_h i_d i_c];
-%                 % Find all point cloud elements within the slice
-%                 hPoints = pcHDBin(:,3);
-%                 dPoints = sqrt(pcHDBin(:,1).^2+pcHDBin(:,2).^2);
-%                 cPoints = zeros(size(pcHDBin,1),1);
-%                 xNeg = pcHDBin(:,1) <= 0;
-%                 xPos = pcHDBin(:,1) >  0;
-%                 xNegDir = [pcHDBin(xNeg,1:2) zeros(sum(xNeg),1)];
-%                 xNegDir = xNegDir./sqrt(sum(xNegDir.^2,2));
-%                 xPosDir = [pcHDBin(xPos,1:2) zeros(sum(xPos),1)];
-%                 xPosDir = xPosDir./sqrt(sum(xPosDir.^2,2));
-%                 cPoints(xNeg) = acos(xNegDir*[0 1 0]');
-%                 cPoints(xPos) = 2*pi - acos(xPosDir*[0 1 0]');
-%                 pointsInSlice = all([hPoints<binEdgesH(i_h+1) ...
-%                                      hPoints>=binEdgesH(i_h) ...
-%                                      dPoints<binEdgesD(i_d+1) ...
-%                                      dPoints>=binEdgesD(i_d) ...
-%                                      cPoints<binEdgesC(i_c+1) ...
-%                                      cPoints>=binEdgesC(i_c)] ...
-%                                      ,2);
-%                 % Calculate the point density in slice
-%                 pcDensityInVolume(k) = sum(pointsInSlice)/vol;
-%             end
-%         end
-%     end
-%     cumulativePCD = cumsum(pcDensityInVolume);
-%     cumulativeDistPCD = cumulativePCD./cumulativePCD(end);
-% 
-% end
-% toc
-
 %% Caculating voxel array and finding which voxels contain points
+disp('Calculating point cloud voxelization')
 tic
-voxelEdge = 0.15;
 xMin = min(treePointCloud(:,1));
 xMax = max(treePointCloud(:,1));
 yMin = min(treePointCloud(:,2));
@@ -272,12 +227,6 @@ zEdges = [zMin zMin+cumsum(voxelEdge*ones(1,nz))];
 
 protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 1 0 1];
 voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
-% voxelBottom = [1 4 3 2 1]';
-% voxelTop = [5 8 7 6 5]';
-% sideVert00 = [1 5]';
-% sideVert10 = [4 8]';
-% sideVert01 = [2 6]';
-% sideVert11 = [3 7]';
 
 voxelPointTreshold = 5;
 pcVoxels = zeros(nx,ny,nz);
@@ -368,38 +317,38 @@ while leafArea < candidateArea
 
     % Sampling leaf normal orientation with LOD
     % Leaf inclination angle
-    switch dType_inc
-        case 'dewit'
+    switch lod_inc_sampling
+        case 'rejection sampling'
             % Sample inclination angle value with acceptance-rejection
             % sampling
             accepted = 0;
             while accepted == 0
                 incProposal = rand(1)*pi/2;
                 dParams = fun_inc_params(hLeaf,dLeaf,cLeaf);
-                funValue = f_inc(incProposal,dParams(1),dParams(2));
-                vertValue = 1.5*rand(1); % all de Wit values are below 1.5
+                funValue = f_inc(incProposal,dParams);
+                vertValue = rand(1)*max_f_inc(dParams);
                 if vertValue < funValue
                     incAngles(iLeaf) = incProposal;
                     accepted = 1;
                 end
             end
-        case 'beta'
+        case 'inverse sampling'
             % Sample inclination angle by inverse transform sampling
             u = rand(1);
             dParams = fun_inc_params(hLeaf,dLeaf,cLeaf);
-            incAngles(iLeaf) = F_inc_inv(u,dParams(1),dParams(2));
+            incAngles(iLeaf) = F_inc_inv(u,dParams);
     end
     % Leaf azimuth angle
-    switch dType_az
-        case 'vonmises'
+    switch lod_az_sampling
+        case 'rejection sampling'
             % Sample azimuth angle value with acceptance-rejection
             % sampling
             accepted = 0;
             while accepted == 0
                 azProposal = rand(1)*2*pi;
                 dParams = fun_az_params(hLeaf,dLeaf,cLeaf);
-                funValue = f_az(azProposal,dParams(1),dParams(2));
-                vertValue = f_az(dParams(1),dParams(1),dParams(2))*rand(1);
+                funValue = f_az(azProposal,dParams);
+                vertValue = rand(1)*max_f_az(dParams);
                 if vertValue < funValue
                     azAngles(iLeaf) = azProposal;
                     accepted = 1;
