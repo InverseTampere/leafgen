@@ -68,8 +68,8 @@ tris = [
 ];
 
 %% Generate leaf-cylinder library
-% LeafCylinderLibrary = load('LeafCyliderLibraryExample.mat');
-% return
+LeafCylinderLibrary = load('LeafCyliderLibraryExample.mat');
+return
 tic
 LeafCylinderLibrary = generate_leaf_cylinder_library(Nodes, ...
                         LeafDistributions, ...
@@ -82,7 +82,7 @@ toc
 
 %% Initialize QSM object.
 % QSM = QSMBCylindrical('example');
-filename = "pm\qsm_Small.mat";
+filename = "qsm_Small.mat";
 load(filename); % contains the struct named "qsm"
 QSM = QSMBCylindrical(qsm);
 
@@ -124,7 +124,7 @@ TargetDistributions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
 targetLeafArea = 50;
 
 tic
-Leaves = populate_qsm_with_leaves(QSM,LeafCylinderLibrary,Nodes, ...
+Leaves = populate_qsm_with_leaves(QSM,LeafCylinderLibrary, ...
                                   TargetDistributions,targetLeafArea);
 toc
 
@@ -148,6 +148,12 @@ axis equal;
 xlabel('x')
 ylabel('y')
 zlabel('z')
+
+%% Plot leaf distributions
+
+plot_LADD_h_LCL(QSM,Leaves,TargetDistributions);
+plot_LADD_d_LCL(QSM,Leaves,TargetDistributions);
+plot_LADD_c_LCL(QSM,Leaves,TargetDistributions);
 
 %% Save the leaf cylinder library as a .mat file
 
