@@ -138,4 +138,4 @@ custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.5,...
 xlabel("relative height")
 ylabel("leaf area frequency density [m^2]")
 axis tight
-legend('Location','southeast')
+legend('Location','northwest')

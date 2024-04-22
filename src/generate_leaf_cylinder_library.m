@@ -154,7 +154,7 @@ for  iLodInc1 = 1:nLodInc1
     % cylinder)
     if (iInc == 1 || iInc == nInc) && iAz > 1
         Leaves = LeavesObjects{iLen,iRad,iInc,1,iAr,iLodInc1,iLodInc2, ...
-                               iLodAz1,iLodAz2,iLsd2,iLsd2,iCyl};
+                               iLodAz1,iLodAz2,iLsd1,iLsd2,iCyl};
         LeavesObjects{iLen,iRad,iInc,iAz,iAr,iLodInc1,iLodInc2,iLodAz1, ...
                       iLodAz2,iLsd1,iLsd2,iCyl} = Leaves;
         clearvars Leaves;

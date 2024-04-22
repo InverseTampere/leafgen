@@ -14,16 +14,16 @@ LeafDistributions.dTypeLsd    = 'uniform';
 %% Leaf-cylinder library nodes
 
 % Inclination angle distribution nodes
-nIncNodes1    = 3 %2;
-nIncNodes2    = 3 %2;
+nIncNodes1    = 2;
+nIncNodes2    = 2;
 aInterval     = [-1 1];
 bInterval     = [ 2 4];
 Nodes.LodInc1 = linspace(aInterval(1),aInterval(2),nIncNodes1);
 Nodes.LodInc2 = linspace(bInterval(1),bInterval(2),nIncNodes2);
 
 % Azimuth angle distribution nodes
-nAzNodes1      = 6 %3;
-nAzNodes2      = 3 %2;
+nAzNodes1      = 3;
+nAzNodes2      = 2;
 muInterval     = [0 2*pi]; % *(1-1/nAzNodes1)
 kappaInterval  = [0.01 0.5];
 Nodes.LodAz1   = linspace(muInterval(1),muInterval(2),nAzNodes1);
@@ -39,11 +39,11 @@ Nodes.Lsd2 = linspace(ubInterval(1),ubInterval(2),nLsdNodes2);
 
 %% Cylinder attribute nodes
 
-nCylLenNodes = 3 %2;
-nCylRadNodes = 4 %2;
-nCylIncNodes = 5 %3;
-nCylAzNodes  = 6 %3;
-nCylArNodes  = 3 %2;
+nCylLenNodes = 2;
+nCylRadNodes = 2;
+nCylIncNodes = 3;
+nCylAzNodes  = 3;
+nCylArNodes  = 2;
 
 Nodes.cylinderLength = linspace(0.10,0.5,nCylLenNodes);
 Nodes.cylinderRadius = linspace(0.05,0.2,nCylRadNodes);

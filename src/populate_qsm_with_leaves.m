@@ -221,8 +221,8 @@ for iCyl = 1:length(cylinderLeafArea)
         % Inclination angle rotation matrix
         rotAxis = [-1 0 0];
         incRM = rotation_matrix(rotAxis,trInc);
-        % Azimuth angle rotation matrix
-        azRM = rotation_matrix([0 0 1],cylAzAngle);
+        % Azimuth angle rotation matrix (no azimuth rotation
+        azRM = eye(3);
     end    
     % Inclination angle rotations
     leafStartPoints = (incRM*leafStartPoints')';

@@ -36,7 +36,7 @@ switch dTypeLodInc
         % Generalized de Wit's distribution function
         f_inc = @(x,p) fun_dewit(x,p(1),p(2));
         % Upper limit for the distribution
-        max_f_inc = @(p) max(f_inc([0 1 2 3]*(pi/p(2)),p(1),p(2)));
+        max_f_inc = @(p) max(f_inc([0 1 2 3]*(pi/p(2)),p));
         % Set sampling type to rejection sampling
         lod_inc_sampling = 'rejection sampling';
 
@@ -44,7 +44,7 @@ switch dTypeLodInc
         % Beta distribution density function
         f_inc = @(x,p) fun_beta(2*x/pi,p(1),p(2));
         % Inverse of cumulative density function
-        F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p(1),p(2));
+        F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p);
         % Set sampling type to inverse sampling
         lod_inc_sampling = 'inverse sampling';
 
