@@ -149,6 +149,19 @@ for  iLodInc1 = 1:nLodInc1
                     iIter,nIter) ...
            );
 
+    % If cylinder inclination is vertical pick already made leaf cylinder
+    % if possible (cylinder azimuth loses significance for vertical 
+    % cylinder)
+    if (iInc == 1 || iInc == nInc) && iAz > 1
+        Leaves = LeavesObjects{iLen,iRad,iInc,1,iAr,iLodInc1,iLodInc2, ...
+                               iLodAz1,iLodAz2,iLsd2,iLsd2,iCyl};
+        LeavesObjects{iLen,iRad,iInc,iAz,iAr,iLodInc1,iLodInc2,iLodAz1, ...
+                      iLodAz2,iLsd1,iLsd2,iCyl} = Leaves;
+        clearvars Leaves;
+        % Skip to next iteration of the active for-loop
+        continue
+    end
+
 
     % Initialize Leaves object
     Leaves = LeafModelTriangle(vertices,tris);
