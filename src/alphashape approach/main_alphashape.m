@@ -28,17 +28,17 @@ tris = [1, 2, 3];
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dType_h = 'betamixturemodel';
+TargetDistributions.dType_h = '';%'betamixturemodel';
 TargetDistributions.p_h = [22 3 41 50 0.85];
 TargetDistributions.nBins_h = 10;
 
 % LADD relative distance from stem
-TargetDistributions.dType_d = 'beta';
+TargetDistributions.dType_d = '';%'beta';
 TargetDistributions.p_d = [2 1];
 TargetDistributions.nBins_d = 10;
 
 % LADD compass direction
-TargetDistributions.dType_c = 'vonmisesmixturemodel';
+TargetDistributions.dType_c = '';%'vonmisesmixturemodel';
 TargetDistributions.p_c = [pi 0.1 6/5*pi 0.1 0.6];
 TargetDistributions.nBins_c = 10;
 

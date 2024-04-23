@@ -9,6 +9,7 @@ function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
 alpha = 1;
 stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
 voxelEdge = 0.15;
+leafAttLabels = ones(size(treePointCloud,1),1);
 fDist_h = []; fDist_d = []; fDist_c = [];
 maxfDist_h = []; maxfDist_d = []; maxfDist_c = [];
 
@@ -26,6 +27,8 @@ while i <= NArg
                 stemCoordinates = varargin{i+1};
             case 'voxelsize'
                 voxelEdge = varargin{i+1};
+            case 'leafattractorlabels'
+                leafAttLabels = varargin{i+1};
         end
     end
     i = i + 1;
@@ -210,7 +213,10 @@ maxHeight = max(treePointCloud(:,3));
 
 %% Caculating voxel array and finding which voxels contain points
 disp('Calculating point cloud voxelization')
+
 tic
+
+% Voxel parameters
 xMin = min(treePointCloud(:,1));
 xMax = max(treePointCloud(:,1));
 yMin = min(treePointCloud(:,2));
@@ -227,18 +233,26 @@ xCenters = 0.5*(xEdges(1:end-1)+xEdges(2:end));
 yCenters = 0.5*(yEdges(1:end-1)+yEdges(2:end));
 zCenters = 0.5*(zEdges(1:end-1)+zEdges(2:end));
 
-protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 1 0 1];
-voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
-
-voxelPointTreshold = 5;
-pcVoxels = zeros(nx,ny,nz);
-k = 0;
+% Initialize visualizaiton of point cloud voxelization
 figure, clf, hold on, grid on, axis equal, view(3)
 plot3(treePointCloud(:,1),treePointCloud(:,2),treePointCloud(:,3), ...
       'g.','MarkerSize',0.5)
-pcRemaining = treePointCloud;
+protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 1 0 1];
+voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
+
+% Pick the leaf attractor points from point cloud (if not supplied by user, 
+% all point cloud points act as leaf attractors)
+pcRemaining = treePointCloud(leafAttLabels,:);
+
+% Set the threshold for minimum amount of points needed to include a voxel
+% in point cloud voxelization
+voxelPointTreshold = 5;
+
+% Initialize loop variables
 voxelInd = cell(nx,ny,nz);
 voxelCenDir = zeros(nx,ny,nz);
+pcVoxels = zeros(nx,ny,nz);
+k = 0;
 for ix = 1:nx
     % Slice of point cloud corrseponding to the x voxel coordinates
     inXslice = all([(pcRemaining(:,1) < xEdges(ix+1)) ...
@@ -277,7 +291,9 @@ for ix = 1:nx
         end
     end
 end
+
 toc
+
 %% Initialize leaf object and candidate leaf area
 Leaves = LeafModelTriangle(vertices,tris);
 baseArea = Leaves.base_area;
