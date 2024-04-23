@@ -22,7 +22,7 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dType_h;
-if ~any(strcmp(dType,{'none','uniform','polynomial', ...
+if ~any(strcmp(dType,{'','uniform','polynomial', ...
         'polynomialmixturemodel','weibull','weibullmixturemodel', ...
         'beta','betamixturemodel'}))
     error("LADD height distribution type not recognized.")
@@ -43,7 +43,7 @@ binEdges = linspace(0,1,nBins+1);
 
 %% Plot the target distribution function
 
-if dType ~= "none"
+if dType ~= ""
     switch dType
         case 'uniform'
             yy = ones(size(xx));

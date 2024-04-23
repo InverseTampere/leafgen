@@ -9,6 +9,8 @@ function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
 alpha = 1;
 stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
 voxelEdge = 0.15;
+fDist_h = []; fDist_d = []; fDist_c = [];
+maxfDist_h = []; maxfDist_d = []; maxfDist_c = [];
 
 %% Read inputs
 
@@ -37,7 +39,6 @@ fun_dewit = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
 % Distribution function and parameters for relative height
 dType_h = TargetDistributions.dType_h;
 p_h     = TargetDistributions.p_h;
-% nBins_h = TargetDistributions.nBins_h;
 switch dType_h
     case 'uniform'
         fDist_h = @(h) 1;
@@ -79,7 +80,6 @@ end
 % sub-branch
 dType_d = TargetDistributions.dType_d;
 p_d     = TargetDistributions.p_d;
-% nBins_d = TargetDistributions.nBins_d;
 switch dType_d
     case 'uniform'
         fDist_d = @(d) 1;
@@ -120,7 +120,6 @@ end
 % Distribution function and parameters for compass direction
 dType_c = TargetDistributions.dType_c;
 p_c     = TargetDistributions.p_c;
-% nBins_c = TargetDistributions.nBins_c;
 switch dType_c
     case 'uniform'
         fDist_c = @(c) 1/(2*pi);
@@ -224,6 +223,9 @@ nz = ceil((zMax-zMin)/voxelEdge);
 xEdges = [xMin xMin+cumsum(voxelEdge*ones(1,nx))];
 yEdges = [yMin yMin+cumsum(voxelEdge*ones(1,ny))];
 zEdges = [zMin zMin+cumsum(voxelEdge*ones(1,nz))];
+xCenters = 0.5*(xEdges(1:end-1)+xEdges(2:end));
+yCenters = 0.5*(yEdges(1:end-1)+yEdges(2:end));
+zCenters = 0.5*(zEdges(1:end-1)+zEdges(2:end));
 
 protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 1 0 1];
 voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
@@ -236,6 +238,7 @@ plot3(treePointCloud(:,1),treePointCloud(:,2),treePointCloud(:,3), ...
       'g.','MarkerSize',0.5)
 pcRemaining = treePointCloud;
 voxelInd = cell(nx,ny,nz);
+voxelCenDir = zeros(nx,ny,nz);
 for ix = 1:nx
     % Slice of point cloud corrseponding to the x voxel coordinates
     inXslice = all([(pcRemaining(:,1) < xEdges(ix+1)) ...
@@ -253,6 +256,10 @@ for ix = 1:nx
             k = k + 1;
             % Cell for voxel indices
             voxelInd{ix,iy,iz} = [ix iy iz];
+            % Compass direction of voxel center point wrt. stem
+            voxelCenter = [xCenters(ix) yCenters(iy) zCenters(iz)];
+            voxelCenDir(ix,iy,iz) = xyz_to_compass_dir(voxelCenter, ...
+                                                       stemCoordinates);
             % Find the number of points inside the voxel
             inXYZvoxel = all([(pcXYcolumn(:,3) < zEdges(iz+1)) ...
                               (pcXYcolumn(:,3) >= zEdges(iz))],2);
@@ -295,18 +302,13 @@ while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
     % Sampling leaf position   
-    if 0
-        leafStartPoints(iLeaf,:) = sample_leaf_position_LADD(fDist_h, ...
-                                       fDist_d,fDist_c,maxfDist_h, ...
-                                       maxfDist_d,maxfDist_c, ...
-                                       maxHorzDist,maxHeight, ...
-                                       stemCoordinates);
-    else
-        leafStartPoints(iLeaf,:) = leaf_position_LADD_and_pc(aShape, ...
-                                       fDist_h,maxfDist_h,xEdges, ...
-                                       yEdges,zEdges,pcVoxels,voxelInd, ...
-                                       maxHeight);
-    end
+    leafStartPoints(iLeaf,:) = sample_leaf_position(aShape, ...
+                                   fDist_h,fDist_d,fDist_c, ...
+                                   maxfDist_h,maxfDist_d,maxfDist_c, ...
+                                   maxHorzDist,maxHeight, ...
+                                   stemCoordinates, ...
+                                   xEdges,yEdges,zEdges, ...
+                                   pcVoxels,voxelInd,voxelCenDir);
     % Leaf height value
     hLeaf = leafStartPoints(iLeaf,3)/maxHeight;
     % Leaf compass direction value

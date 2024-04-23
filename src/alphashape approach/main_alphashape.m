@@ -108,9 +108,6 @@ zlabel('z')
 
 %% Plot leaf distributions
 
-TargetDistributions.dType_d = 'none';
-TargetDistributions.dType_c = 'none';
-
 plot_LADD_h(aShape,Leaves,TargetDistributions);
 plot_LADD_d(aShape,Leaves,TargetDistributions, ...
             'StemCoordinates',stemCoordinates);
