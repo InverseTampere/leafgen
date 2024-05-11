@@ -20,6 +20,11 @@ ParLabels = {'relative_height',...
              'index_in_branch'};
 
 CylinderParameters = QSM.get_block_properties(ParLabels);
+originalCylIndex   = (1:length(CylinderParameters.relative_height))';
+
+[CylinderParameters,originalCylIndex] = preprocess_cylinders( ...
+                                            CylinderParameters, ...
+                                            Nodes);
 
 % Calculate the relative distance of cylinders along subbranch
 CylinderParameters.relative_distance_along_subbranch = ...
@@ -241,7 +246,7 @@ for iCyl = 1:length(cylinderLeafArea)
     leafNormals(iIncFix,:) = -leafNormals(iIncFix,:);
     
     % Leaf parent cylinder
-    leafParent = iCyl;
+    leafParent = originalCylIndex(iCyl);
 
     % Library leaf object base area and leaf area scalings
     leafBaseArea  = LibraryObj.base_area;

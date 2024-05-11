@@ -8,8 +8,10 @@ function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
 %% Initialize values
 alpha = 1;
 stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
+pcSamplingWeights = 0;
 voxelEdge = 0.15;
-leafAttLabels = ones(size(treePointCloud,1),1);
+voxelThreshold = 5;
+leafAttLabels = true(size(treePointCloud,1),1);
 fDist_h = []; fDist_d = []; fDist_c = [];
 maxfDist_h = []; maxfDist_d = []; maxfDist_c = [];
 
@@ -25,10 +27,14 @@ while i <= NArg
                 alpha = varargin{i+1};
             case 'stemcoordinates'
                 stemCoordinates = varargin{i+1};
+            case 'pcsamplingweights'
+                pcSamplingWeights = varargin{i+1};
             case 'voxelsize'
                 voxelEdge = varargin{i+1};
+            case 'voxelthreshold'
+                voxelThreshold = varargin{i+1};
             case 'leafattractorlabels'
-                leafAttLabels = varargin{i+1};
+                leafAttLabels = logical(varargin{i+1});
         end
     end
     i = i + 1;
@@ -244,10 +250,6 @@ voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
 % all point cloud points act as leaf attractors)
 pcRemaining = treePointCloud(leafAttLabels,:);
 
-% Set the threshold for minimum amount of points needed to include a voxel
-% in point cloud voxelization
-voxelPointTreshold = 5;
-
 % Initialize loop variables
 voxelInd = cell(nx,ny,nz);
 voxelCenDir = zeros(nx,ny,nz);
@@ -277,9 +279,9 @@ for ix = 1:nx
             % Find the number of points inside the voxel
             inXYZvoxel = all([(pcXYcolumn(:,3) < zEdges(iz+1)) ...
                               (pcXYcolumn(:,3) >= zEdges(iz))],2);
-            % If the number of points surpasses voxel point treshold, set
+            % If the number of points surpasses voxel point threshold, set
             % voxel value to 1, otherwise 0
-            if sum(inXYZvoxel) >= voxelPointTreshold
+            if sum(inXYZvoxel) >= voxelThreshold
                 pcVoxels(ix,iy,iz) = 1;
                 % Visualize the voxel
                 voxelVertices = voxelEdge*protoVertices ...
@@ -293,6 +295,9 @@ for ix = 1:nx
 end
 
 toc
+
+%% Point cloud sampling bins
+pcSamplingBins = linspace(0,1,length(pcSamplingWeights)+1);
 
 %% Initialize leaf object and candidate leaf area
 Leaves = LeafModelTriangle(vertices,tris);
@@ -309,7 +314,7 @@ leafDir          = zeros(nInit,3);
 leafScaleFactors = zeros(nInit,3);
 
 %% Sample leaf positions, orientations and sizes
-disp('Sampling leaves from leaf distributions')
+disp('Sampling leaf positions')
 tic
 iLeaf = 0;
 leafArea = 0;
@@ -322,7 +327,8 @@ while leafArea < candidateArea
                                    fDist_h,fDist_d,fDist_c, ...
                                    maxfDist_h,maxfDist_d,maxfDist_c, ...
                                    maxHorzDist,maxHeight, ...
-                                   stemCoordinates, ...
+                                   stemCoordinates, pcSamplingBins, ...
+                                   pcSamplingWeights, ...
                                    xEdges,yEdges,zEdges, ...
                                    pcVoxels,voxelInd,voxelCenDir);
     % Leaf height value
