@@ -20,8 +20,8 @@ ParLabels = {'relative_height',...
              'index_in_branch'};
 
 CylinderParameters = QSM.get_block_properties(ParLabels);
-originalCylIndex   = (1:length(CylinderParameters.relative_height))';
 
+% Preprocess the cylinder lengths to better suit the leaf cylinder library
 [CylinderParameters,originalCylIndex] = preprocess_cylinders( ...
                                             CylinderParameters, ...
                                             Nodes);

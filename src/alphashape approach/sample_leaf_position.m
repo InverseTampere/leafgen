@@ -108,7 +108,6 @@ elseif isempty(fDist_d) && isempty(fDist_c)
 % Use heightwise and directionwise LADD (or point cloud) in positioning
 elseif isempty(fDist_d)
 
-
     accepted = 0;
     while accepted == 0
         % Proposal values for relative height and compass direction

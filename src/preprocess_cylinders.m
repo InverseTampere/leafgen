@@ -62,7 +62,8 @@ for iBranch = 1:max(branchIndex_US)
     branchIndex(k:kk)      = branchIndex_US(indCyl(permCyl));
     indexInBranch(k:kk)    = indexInBranch_US(indCyl(permCyl));
 
-    % Keep track of the sorting of original indices
+    % Keep track of the sorting of original indices (for correct leaf
+    % parent info on the end result)
     ogIndices(k:kk) = indCyl(permCyl);
 
     k = kk + 1;
