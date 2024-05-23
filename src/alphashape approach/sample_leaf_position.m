@@ -2,35 +2,54 @@ function leafStartPoint = sample_leaf_position(aShape, ...
                               fDist_h,fDist_d,fDist_c, ...
                               maxfDist_h,maxfDist_d,maxfDist_c, ...
                               maxHorzDist,maxHeight, ...
-                              stemCoordinates, pcSamplingBins, ...
+                              stemCoordinates, pcSamplingBinEdges, ...
                               pcSamplingWeights, ...
                               xEdges,yEdges,zEdges, ...
                               pcVoxels,voxelInd,voxelCenDir)
 
 
 
-
 % Use uniform sampling of alphashape (or point cloud) in positioning
 if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
 
+    uniformSampling = true;
     relHeight = rand(1);
-    iPCS = find(relHeight<pcSamplingBins,1,'first') - 1;
+    iPCS = find(relHeight<pcSamplingBinEdges,1,'first') - 1;
     if pcSamplingWeights(iPCS) >= rand(1)
-        % Point cloud sampling
-        cumulativeSum = cumsum(pcVoxels(:));
-        cumulativePDF = cumulativeSum./cumulativeSum(end);
-        k = find(cumulativePDF>rand(1),1,'first');
-        xyzInds = voxelInd{k};
-        ix = xyzInds(1);
-        iy = xyzInds(2);
-        iz = xyzInds(3);
-        % Uniformly sample a point inside the voxel
-        proposal = rand(1,3).*[xEdges(ix+1)-xEdges(ix) ...
-                               yEdges(iy+1)-yEdges(iy) ...
-                               zEdges(iz+1)-zEdges(iz)] ...
-                   + [xEdges(ix) yEdges(iy) zEdges(iz)];
-        leafStartPoint = proposal;
-    else
+        % Voxels inside the point cloud sampling bin
+        izLB = find(zEdges>maxHeight*pcSamplingBinEdges(iPCS),1, ...
+                    'first') - 1;
+        izUB = find(zEdges>maxHeight*pcSamplingBinEdges(iPCS+1),1, ...
+                    'first') - 1;
+        samplingBinVoxels = pcVoxels(:,:,izLB:izUB);
+        cumulativeSum = cumsum(samplingBinVoxels(:));
+        % Check whether there are point cloud voxels inside the sampling
+        % bin
+        if cumulativeSum(end) > 0 
+            uniformSampling = false;
+            % Point cloud sampling
+            cumulativePDF = cumulativeSum./cumulativeSum(end);
+            k = find(cumulativePDF>rand(1),1,'first');
+            if izLB > 1
+                belowVoxels = pcVoxels(:,:,1:(izLB-1));
+                k = k + length(belowVoxels(:));
+            end
+            xyzInds = voxelInd{k};
+            ix = xyzInds(1);
+            iy = xyzInds(2);
+            iz = xyzInds(3);
+            % Uniformly sample a point inside the voxel
+            proposal = rand(1,3).*[xEdges(ix+1)-xEdges(ix) ...
+                                   yEdges(iy+1)-yEdges(iy) ...
+                                   zEdges(iz+1)-zEdges(iz)] ...
+                       + [xEdges(ix) yEdges(iy) zEdges(iz)];
+            leafStartPoint = proposal;
+        else
+            uniformSampling = true;
+        end
+    end
+
+    if uniformSampling == true
         % Uniform sampling inside alphashape
         proposal = [0 0 relHeight*maxHeight];
         accepted = 0;
@@ -63,7 +82,7 @@ elseif isempty(fDist_d) && isempty(fDist_c)
         % Sample height value from heightwise LADD
         hLeaf = rejection_sampling(fDist_h,maxfDist_h);
         % Find index of point cloud sampling height bin
-        iPCS = find(hLeaf<pcSamplingBins,1,'first') - 1;
+        iPCS = find(hLeaf<pcSamplingBinEdges,1,'first') - 1;
         if pcSamplingWeights(iPCS) >= rand(1)
             % Corresponding height index in voxelization
             iz = find(zEdges>hLeaf,1,'first') - 1;
@@ -71,6 +90,9 @@ elseif isempty(fDist_d) && isempty(fDist_c)
             zSliceInds = voxelInd(:,:,iz);
             zSliceCol = zSlice(:);
             zSliceIndsCol = zSliceInds(:);
+            if sum(zSliceCol) == 0
+                continue
+            end
             cumulativeSum = cumsum(zSliceCol);
             cumulativePDF = cumulativeSum./cumulativeSum(end);
             k = find(cumulativePDF>rand(1),1,'first');
@@ -83,6 +105,7 @@ elseif isempty(fDist_d) && isempty(fDist_c)
                                    0] ...
                        + [xEdges(ix) yEdges(iy) hLeaf];
             leafStartPoint = proposal;
+            accepted = 1;
         else
             % Uniform sampling inside alphashape
             proposal = [0 0 hLeaf*maxHeight];
@@ -123,7 +146,7 @@ elseif isempty(fDist_d)
         cLeaf = cProposal;
 
         % Find index of point cloud sampling height bin
-        iPCS = find(hProposal<pcSamplingBins,1,'first') - 1;
+        iPCS = find(hProposal<pcSamplingBinEdges,1,'first') - 1;
         if pcSamplingWeights(iPCS) >= rand(1) 
             % Corresponding height index in voxelization
             iz = find(zEdges>hLeaf,1,'first') - 1;

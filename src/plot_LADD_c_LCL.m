@@ -1,4 +1,4 @@
-function f = plot_LADD_c_LCL(QSM,Leaves,TargetDistributions,varargin)
+function f = plot_LADD_c_LCL(QSM,Leaves,TargetLADD,varargin)
 
 % Initialize values
 nBins = 10;
@@ -20,13 +20,13 @@ end
 f = figure; clf, hold on
 
 % Check validity of distribution function type
-dType = TargetDistributions.dType_c;
+dType = TargetLADD.dTypeLADD_c;
 if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixturemodel'}))
     error("LADD compass direction distribution type not recognized.")
 end
 
 % Read target distribution parameters
-p = TargetDistributions.p_c;
+p = TargetLADD.p_c;
 
 % Functions
 fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));

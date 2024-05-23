@@ -5,51 +5,55 @@ addpath('classes/');
 %% Leaf distribution types
 
 % Leaf orientation distribution types
-LeafDistributions.dTypeLodInc = 'dewit';
-LeafDistributions.dTypeLodAz  = 'vonmises';
+LibraryDistributions.dTypeLOD_inc = 'dewit';
+LibraryDistributions.dTypeLOD_az  = 'uniform'; %'vonmises';
 
-% Leaf size distribution types
-LeafDistributions.dTypeLsd    = 'uniform';
+% Leaf size distribution type
+LibraryDistributions.dTypeLSD    = 'uniform';
 
-%% Leaf-cylinder library nodes
+%% Leaf distribution parameter nodes
 
 % Inclination angle distribution nodes
-nIncNodes1    = 2;
-nIncNodes2    = 2;
-aInterval     = [-1 1];
-bInterval     = [ 2 4];
+nIncNodes1    = 1;
+nIncNodes2    = 1;
+aInterval     = [-1 -1]; %[-1 1];
+bInterval     = [ 4  4]; %[ 2 4];
 Nodes.LodInc1 = linspace(aInterval(1),aInterval(2),nIncNodes1);
 Nodes.LodInc2 = linspace(bInterval(1),bInterval(2),nIncNodes2);
 
 % Azimuth angle distribution nodes
-nAzNodes1      = 3;
-nAzNodes2      = 2;
-muInterval     = [0 2*pi]; % *(1-1/nAzNodes1)
-kappaInterval  = [0.01 0.5];
-Nodes.LodAz1   = linspace(muInterval(1),muInterval(2),nAzNodes1);
-Nodes.LodAz2   = linspace(kappaInterval(1),kappaInterval(2),nAzNodes2);
+% nAzNodes1      = 3;
+% nAzNodes2      = 2;
+% muInterval     = [0 2*pi]; % *(1-1/nAzNodes1)
+% kappaInterval  = [0.01 0.5];
+% Nodes.LodAz1   = linspace(muInterval(1),muInterval(2),nAzNodes1);
+% Nodes.LodAz2   = linspace(kappaInterval(1),kappaInterval(2),nAzNodes2);
 
 % Leaf size distribution nodes
-nLsdNodes1 = 2;
-nLsdNodes2 = 2;
-lbInterval = [0.002 0.0025];
-ubInterval = [0.0035 0.004];
+nLsdNodes1 = 1;
+nLsdNodes2 = 1;
+lbInterval = [0.002 0.002];
+ubInterval = [0.004 0.004];
 Nodes.Lsd1 = linspace(lbInterval(1),lbInterval(2),nLsdNodes1);
 Nodes.Lsd2 = linspace(ubInterval(1),ubInterval(2),nLsdNodes2);
 
 %% Cylinder attribute nodes
 
-nCylLenNodes = 2;
-nCylRadNodes = 2;
-nCylIncNodes = 3;
-nCylAzNodes  = 3;
+nCylLenNodes = 3;
+nCylRadNodes = 3;
+nCylIncNodes = 2;
+nCylAzNodes  = 4;
 nCylArNodes  = 2;
 
-Nodes.cylinderLength = linspace(0.10,0.5,nCylLenNodes);
-Nodes.cylinderRadius = linspace(0.05,0.2,nCylRadNodes);
-Nodes.cylinderInclinationAngle = linspace(0,pi,nCylIncNodes);
-Nodes.cylinderAzimuthAngle = linspace(0,2*pi*(1-(1/nCylAzNodes)),nCylAzNodes);
-Nodes.cylinderLeafArea = linspace(0.3,1,nCylArNodes);
+Nodes.cylinderLength = linspace(0.10,0.20,nCylLenNodes);
+Nodes.cylinderRadius = linspace(0.01,0.10,nCylRadNodes);
+Nodes.cylinderInclinationAngle = linspace(0.5*pi/nCylIncNodes, ...
+                                          pi-0.5*pi/nCylIncNodes, ...
+                                          nCylIncNodes);
+Nodes.cylinderAzimuthAngle = linspace(0.5*2*pi*nCylAzNodes, ...
+                                      2*pi-0.5*2*pi*nCylAzNodes, ...
+                                      nCylAzNodes);
+Nodes.cylinderLeafArea = linspace(0.2,0.5,nCylArNodes);
 
 %% Leaf and twig base parameters
 
@@ -68,17 +72,17 @@ tris = [
 ];
 
 %% Generate leaf-cylinder library
-LeafCylinderLibrary = load('LeafCyliderLibraryExample.mat');
+% LeafCylinderLibrary = load('LeafCyliderLibraryExample.mat');
 
-% tic
-% LeafCylinderLibrary = generate_leaf_cylinder_library(Nodes, ...
-%                         LeafDistributions, ...
-%                         twigLengthLimits, ...
-%                         vertices, ...
-%                         tris, ...
-%                         'nLeafObjectsPerNode',1, ...
-%                         'PreventIntersections',true);
-% toc
+tic
+LeafCylinderLibrary = generate_leaf_cylinder_library(Nodes, ...
+                        LibraryDistributions, ...
+                        twigLengthLimits, ...
+                        vertices, ...
+                        tris, ...
+                        'nLeafObjectsPerNode',1, ...
+                        'PreventIntersections',true);
+toc
 
 %% Initialize QSM object.
 % QSM = QSMBCylindrical('example');
@@ -89,34 +93,28 @@ QSM = QSMBCylindrical(qsm);
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dType_h = 'beta';
-TargetDistributions.p_h = [4.5 1];
-TargetDistributions.nBins_h = 10;
+TargetLADD.dTypeLADD_h = 'beta';
+TargetLADD.p_h = [4.5 1];
+TargetLADD.nBins_h = 10;
 
 % LADD relative distance along sub-branch
-TargetDistributions.dType_d = 'beta';
-TargetDistributions.p_d = [7 1];
-TargetDistributions.nBins_d = 10;
+TargetLADD.dTypeLADD_d = 'beta';
+TargetLADD.p_d = [7 1];
+TargetLADD.nBins_d = 10;
 
 % LADD compass direction
-TargetDistributions.dType_c = 'vonmises';
-TargetDistributions.p_c = [pi 0.1];
-TargetDistributions.nBins_c = 10;
+TargetLADD.dTypeLADD_c = 'vonmises';
+TargetLADD.p_c = [pi 0.1];
+TargetLADD.nBins_c = 10;
 
 % LOD inclination angle
-TargetDistributions.dType_inc = 'dewit';
-TargetDistributions.fun_inc_params = @(h,d,c) [1,2];
-% TargetDistributions.p_inc = [1 2];
+ParamFunctions.fun_inc_params = @(h,d,c) [1,2];
 
 % LOD azimuth angle
-TargetDistributions.dType_az = 'vonmises';
-TargetDistributions.fun_az_params = @(h,d,c) [3.3, 0.25];
-% TargetDistributions.p_az = [3.3 0.25];
+ParamFunctions.fun_az_params = @(h,d,c) [3.3, 0.25];
 
 % LSD
-TargetDistributions.dType_size = 'uniform';
-TargetDistributions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
-% TargetDistributions.p_size =  [0.0021 0.0038];
+ParamFunctions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
 
 %% Populate QSM with leaves using leaf-clinder library
 
@@ -125,7 +123,8 @@ targetLeafArea = 50;
 
 tic
 Leaves = populate_qsm_with_leaves(QSM,LeafCylinderLibrary, ...
-                                  TargetDistributions,targetLeafArea);
+                                  TargetLADD,ParamFunctions, ...
+                                  targetLeafArea);
 toc
 
 %% Visualize the QSM with generated foliage
@@ -151,14 +150,22 @@ zlabel('z')
 
 %% Plot leaf distributions
 
-plot_LADD_h_LCL(QSM,Leaves,TargetDistributions);
-plot_LADD_d_LCL(QSM,Leaves,TargetDistributions);
-plot_LADD_c_LCL(QSM,Leaves,TargetDistributions);
+plot_LADD_h_LCL(QSM,Leaves,TargetLADD);
+plot_LADD_d_LCL(QSM,Leaves,TargetLADD);
+plot_LADD_c_LCL(QSM,Leaves,TargetLADD);
+
+%% Plots for debugging LOD and LSD
+
+plot_LOD_inc_LCL(QSM,Leaves, ...
+                 LeafCylinderLibrary.LeafDistributions, ...
+                 ParamFunctions,10)
+% plot_LOD_az_LCL
+% plot_LSD_LCL
 
 %% Save the leaf cylinder library as a .mat file
 
 return
-save('BigLeafCyliderLibraryExample.mat','-struct','LeafCylinderLibrary')
+save('NewLeafCyliderLibraryExample.mat','-struct','LeafCylinderLibrary')
 
 
 

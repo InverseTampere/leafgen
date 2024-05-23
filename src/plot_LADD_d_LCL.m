@@ -1,4 +1,4 @@
-function f = plot_LADD_d_LCL(QSM,Leaves,TargetDistributions,varargin)
+function f = plot_LADD_d_LCL(QSM,Leaves,TargetLADD,varargin)
 
 % Initialize values
 nBins = 10;
@@ -20,7 +20,7 @@ end
 f = figure; clf, hold on
 
 % Check validity of distribution function type
-dType = TargetDistributions.dType_d;
+dType = TargetLADD.dTypeLADD_d;
 if ~any(strcmp(dType,{'none','uniform','polynomial', ...
         'polynomialmixturemodel','weibull','weibullmixturemodel', ...
         'beta','betamixturemodel'}))
@@ -28,7 +28,7 @@ if ~any(strcmp(dType,{'none','uniform','polynomial', ...
 end
 
 % Read target distribution parameters
-p = TargetDistributions.p_d;
+p = TargetLADD.p_d;
 
 % Functions
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);

@@ -5,7 +5,7 @@ function [NewCylinderParameters,originalIndex] = preprocess_cylinders(...
 
 % Leaf cylinder library minimum and maximum cylinder lenghts
 lMin = Nodes.cylinderLength(1);
-lMax = Nodes.cylinderLength(2);
+lMax = Nodes.cylinderLength(end);
 
 % Read cylinder parameters (unsorted)
 relativeHeight_US   = CylinderParameters.relative_height;
@@ -69,12 +69,13 @@ for iBranch = 1:max(branchIndex_US)
     k = kk + 1;
 end
 
-% Cylinder midpoints
+% Cylinder midpoints and endpoints
 midPoint = startPoint + 0.5.*cylLength.*cylAxis;
+endPoint = startPoint + cylLength.*cylAxis;
 
 % Maximum and minimum height of a cylinder
-maxHeight = max(midPoint(:,3));
-minHeight = min(midPoint(:,3));
+maxHeight = max([startPoint(:,3) midPoint(:,3) endPoint(:,3)],[],'all');
+minHeight = min([startPoint(:,3) midPoint(:,3) endPoint(:,3)],[],'all');
 
 % Total number of cylinders before preprocessing
 nCyl = size(cylLength,1);
@@ -142,7 +143,7 @@ for iCyl = 1:nCyl
                 end
                 % Set the new cylinder parameter values
                 if rh > 1 || rh < 0
-                    error("negatiivinen arvo suhteelliselle korkeudelle")
+                    error("Invalid relative height for a cylinder")
                 end
                 newRelativeHeight(newInd)   = rh;
                 newRelativePosition(newInd) = rp;

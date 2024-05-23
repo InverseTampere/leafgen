@@ -1,5 +1,5 @@
 function relAreas = fun_leaf_area_density(CylinderParameters, ...
-                                          TargetDistributions)
+                                          TargetLADD)
 
 %% Function definitions
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
@@ -9,10 +9,10 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 %% Distribution functions and parameters 
 
 % Distribution function and parameters for relative height
-dType_h = TargetDistributions.dType_h;
-p_h     = TargetDistributions.p_h;
-nBins_h = TargetDistributions.nBins_h;
-switch dType_h
+dTypeLADD_h = TargetLADD.dTypeLADD_h;
+p_h     = TargetLADD.p_h;
+nBins_h = TargetLADD.nBins_h;
+switch dTypeLADD_h
     case 'uniform'
         fDist_h = @(h) 1;
     case 'polynomial'
@@ -45,10 +45,10 @@ end
 
 % Distribution function and parameters for relative distance along
 % sub-branch
-dType_d = TargetDistributions.dType_d;
-p_d     = TargetDistributions.p_d;
-nBins_d = TargetDistributions.nBins_d;
-switch dType_d
+dTypeLADD_d = TargetLADD.dTypeLADD_d;
+p_d     = TargetLADD.p_d;
+nBins_d = TargetLADD.nBins_d;
+switch dTypeLADD_d
     case 'uniform'
         fDist_d = @(d) 1;
     case 'polynomial'
@@ -80,10 +80,10 @@ switch dType_d
 end
 
 % Distribution function and parameters for compass direction
-dType_c = TargetDistributions.dType_c;
-p_c     = TargetDistributions.p_c;
-nBins_c = TargetDistributions.nBins_c;
-switch dType_c
+dTypeLADD_c = TargetLADD.dTypeLADD_c;
+p_c     = TargetLADD.p_c;
+nBins_c = TargetLADD.nBins_c;
+switch dTypeLADD_c
     case 'uniform'
         fDist_c = @(c) 1/(2*pi);
     case 'vonmises'

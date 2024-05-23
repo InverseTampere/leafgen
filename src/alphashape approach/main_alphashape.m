@@ -28,7 +28,7 @@ tris = [1, 2, 3];
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dType_h = 'betamixturemodel';
+TargetDistributions.dType_h = '';%'betamixturemodel';
 TargetDistributions.p_h = [22 3 41 50 0.85];
 TargetDistributions.nBins_h = 10;
 
@@ -68,7 +68,8 @@ totalLeafArea = 20;
                                      totalLeafArea,vertices,tris, ...
                                      'alpha',1, ...
                                      'StemCoordinates',stemCoordinates, ...
-                                     'VoxelEdge',0.1);
+                                     'VoxelEdge',0.1, ...
+                                     'PCSamplingWeights',[1 0]);
 
 %% Visualize the foliage
 
