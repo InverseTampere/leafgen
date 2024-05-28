@@ -1,8 +1,6 @@
 function LeafCylLib = generate_leaf_cylinder_library(Nodes, ...
                                                      LibraryDistributions, ...
-                                                     twigLengthLimits, ...
-                                                     vertices, ...
-                                                     tris, ...
+                                                     LeafProperties, ...
                                                      varargin)
 
 %% Default values
@@ -13,14 +11,14 @@ overSamplingFactor = 2;
 TwigDirectionDistribution.flag = false;
 Phyllotaxis.flag = false;
 
-if LibraryDistributions.dTypeLOD_inc == "uniform"
-    Nodes.LodInc1 = 0;
-    Nodes.LodInc2 = 0;
+if LibraryDistributions.dTypeLODinc == "uniform"
+    Nodes.pLODinc1 = 0;
+    Nodes.pLODinc2 = 0;
 end
 
-if LibraryDistributions.dTypeLOD_az == "uniform"
-    Nodes.LodAz1 = 0;
-    Nodes.LodAz2 = 0;
+if LibraryDistributions.dTypeLODaz == "uniform"
+    Nodes.pLODaz1 = 0;
+    Nodes.pLODaz2 = 0;
 end
 
 %% Read inputs
@@ -87,11 +85,11 @@ LeafCylLib.LeafDistributions = LibraryDistributions;
 LeafCylLib.Nodes = Nodes;
 
 % Twig length limits
-LeafCylLib.twigLengthLimits = twigLengthLimits;
+LeafCylLib.twigLengthLimits = LeafProperties.twigLengthLimits;
 
 % Leaf base information
-LeafCylLib.LeafBaseModel.vertices = vertices;
-LeafCylLib.LeafBaseModel.tris = tris;
+LeafCylLib.LeafBaseModel.vertices = LeafProperties.vertices;
+LeafCylLib.LeafBaseModel.tris     = LeafProperties.triangles;
 
 % Number of leaf objects generated for each node
 LeafCylLib.nLeafObjectsPerNode = nLeafObjectsPerNode;
@@ -99,12 +97,12 @@ LeafCylLib.nLeafObjectsPerNode = nLeafObjectsPerNode;
 %% Leaf-cylinder generation
 
 % Ranges of library variables
-nLodInc1 = length(Nodes.LodInc1);
-nLodInc2 = length(Nodes.LodInc2);
-nLodAz1  = length(Nodes.LodAz1);
-nLodAz2  = length(Nodes.LodAz2);
-nLsd1    = length(Nodes.Lsd1);
-nLsd2    = length(Nodes.Lsd2);
+nLODinc1 = length(Nodes.pLODinc1);
+nLODinc2 = length(Nodes.pLODinc2);
+nLODaz1  = length(Nodes.pLODaz1);
+nLODaz2  = length(Nodes.pLODaz2);
+nLSD1    = length(Nodes.pLSD1);
+nLSD2    = length(Nodes.pLSD2);
 
 nLen = length(Nodes.cylinderLength);
 nRad = length(Nodes.cylinderRadius);
@@ -113,8 +111,8 @@ nAz  = length(Nodes.cylinderAzimuthAngle);
 nAr  = length(Nodes.cylinderLeafArea);
 
 % Number of nodes per library variable
-nNodesPerLibVar = [nLen,nRad,nInc,nAz,nAr,nLodInc1,nLodInc2,nLodAz1,...
-                   nLodAz2,nLsd1,nLsd2,nLeafObjectsPerNode];
+nNodesPerLibVar = [nLen,nRad,nInc,nAz,nAr,nLODinc1,nLODinc2,nLODaz1,...
+                   nLODaz2,nLSD1,nLSD2,nLeafObjectsPerNode];
 
 % Initializing the cell for leaf-cylinder library (empty cell element added
 % to dimensions with only one node to ensure 12-dimensional size for the 
@@ -128,12 +126,12 @@ wb = waitbar(iIter/nIter,num2str(iIter/nIter),...
              'Name','Progress bar');
 
 % Create Leaves objects for the library
-for  iLodInc1 = 1:nLodInc1
-    for iLodInc2 = 1:nLodInc2
-    for iLodAz1  = 1:nLodAz1
-    for iLodAz2  = 1:nLodAz2
-    for iLsd1    = 1:nLsd1
-    for iLsd2    = 1:nLsd2
+for  iLODinc1 = 1:nLODinc1
+    for iLODinc2 = 1:nLODinc2
+    for iLODaz1  = 1:nLODaz1
+    for iLODaz2  = 1:nLODaz2
+    for iLSD1    = 1:nLSD1
+    for iLSD2    = 1:nLSD2
 
     for iCyl = 1:nLeafObjectsPerNode % loop over the desired amount of 
                                        % leaf-cylinders for each node
@@ -165,10 +163,10 @@ for  iLodInc1 = 1:nLodInc1
     % if possible (cylinder azimuth loses significance for vertical 
     % cylinder)
     if (iInc == 1 || iInc == nInc) && iAz > 1
-        Leaves = LeavesObjects{iLen,iRad,iInc,1,iAr,iLodInc1,iLodInc2, ...
-                               iLodAz1,iLodAz2,iLsd1,iLsd2,iCyl};
-        LeavesObjects{iLen,iRad,iInc,iAz,iAr,iLodInc1,iLodInc2,iLodAz1, ...
-                      iLodAz2,iLsd1,iLsd2,iCyl} = Leaves;
+        Leaves = LeavesObjects{iLen,iRad,iInc,1,iAr,iLODinc1,iLODinc2, ...
+                               iLODaz1,iLODaz2,iLSD1,iLSD2,iCyl};
+        LeavesObjects{iLen,iRad,iInc,iAz,iAr,iLODinc1,iLODinc2,iLODaz1, ...
+                      iLODaz2,iLSD1,iLSD2,iCyl} = Leaves;
         clearvars Leaves;
         % Skip to next iteration of the active for-loop
         continue
@@ -176,14 +174,15 @@ for  iLodInc1 = 1:nLodInc1
 
 
     % Initialize Leaves object
-    Leaves = LeafModelTriangle(vertices,tris);
+    Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+                               LeafProperties.triangles);
 
     % Sample leaves from leaf size function
     [leafScaleFactors,nLeaves,maxLeafSize] = fun_leaf_size( ...
         overSamplingFactor*ar, ...
         Leaves.base_area, ...
         LibraryDistributions.dTypeLSD, ...
-        [Nodes.Lsd1(iLsd1), Nodes.Lsd2(iLsd2)] ...
+        [Nodes.pLSD1(iLSD1), Nodes.pLSD2(iLSD2)] ...
         );
 
     % Attach the leaves to the cylinder with leaf orientation
@@ -191,11 +190,11 @@ for  iLodInc1 = 1:nLodInc1
     [leafDir,leafNormal,twigStart,twigEnd] = fun_leaf_orientation( ...
         len,rad,inc,az, ...
         nLeaves, ...
-        twigLengthLimits, ...
-        LibraryDistributions.dTypeLOD_inc, ...
-        LibraryDistributions.dTypeLOD_az, ...
-        [Nodes.LodInc1(iLodInc1), Nodes.LodInc2(iLodInc2)], ...
-        [Nodes.LodAz1(iLodAz1), Nodes.LodAz2(iLodAz2)], ...
+        LeafProperties.twigLengthLimits, ...
+        LibraryDistributions.dTypeLODinc, ...
+        LibraryDistributions.dTypeLODaz, ...
+        [Nodes.LODinc1(iLODinc1), Nodes.LODinc2(iLODinc2)], ...
+        [Nodes.LODaz1(iLODaz1), Nodes.LODaz2(iLODaz2)], ...
         TwigDirectionDistribution, ...
         Phyllotaxis ...
         );
@@ -204,7 +203,8 @@ for  iLodInc1 = 1:nLodInc1
     if intersectionPrevention == true
         Leaves = add_leaves(Leaves,len,rad,inc,az,ar,twigStart,twigEnd, ...
                             leafDir,leafNormal,leafScaleFactors, ...
-                            maxLeafSize,max(twigLengthLimits));
+                            maxLeafSize, ...
+                            max(LeafProperties.twigLengthLimits));
     else
         iLeaf = 1;
         totalArea = 0;
@@ -223,8 +223,8 @@ for  iLodInc1 = 1:nLodInc1
     end
 
     % Add Leaves object to the node cell
-    LeavesObjects{iLen,iRad,iInc,iAz,iAr,iLodInc1,iLodInc2,iLodAz1, ...
-                  iLodAz2,iLsd1,iLsd2,iCyl} = Leaves;
+    LeavesObjects{iLen,iRad,iInc,iAz,iAr,iLODinc1,iLODinc2,iLODaz1, ...
+                  iLODaz2,iLSD1,iLSD2,iCyl} = Leaves;
     clearvars Leaves;
 
     end % cylinderLeafArea
@@ -235,12 +235,12 @@ for  iLodInc1 = 1:nLodInc1
 
     end % nLeafCylindersPerNode
 
-    end % Lsd2
-    end % Lsd1
-    end % LodAz2
-    end % LodAz1
-    end % LodInc2
-end     % LodInc1
+    end % LSD2
+    end % LSD1
+    end % LODaz2
+    end % LODaz1
+    end % LODinc2
+end     % LODinc1
 
 LeafCylLib.LeavesObjects = LeavesObjects;
 

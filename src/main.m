@@ -5,8 +5,8 @@ addpath('classes/');
 %% Leaf distribution types
 
 % Leaf orientation distribution types
-LibraryDistributions.dTypeLOD_inc = 'dewit';
-LibraryDistributions.dTypeLOD_az  = 'uniform'; %'vonmises';
+LibraryDistributions.dTypeLODinc = 'dewit';
+LibraryDistributions.dTypeLODaz  = 'uniform'; %'vonmises';
 
 % Leaf size distribution type
 LibraryDistributions.dTypeLSD    = 'uniform';
@@ -18,24 +18,24 @@ nIncNodes1    = 1;
 nIncNodes2    = 1;
 aInterval     = [-1 -1]; %[-1 1];
 bInterval     = [ 4  4]; %[ 2 4];
-Nodes.LodInc1 = linspace(aInterval(1),aInterval(2),nIncNodes1);
-Nodes.LodInc2 = linspace(bInterval(1),bInterval(2),nIncNodes2);
+Nodes.pLODinc1 = linspace(aInterval(1),aInterval(2),nIncNodes1);
+Nodes.pLODinc2 = linspace(bInterval(1),bInterval(2),nIncNodes2);
 
 % Azimuth angle distribution nodes
 % nAzNodes1      = 3;
 % nAzNodes2      = 2;
 % muInterval     = [0 2*pi]; % *(1-1/nAzNodes1)
 % kappaInterval  = [0.01 0.5];
-% Nodes.LodAz1   = linspace(muInterval(1),muInterval(2),nAzNodes1);
-% Nodes.LodAz2   = linspace(kappaInterval(1),kappaInterval(2),nAzNodes2);
+% Nodes.pLODaz1   = linspace(muInterval(1),muInterval(2),nAzNodes1);
+% Nodes.pLODaz2   = linspace(kappaInterval(1),kappaInterval(2),nAzNodes2);
 
 % Leaf size distribution nodes
-nLsdNodes1 = 1;
-nLsdNodes2 = 1;
+nLSDNodes1 = 1;
+nLSDNodes2 = 1;
 lbInterval = [0.002 0.002];
 ubInterval = [0.004 0.004];
-Nodes.Lsd1 = linspace(lbInterval(1),lbInterval(2),nLsdNodes1);
-Nodes.Lsd2 = linspace(ubInterval(1),ubInterval(2),nLsdNodes2);
+Nodes.pLSD1 = linspace(lbInterval(1),lbInterval(2),nLsdNodes1);
+Nodes.pLSD2 = linspace(ubInterval(1),ubInterval(2),nLsdNodes2);
 
 %% Cylinder attribute nodes
 
@@ -55,21 +55,18 @@ Nodes.cylinderAzimuthAngle = linspace(0.5*2*pi*nCylAzNodes, ...
                                       nCylAzNodes);
 Nodes.cylinderLeafArea = linspace(0.2,0.5,nCylArNodes);
 
-%% Leaf and twig base parameters
+%% Leaf and twig properties
 
-twigLengthLimits = [0.05 0.1];
+% Twig length limits
+LeafProperties.twigLengthLimits = [0.05 0.1];
 
 % Vertices of the leaf basis geometry
-vertices = [
-    -0.04  0.0   0.0;
-    0.0    0.08  0.0;
-    0.04   0.0   0.0
-];
+LeafProperties.vertices = [-0.04  0.0   0.0;
+                           0.0    0.08  0.0;
+                           0.04   0.0   0.0];
 
 % Triangles of the leaf basis geometry
-tris = [
-     1,  2,  3
-];
+LeafProperties.triangles = [1,  2,  3];
 
 %% Generate leaf-cylinder library
 % LeafCylinderLibrary = load('LeafCyliderLibraryExample.mat');
@@ -77,9 +74,7 @@ tris = [
 tic
 LeafCylinderLibrary = generate_leaf_cylinder_library(Nodes, ...
                         LibraryDistributions, ...
-                        twigLengthLimits, ...
-                        vertices, ...
-                        tris, ...
+                        LeafProperties, ...
                         'nLeafObjectsPerNode',1, ...
                         'PreventIntersections',true);
 toc
@@ -93,19 +88,16 @@ QSM = QSMBCylindrical(qsm);
 %% Define target leaf distributions
 
 % LADD relative height
-TargetLADD.dTypeLADD_h = 'beta';
-TargetLADD.p_h = [4.5 1];
-TargetLADD.nBins_h = 10;
+TargetLADD.dTypeLADDh = 'beta';
+TargetLADD.hParams = [4.5 1];
 
 % LADD relative distance along sub-branch
-TargetLADD.dTypeLADD_d = 'beta';
-TargetLADD.p_d = [7 1];
-TargetLADD.nBins_d = 10;
+TargetLADD.dTypeLADDd = 'beta';
+TargetLADD.dParams = [7 1];
 
 % LADD compass direction
-TargetLADD.dTypeLADD_c = 'vonmises';
-TargetLADD.p_c = [pi 0.1];
-TargetLADD.nBins_c = 10;
+TargetLADD.dTypeLADDc = 'vonmises';
+TargetLADD.cParams = [pi 0.1];
 
 % LOD inclination angle
 ParamFunctions.fun_inc_params = @(h,d,c) [1,2];

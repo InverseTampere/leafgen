@@ -2,6 +2,7 @@ function relAreas = fun_leaf_area_density(CylinderParameters, ...
                                           TargetLADD)
 
 %% Function definitions
+
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
 fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
 fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
@@ -9,91 +10,88 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 %% Distribution functions and parameters 
 
 % Distribution function and parameters for relative height
-dTypeLADD_h = TargetLADD.dTypeLADD_h;
-p_h     = TargetLADD.p_h;
-nBins_h = TargetLADD.nBins_h;
-switch dTypeLADD_h
+dTypeLADDh = TargetLADD.dTypeLADDh;
+hParams    = TargetLADD.hParams;
+switch dTypeLADDh
     case 'uniform'
         fDist_h = @(h) 1;
     case 'polynomial'
-        fDist_h = @(h) polyval(p_h,h);
+        fDist_h = @(h) polyval(hParams,h);
     case 'polynomialmixturemodel'
-        nP = (length(p_h)-1)/2; % number of polynomial coefficients
-        p1 = p_h(1:nP); % coefficients of the first polynomial
-        p2 = p_h((nP+1):(2*nP)); % coefficients of the second polynomial
-        w = p_h(end); % mixture model weight
+        nP = (length(hParams)-1)/2; % number of polynomial coefficients
+        p1 = hParams(1:nP); % coefficients of the first polynomial
+        p2 = hParams((nP+1):(2*nP)); % coefficients of the second polynom.
+        w = hParams(end); % mixture model weight
         fDist_h = @(h) w*polyval(p1,h) + (1-w)*polyval(p2,h);
     case 'weibull'
-        l = p_h(1); % scale parameter
-        k = p_h(2); % shape parameter
+        l = hParams(1); % scale parameter
+        k = hParams(2); % shape parameter
         fDist_h = @(h) fun_weibull(h,l,k);
     case 'weibullmixturemodel'
-        l1 = p_h(1); k1 = p_h(2); % parameters of the first distribution
-        l2 = p_h(3); k2 = p_h(4); % parameters of the second distribution
-        w = p_h(5); % mixture model weight
+        l1 = hParams(1); k1 = hParams(2); % parameters of the first dist.
+        l2 = hParams(3); k2 = hParams(4); % parameters of the second dist.
+        w = hParams(5); % mixture model weight
         fDist_h = @(h) w*fun_weibull(h,l1,k1) + (1-w)*fun_weibull(h,l2,k2);
     case 'beta'
-        a = p_h(1);
-        b = p_h(2);
+        a = hParams(1);
+        b = hParams(2);
         fDist_h = @(h) fun_beta(h,a,b);
     case 'betamixturemodel'
-        a1 = p_h(1); b1 = p_h(2); % parameters of the first distribution
-        a2 = p_h(3); b2 = p_h(4); % parameters of the second distribution
-        w = p_h(5); % mixture model weight
+        a1 = hParams(1); b1 = hParams(2); % parameters of the first dist.
+        a2 = hParams(3); b2 = hParams(4); % parameters of the second dist.
+        w = hParams(5); % mixture model weight
         fDist_h = @(h) w*fun_beta(h,a1,b1) + (1-w)*fun_beta(h,a2,b2);
 end
 
 % Distribution function and parameters for relative distance along
 % sub-branch
-dTypeLADD_d = TargetLADD.dTypeLADD_d;
-p_d     = TargetLADD.p_d;
-nBins_d = TargetLADD.nBins_d;
-switch dTypeLADD_d
+dTypeLADDd = TargetLADD.dTypeLADDd;
+dParams    = TargetLADD.dParams;
+switch dTypeLADDd
     case 'uniform'
         fDist_d = @(d) 1;
     case 'polynomial'
-        fDist_d = @(d) polyval(p_d,d);
+        fDist_d = @(d) polyval(dParams,d);
     case 'polynomialmixturemodel'
-        nP = (length(p_d)-1)/2; % order of polynomial
-        p1 = p_d(1:nP); % coefficients of the first polynomial
-        p2 = p_d((nP+1):(2*nP)); % coefficients of the second polynomial
-        w = p_d(end); % mixture model weight
+        nP = (length(dParams)-1)/2; % order of polynomial
+        p1 = dParams(1:nP); % coefficients of the first polynomial
+        p2 = dParams((nP+1):(2*nP)); % coefficients of the second polynom.
+        w = dParams(end); % mixture model weight
         fDist_d = @(d) w*polyval(p1,d) + (1-w)*polyval(p2,d);
     case 'weibull'
-        l = p_d(1); % scale parameter
-        k = p_d(2); % shape parameter
+        l = dParams(1); % scale parameter
+        k = dParams(2); % shape parameter
         fDist_d = @(d) fun_weibull(d,l,k);
     case 'weibullmixturemodel'
-        l1 = p_d(1); k1 = p_d(2); % parameters of the first distribution
-        l2 = p_d(3); k2 = p_d(4); % parameters of the second distribution
-        w = p_d(5); % mixture model weight
+        l1 = dParams(1); k1 = dParams(2); % parameters of the first dist.
+        l2 = dParams(3); k2 = dParams(4); % parameters of the second dist.
+        w = dParams(5); % mixture model weight
         fDist_d = @(d) w*fun_weibull(d,l1,k1) + (1-w)*fun_weibull(d,l2,k2);
     case 'beta'
-        a = p_d(1);
-        b = p_d(2);
+        a = dParams(1);
+        b = dParams(2);
         fDist_d = @(d) fun_beta(d,a,b);
     case 'betamixturemodel'
-        a1 = p_d(1); b1 = p_d(2); % parameters of the first distribution
-        a2 = p_d(3); b2 = p_d(4); % parameters of the second distribution
-        w = p_d(5); % mixture model weight
+        a1 = dParams(1); b1 = dParams(2); % parameters of the first dist.
+        a2 = dParams(3); b2 = dParams(4); % parameters of the second dist.
+        w = dParams(5); % mixture model weight
         fDist_d = @(d) w*fun_beta(d,a1,b1) + (1-w)*fun_beta(d,a2,b2);
 end
 
 % Distribution function and parameters for compass direction
-dTypeLADD_c = TargetLADD.dTypeLADD_c;
-p_c     = TargetLADD.p_c;
-nBins_c = TargetLADD.nBins_c;
-switch dTypeLADD_c
+dTypeLADDc = TargetLADD.dTypeLADDc;
+cParams    = TargetLADD.cParams;
+switch dTypeLADDc
     case 'uniform'
         fDist_c = @(c) 1/(2*pi);
     case 'vonmises'
-        m = p_c(1); % mean
-        k = p_c(2); % measure of concentration
+        m = cParams(1); % mean
+        k = cParams(2); % measure of concentration
         fDist_c = @(c) fun_vonmises(c,m,k);
     case 'vonmisesmixturemodel'
-        m1 = p_c(1); k1 = p_c(2); % parameters of the first distribution
-        m2 = p_c(3); k2 = p_c(4); % parameters of the second distribution
-        w = p_c(5); % mixture model weight
+        m1 = cParams(1); k1 = cParams(2); % parameters of the first dist.
+        m2 = cParams(3); k2 = cParams(4); % parameters of the second dist.
+        w = cParams(5); % mixture model weight
         fDist_c = @(c) w*fun_vonmises(c,m1,k1) ...
                        + (1-w)*fun_vonmises(c,m2,k2);
 end
@@ -107,14 +105,36 @@ cylinderLength = CylinderParameters.length;
 
 nCylinders = length(relativeHeight);
 
+%% Bins for distribution of leaf area
+
+% Heightwise bins for distributing leaf area
+if isfield(TargetLADD,'nBins_h')
+    nBinsH = TargetLADD.nBinsLADDh;
+else
+    nBinsH = 10;
+end
+% Distancewise bins for distributing leaf area
+if isfield(TargetLADD,'nBins_d')
+    nBinsD = TargetLADD.nBinsLADDd;
+else
+    nBinsD = 10;
+end
+% Directionwise bins for distributing leaf area
+if isfield(TargetLADD,'nBins_c')
+    nBinsC = TargetLADD.nBinsLADDc;
+else
+    nBinsC = 10;
+end
+
+
 %% Partition of leaf surface area with respect to height
 
 % Heightwise bins
-binEdges_h = generate_bin_edges([0 1],nBins_h,fDist_h);
+binEdges_h = generate_bin_edges([0 1],nBinsH,fDist_h);
 
 % Calculate normalized distribution function values for each height bin
-binAreas_h = zeros(nBins_h,1);
-for iBin = 1:nBins_h
+binAreas_h = zeros(nBinsH,1);
+for iBin = 1:nBinsH
     xTemp_h = linspace(binEdges_h(iBin),binEdges_h(iBin+1),1000);
     yTemp_h = fDist_h(xTemp_h);
     % Prevent infinite values at the edges of the interval
@@ -174,11 +194,11 @@ for iBranch = 1:max(branchIndex) % stem index 0 is skipped automatically
 end
 
 % Distancewise bins
-binEdges_d = generate_bin_edges([0 1],nBins_d,fDist_d);
+binEdges_d = generate_bin_edges([0 1],nBinsD,fDist_d);
 
 % Calculate normalized distribution function values for each distance bin
-binAreas_d = zeros(nBins_d,1);
-for iBin = 1:nBins_d
+binAreas_d = zeros(nBinsD,1);
+for iBin = 1:nBinsD
     xTemp_d = linspace(binEdges_d(iBin),binEdges_d(iBin+1),1000);
     yTemp_d = fDist_d(xTemp_d);
     % Prevent infinite values at the edges of the interval
@@ -231,11 +251,11 @@ for j = 1:nCylinders
 end
 
 % Directionwise bins
-binEdges_a = generate_bin_edges([0 2*pi],nBins_c,fDist_c);
+binEdges_a = generate_bin_edges([0 2*pi],nBinsC,fDist_c);
 
 % Calculate normalized distribution function values for each direction bin
-binAreas_a = zeros(nBins_c,1);
-for iBin = 1:nBins_c
+binAreas_a = zeros(nBinsC,1);
+for iBin = 1:nBinsC
     xTemp_a = linspace(binEdges_a(iBin),binEdges_a(iBin+1),1000);
     yTemp_a = fDist_c(xTemp_a);
     % Integrate function values over bin width (polar integration)
@@ -258,9 +278,9 @@ end
 
 % Block area factors for each cylinder
 blockArea = zeros(nCylinders,1);
-for iBin_h = 1:nBins_h
-    for iBin_d = 1:nBins_d
-        for iBin_a = 1:nBins_c
+for iBin_h = 1:nBinsH
+    for iBin_d = 1:nBinsD
+        for iBin_a = 1:nBinsC
             % Indexes of cylinders with desired bin indexes
             bool_h = (binIndex_h == iBin_h);
             bool_d = (binIndex_d == iBin_d);

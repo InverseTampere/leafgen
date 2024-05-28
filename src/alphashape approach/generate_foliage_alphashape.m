@@ -1,10 +1,9 @@
 function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
-                                                    TargetDistributions, ...
-                                                    totalLeafArea, ...
-                                                    vertices, ...
-                                                    tris, ...
-                                                    varargin ...
-                                                    )
+                                                   TargetDistributions, ...
+                                                   LeafProperties, ...
+                                                   totalLeafArea, ...
+                                                   varargin ...
+                                                   )
 %% Initialize values
 alpha = 1;
 stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
@@ -46,113 +45,113 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 fun_dewit = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
 %% Leaf area density distribution functions
 % Distribution function and parameters for relative height
-dType_h = TargetDistributions.dType_h;
-p_h     = TargetDistributions.p_h;
-switch dType_h
+dTypeLADDh = TargetDistributions.dTypeLADDh;
+hParams    = TargetDistributions.hParams;
+switch dTypeLADDh
     case 'uniform'
         fDist_h = @(h) 1;
         maxfDist_h = 1;
     case 'polynomial'
-        fDist_h = @(h) polyval(p_h,h);
-        maxfDist_h = max([0,polynomial_upper_limit(p_h)]);
+        fDist_h = @(h) polyval(hParams,h);
+        maxfDist_h = max([0,polynomial_upper_limit(hParams)]);
     case 'polynomialmixturemodel'
-        nP = (length(p_h)-1)/2; % number of polynomial coefficients
-        p1 = p_h(1:nP); % coefficients of the first polynomial
-        p2 = p_h((nP+1):(2*nP)); % coefficients of the second polynomial
-        w = p_h(end); % mixture model weight
+        nP = (length(hParams)-1)/2; % number of polynomial coefficients
+        p1 = hParams(1:nP); % coefficients of the first polynomial
+        p2 = hParams((nP+1):(2*nP)); % coefficients of the second polynom.
+        w = hParams(end); % mixture model weight
         fDist_h = @(h) w*polyval(p1,h) + (1-w)*polyval(p2,h);
         maxfDist_h = max([0,polynomial_upper_limit(w*p1+(1-w)*p2)]);
     case 'weibull'
-        l = p_h(1); % scale parameter
-        k = p_h(2); % shape parameter
+        l = hParams(1); % scale parameter
+        k = hParams(2); % shape parameter
         fDist_h = @(h) fun_weibull(h,l,k);
         maxfDist_h = weibull_upper_limit(l,k);
     case 'weibullmixturemodel'
-        l1 = p_h(1); k1 = p_h(2); % parameters of the first distribution
-        l2 = p_h(3); k2 = p_h(4); % parameters of the second distribution
-        w = p_h(5); % mixture model weight
+        l1 = hParams(1); k1 = hParams(2); % parameters of the first dist.
+        l2 = hParams(3); k2 = hParams(4); % parameters of the second dist.
+        w = hParams(5); % mixture model weight
         fDist_h = @(h) w*fun_weibull(h,l1,k1) + (1-w)*fun_weibull(h,l2,k2);
-        maxfDist_h = weibull_mm_upper_limit(p_h);
+        maxfDist_h = weibull_mm_upper_limit(hParams);
     case 'beta'
-        a = p_h(1);
-        b = p_h(2);
+        a = hParams(1);
+        b = hParams(2);
         fDist_h = @(h) fun_beta(h,a,b);
         maxfDist_h = beta_upper_limit(a,b);
     case 'betamixturemodel'
-        a1 = p_h(1); b1 = p_h(2); % parameters of the first distribution
-        a2 = p_h(3); b2 = p_h(4); % parameters of the second distribution
-        w = p_h(5); % mixture model weight
+        a1 = hParams(1); b1 = hParams(2); % parameters of the first dist.
+        a2 = hParams(3); b2 = hParams(4); % parameters of the second dist.
+        w = hParams(5); % mixture model weight
         fDist_h = @(h) w*fun_beta(h,a1,b1) + (1-w)*fun_beta(h,a2,b2);
-        maxfDist_h = beta_mm_upper_limit(p_h);
+        maxfDist_h = beta_mm_upper_limit(hParams);
 end
 % Distribution function and parameters for relative distance along
 % sub-branch
-dType_d = TargetDistributions.dType_d;
-p_d     = TargetDistributions.p_d;
-switch dType_d
+dTypeLADDd = TargetDistributions.dTypeLADDd;
+dParams    = TargetDistributions.dParams;
+switch dTypeLADDd
     case 'uniform'
         fDist_d = @(d) 1;
         maxfDist_d = 1;
     case 'polynomial'
-        fDist_d = @(d) polyval(p_d,d);
-        maxfDist_d = max([0,polynomial_upper_limit(p_d)]);
+        fDist_d = @(d) polyval(dParams,d);
+        maxfDist_d = max([0,polynomial_upper_limit(dParams)]);
     case 'polynomialmixturemodel'
-        nP = (length(p_d)-1)/2; % order of polynomial
-        p1 = p_d(1:nP); % coefficients of the first polynomial
-        p2 = p_d((nP+1):(2*nP)); % coefficients of the second polynomial
-        w = p_d(end); % mixture model weight
+        nP = (length(dParams)-1)/2; % order of polynomial
+        p1 = dParams(1:nP); % coefficients of the first polynomial
+        p2 = dParams((nP+1):(2*nP)); % coefficients of the second polynom.
+        w = dParams(end); % mixture model weight
         fDist_d = @(d) w*polyval(p1,d) + (1-w)*polyval(p2,d);
         maxfDist_d = max([0,polynomial_upper_limit(w*p1+(1-w)*p2)]);
     case 'weibull'
-        l = p_d(1); % scale parameter
-        k = p_d(2); % shape parameter
+        l = dParams(1); % scale parameter
+        k = dParams(2); % shape parameter
         fDist_d = @(d) fun_weibull(d,l,k);
         maxfDist_d = weibull_upper_limit(l,k);
     case 'weibullmixturemodel'
-        l1 = p_d(1); k1 = p_d(2); % parameters of the first distribution
-        l2 = p_d(3); k2 = p_d(4); % parameters of the second distribution
-        w = p_d(5); % mixture model weight
+        l1 = dParams(1); k1 = dParams(2); % parameters of the first dist.
+        l2 = dParams(3); k2 = dParams(4); % parameters of the second dist.
+        w = dParams(5); % mixture model weight
         fDist_d = @(d) w*fun_weibull(d,l1,k1) + (1-w)*fun_weibull(d,l2,k2);
-        maxfDist_d = weibull_mm_upper_limit(p_d);
+        maxfDist_d = weibull_mm_upper_limit(dParams);
     case 'beta'
-        a = p_d(1);
-        b = p_d(2);
+        a = dParams(1);
+        b = dParams(2);
         fDist_d = @(d) fun_beta(d,a,b);
         maxfDist_d = beta_upper_limit(a,b);
     case 'betamixturemodel'
-        a1 = p_d(1); b1 = p_d(2); % parameters of the first distribution
-        a2 = p_d(3); b2 = p_d(4); % parameters of the second distribution
-        w = p_d(5); % mixture model weight
+        a1 = dParams(1); b1 = dParams(2); % parameters of the first dist.
+        a2 = dParams(3); b2 = dParams(4); % parameters of the second dist.
+        w = dParams(5); % mixture model weight
         fDist_d = @(d) w*fun_beta(d,a1,b1) + (1-w)*fun_beta(d,a2,b2);
-        maxfDist_d = beta_mm_upper_limit(p_d);
+        maxfDist_d = beta_mm_upper_limit(dParams);
 end
 % Distribution function and parameters for compass direction
-dType_c = TargetDistributions.dType_c;
-p_c     = TargetDistributions.p_c;
-switch dType_c
+dTypeLADDc = TargetDistributions.dTypeLADDc;
+cParams    = TargetDistributions.cParams;
+switch dTypeLADDc
     case 'uniform'
         fDist_c = @(c) 1/(2*pi);
         maxfDist_c = 1/(2*pi);
     case 'vonmises'
-        m = p_c(1); % mean
-        k = p_c(2); % measure of concentration
+        m = cParams(1); % mean
+        k = cParams(2); % measure of concentration
         fDist_c = @(c) fun_vonmises(c,m,k);
         maxfDist_c = fDist_c(m);
     case 'vonmisesmixturemodel'
-        m1 = p_c(1); k1 = p_c(2); % parameters of the first distribution
-        m2 = p_c(3); k2 = p_c(4); % parameters of the second distribution
-        w = p_c(5); % mixture model weight
+        m1 = cParams(1); k1 = cParams(2); % parameters of the first dist.
+        m2 = cParams(3); k2 = cParams(4); % parameters of the second dist.
+        w = cParams(5); % mixture model weight
         fDist_c = @(c) w*fun_vonmises(c,m1,k1) ...
                        + (1-w)*fun_vonmises(c,m2,k2);
-        maxfDist_c = vonmises_mm_upper_limit(p_c);
+        maxfDist_c = vonmises_mm_upper_limit(cParams);
 end
 
 %% Leaf orientation distribution functions
 % Distribution funtion and parameter value function for leaf inclination
 % angle distribution
-dType_inc = TargetDistributions.dType_inc;
+dTypeLODinc    = TargetDistributions.dTypeLODinc;
 fun_inc_params = TargetDistributions.fun_inc_params;
-switch dType_inc
+switch dTypeLODinc
     case 'uniform'
         % Uniform distribution
         f_inc = @(x,p) 2/pi;
@@ -183,9 +182,9 @@ switch dType_inc
 end
 % Distribution function and parameter value function for leaf azimuth angle
 % distribution
-dType_az = TargetDistributions.dType_az;
+dTypeLODaz    = TargetDistributions.dTypeLODaz;
 fun_az_params = TargetDistributions.fun_az_params;
-switch dType_az
+switch dTypeLODaz
     case 'uniform'
         % Uniform distribution
         f_az = @(x,p) 1/(2*pi);
@@ -201,7 +200,7 @@ switch dType_az
         lod_az_sampling = 'rejection sampling';
 end
 %% Leaf size distriubtion functions
-dType_size = TargetDistributions.dType_size;
+dTypeLSD        = TargetDistributions.dTypeLSD;
 fun_size_params = TargetDistributions.fun_size_params;
 %% Generate alpha shape on the point cloud
 disp('---------------------------------------')
@@ -300,7 +299,8 @@ toc
 pcSamplingBinEdges = linspace(0,1,length(pcSamplingWeights)+1);
 
 %% Initialize leaf object and candidate leaf area
-Leaves = LeafModelTriangle(vertices,tris);
+Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+                           LeafProperties.triangles);
 baseArea = Leaves.base_area;
 candidateArea = 2*totalLeafArea;
 
@@ -384,7 +384,7 @@ while leafArea < candidateArea
     end
 
     % Sampling leaf surface area with LSD
-    switch dType_size
+    switch dTypeLSD
         case 'uniform'
             dParams = fun_size_params(hLeaf,dLeaf,cLeaf);
             sampledArea = (dParams(2)-dParams(1))*rand(1) + dParams(1);

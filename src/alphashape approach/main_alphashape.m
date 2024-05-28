@@ -18,41 +18,37 @@ pCloud = pCloud - [mean(pCloud(tfBottom,1:2)) 0];
 %% Initialize leaf base geometry
 
 % Vertices of the leaf basis geometry
-vertices = [-0.04  0.0   0.0;
-            0.0    0.08  0.0;
-            0.04   0.0   0.0];
+LeafProperties.vertices = [-0.04  0.0   0.0;
+                           0.0    0.08  0.0;
+                           0.04   0.0   0.0];
 
 % Triangles of the leaf basis geometry
-tris = [1, 2, 3];
+LeafProperties.triangles = [1, 2, 3];
 
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dType_h = '';%'betamixturemodel';
-TargetDistributions.p_h = [22 3 41 50 0.85];
-TargetDistributions.nBins_h = 10;
+TargetDistributions.dTypeLADDh = '';%'betamixturemodel';
+TargetDistributions.hParams = [22 3 41 50 0.85];
 
 % LADD relative distance from stem
-TargetDistributions.dType_d = '';%'beta';
-TargetDistributions.p_d = [2 1];
-TargetDistributions.nBins_d = 10;
+TargetDistributions.dTypeLADDd = '';%'beta';
+TargetDistributions.dParams = [2 1];
 
 % LADD compass direction
-TargetDistributions.dType_c = '';%'vonmisesmixturemodel';
-TargetDistributions.p_c = [pi 0.1 6/5*pi 0.1 0.6];
-TargetDistributions.nBins_c = 10;
+TargetDistributions.dTypeLADDc = '';%'vonmisesmixturemodel';
+TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
-TargetDistributions.dType_inc = 'dewit';
+TargetDistributions.dTypeLODinc = 'dewit';
 TargetDistributions.fun_inc_params = @(h,d,c) [1,2];
-% TargetDistributions.p_inc = [1 2];
 
 % LOD azimuth angle
-TargetDistributions.dType_az = 'vonmises';
+TargetDistributions.dTypeLODaz = 'vonmises';
 TargetDistributions.fun_az_params = @(h,d,c) [3.3, 0.25];
 
 % LSD
-TargetDistributions.dType_size = 'uniform';
+TargetDistributions.dTypeLSD = 'uniform';
 TargetDistributions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
 
 
@@ -65,7 +61,7 @@ stemCoordinates = [   0,      0,                  0;
 totalLeafArea = 20;
 
 [Leaves,aShape] = generate_foliage_alphashape(pCloud,TargetDistributions, ...
-                                     totalLeafArea,vertices,tris, ...
+                                     LeafProperties,totalLeafArea, ...
                                      'alpha',1, ...
                                      'StemCoordinates',stemCoordinates, ...
                                      'VoxelEdge',0.1, ...
