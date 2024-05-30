@@ -1,17 +1,23 @@
-function Leaves = add_leaves_to_alphashape(aShape, ...
-                                           Leaves, ...
-                                           totalLeafArea, ....
-                                           leafStartPoints, ...
-                                           leafNormal, ...
-                                           leafDir, ...
-                                           leafScaleFactors)
+function Leaves = add_leaves_qsm(QSM,Leaves,leafScaleFactors,leafParent,...
+                                 leafDir,leafNormal,twigStart,twigEnd,...
+                                 totalLeafArea)
 
-%% Initialize voxelization of accepted leaves
+%% Maximum leaf scaling and twig length
+maxLeafSize = max(max(leafScaleFactors))*max(Leaves.base_dimensions);
+maxTwigLen = max(sum((twigEnd-twigStart).^2,2));
 
-maxLeafScale = max(max(leafScaleFactors));
-minPoint = min(aShape.Points);
-maxPoint = max(aShape.Points);
-LeafVoxelization = CubeVoxelization(maxLeafScale, minPoint, maxPoint);
+%% Voxelization parameters
+
+% Extreme values of cylinder QSM
+treeBox = QSM.tree_limits;
+minPoint = treeBox(1,:) - maxLeafSize - maxTwigLen;
+maxPoint = treeBox(2,:) + maxLeafSize + maxTwigLen;
+
+% Compute voxelization of cylinder QSM
+QSMVoxelization = QSM.toVoxels(maxLeafSize, minPoint, maxPoint);
+
+% Initialize voxelization of accepted leaves
+LeafVoxelization = CubeVoxelization(maxLeafSize, minPoint, maxPoint);
 
 %% Initialization of leaf transfromations
 
@@ -37,8 +43,8 @@ nLeafCandidate = size(leafDir,1);
 % Number of configurations tried
 nConfigsTried = nan(nLeafCandidate,1);
 
-% Number of neighbours on initial run
-nNeighbour = nan(nLeafCandidate,1);
+% Number of neighbours on initial run (1: cylinder, 2: leaf)
+nNeighbour = nan(nLeafCandidate,2);
 
 % Number of accepted leaves
 nAccepted = 0;
@@ -52,12 +58,14 @@ jTransform = randperm(nTransform);
 % Flag for reaching target leaf area
 targetReached = false;
 
+
+
 %% Add leaves to the model
 
 for iLeaf = 1:nLeafCandidate
     
     % Check if target area has been reached
-    if areaAccepted >= totalLeafArea;
+    if areaAccepted >= totalLeafArea
         targetReached = true;
         break;
     end
@@ -71,7 +79,7 @@ for iLeaf = 1:nLeafCandidate
     for iTransform = 1:nTransform+1
         
         % Paramenters of the current leaf
-        origin = leafStartPoints(iLeaf,:);
+        origin = twigEnd(iLeaf,:);
         dir    = leafDir(iLeaf,:);
         normal = leafNormal(iLeaf,:);
         scale  = leafScaleFactors(iLeaf,:);
@@ -121,7 +129,7 @@ for iLeaf = 1:nLeafCandidate
         end
         
         % Compute leaf center point
-        cen = origin + scale(2)*dir; 
+        cen = origin + scale(2)*dir;
         
         % Compute leaf triangles for intersection computations
         leafTris = Leaves.triangles(origin, dir, normal, scale);
@@ -139,10 +147,30 @@ for iLeaf = 1:nLeafCandidate
             lastCC = leafCC;
         end
         
-        % Find neighbour leaves and their count only if changes have
+        % Find neighbour blocks and their count only if changes have
+        % occured
+        if computeNeighbours
+            % Get neighbour cylinder indices (exclude parent cylinder)
+            cylNeighbour = QSMVoxelization.get_neighbor_objects(leafCC);
+
+            % Number of cylinder neighbours
+            nCylNei = length(cylNeighbour);
+            
+            if isnan(nNeighbour(iLeaf,1))
+                nNeighbour(iLeaf,1) = nCylNei;
+            end
+        end
+
+        % If any overlap, try next configuration
+        if nCylNei && QSM.block_triangle_intersection(cylNeighbour,...
+                                                        leafTris)
+            continue;
+        end
+        
+        % Find neighbour blocks and their count only if changes have
         % occured
         if computeNeighbours || computeLeafNeigbours
-            % Get neighbour leaf indices
+            % Get neighbour cylinder indices (exclude parent cylinder)
             leafNeighbour = LeafVoxelization.get_neighbor_objects(leafCC);
             
             % After first compute, respect <computeNeighbours>
@@ -151,8 +179,8 @@ for iLeaf = 1:nLeafCandidate
             % Number of cylinder neighbours
             nLeafNei = length(leafNeighbour);
             
-            if isnan(nNeighbour(iLeaf))
-                nNeighbour(iLeaf) = nLeafNei;
+            if isnan(nNeighbour(iLeaf,2))
+                nNeighbour(iLeaf,2) = nLeafNei;
             end
         end
 
@@ -162,10 +190,16 @@ for iLeaf = 1:nLeafCandidate
         end
     
         % Set the parent of accepted leaf as NaN
-        parent = nan;
+        parent = leafParent(iLeaf);
         
-        % Set the twig start point of accepted leaf as NaN
-        twig = nan;
+        % Twig start point
+        twig = twigStart(iLeaf,:);
+
+        % If inclination of normal is above pi/2, mirror normal to other
+        % side
+        if acos(dot(normal,[0,0,1])) > pi/2
+            normal = -normal;
+        end
         
         % No intersections: leaf is accepted and inserted into model
         [leafIndex,leafArea] = Leaves.add_leaf(origin,...
@@ -199,3 +233,5 @@ end
 
 % Clear possible empty rows.
 Leaves.trim_slack();
+
+end

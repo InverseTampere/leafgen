@@ -2,10 +2,10 @@ function [leafDir,leafNormal,twigStart,twigEnd] = fun_leaf_orientation( ...
                                                     len,rad,inc,az, ...
                                                     nLeaves, ...
                                                     twigLengthLimits, ...
-                                                    dTypeLodInc, ...
-                                                    dTypeLodAz, ...
-                                                    dParametersLodInc, ...
-                                                    dParametersLodAz, ...
+                                                    dTypeLODinc, ...
+                                                    dTypeLODaz, ...
+                                                    dParametersLODinc, ...
+                                                    dParametersLODaz, ...
                                                     TwigDirDistribution,...
                                                     Phyllotaxis)
 
@@ -15,7 +15,7 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 fun_dewit = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
 
 % Define the distribution function for leaf inclination angle
-switch dTypeLodInc
+switch dTypeLODinc
 
     case 'uniform'
         % Uniform distribution
@@ -51,7 +51,7 @@ switch dTypeLodInc
 end
 
 % Define the distribution function for leaf azimuth angle
-switch dTypeLodAz
+switch dTypeLODaz
 
     case 'uniform'
         % Uniform distribution
@@ -115,8 +115,8 @@ for iLeaf = 1:nLeaves
             accepted = 0;
             while accepted == 0
                 incProposal = rand(1)*pi/2;
-                funValue = f_inc(incProposal,dParametersLodInc);
-                vertValue = rand(1)*max_f_inc(dParametersLodInc);
+                funValue = f_inc(incProposal,dParametersLODinc);
+                vertValue = rand(1)*max_f_inc(dParametersLODinc);
                 if vertValue < funValue
                     incAngles(iLeaf) = incProposal;
                     accepted = 1;
@@ -126,7 +126,7 @@ for iLeaf = 1:nLeaves
         case 'inverse sampling'
             % Sample inclination angle by inverse transform sampling
             u = rand(1);
-            incAngles(iLeaf) = F_inc_inv(u,dParametersLodInc);
+            incAngles(iLeaf) = F_inc_inv(u,dParametersLODinc);
 
     end
 
@@ -138,8 +138,8 @@ for iLeaf = 1:nLeaves
             accepted = 0;
             while accepted == 0
                 azProposal = rand(1)*2*pi;
-                funValue = f_az(azProposal,dParametersLodAz);
-                vertValue = rand(1)*max_f_az(dParametersLodAz);
+                funValue = f_az(azProposal,dParametersLODaz);
+                vertValue = rand(1)*max_f_az(dParametersLODaz);
                 if vertValue < funValue
                     azAngles(iLeaf) = azProposal;
                     accepted = 1;

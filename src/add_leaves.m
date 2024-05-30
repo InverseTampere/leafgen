@@ -142,7 +142,7 @@ for iLeaf = 1:nLeafCandidate
         end
         
         % Compute leaf center point
-        cen = origin + scale(2)*dir; % cen = origin + scale(2)*max(Leaves.base_vertices(:,2))*dir;
+        cen = origin + scale(2)*dir;
         
         % Compute leaf triangles for intersection computations
         leafTris = Leaves.triangles(origin, dir, normal, scale);
@@ -207,6 +207,12 @@ for iLeaf = 1:nLeafCandidate
         
         % Twig start point
         twig = twigStart(iLeaf,:);
+
+        % If inclination of normal is above pi/2, mirror normal to other
+        % side
+        if acos(dot(normal,[0,0,1])) > pi/2
+            normal = -normal;
+        end
         
         % No intersections: leaf is accepted and inserted into model
         [leafIndex,leafArea] = Leaves.add_leaf(origin,...

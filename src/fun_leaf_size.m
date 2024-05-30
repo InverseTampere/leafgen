@@ -1,8 +1,5 @@
-function [leafScaleFactors,nLeaves,maxLeafSize] = fun_leaf_size( ...
-                                                      targetArea, ...
-                                                      baseArea, ...
-                                                      dType, ...
-                                                      dParameters)
+function leafScaleFactors = fun_leaf_size(targetArea,baseArea, ...
+                                          dType,dParameters)
 
 % Initialize number of generated leafs
 nLeaves = 0;
@@ -37,14 +34,12 @@ else
         end
         areaAdded = areaAdded + sampledArea;
         % Store leaf scaling factor (same for all dimensions)
-        leafScaleFactors(nLeaves+1,:) = (sampledArea/baseArea)*ones(1,3);
+        leafScaleFactors(nLeaves+1,:) = sqrt(sampledArea/baseArea)...
+                                        *ones(1,3);
         nLeaves = nLeaves + 1;
     end
     % Remove empty rows from the end of output vector
     leafScaleFactors = leafScaleFactors(1:nLeaves,:);
 end
-
-% Find the maximum scaling
-maxLeafSize = max(max(leafScaleFactors));
 
 end

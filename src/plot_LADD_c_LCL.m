@@ -20,13 +20,13 @@ end
 f = figure; clf, hold on
 
 % Check validity of distribution function type
-dType = TargetLADD.dTypeLADD_c;
+dType = TargetLADD.dTypeLADDc;
 if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixturemodel'}))
     error("LADD compass direction distribution type not recognized.")
 end
 
 % Read target distribution parameters
-p = TargetLADD.p_c;
+p = TargetLADD.cParams;
 
 % Functions
 fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));

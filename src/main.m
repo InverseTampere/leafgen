@@ -34,8 +34,8 @@ nLSDNodes1 = 1;
 nLSDNodes2 = 1;
 lbInterval = [0.002 0.002];
 ubInterval = [0.004 0.004];
-Nodes.pLSD1 = linspace(lbInterval(1),lbInterval(2),nLsdNodes1);
-Nodes.pLSD2 = linspace(ubInterval(1),ubInterval(2),nLsdNodes2);
+Nodes.pLSD1 = linspace(lbInterval(1),lbInterval(2),nLSDNodes1);
+Nodes.pLSD2 = linspace(ubInterval(1),ubInterval(2),nLSDNodes2);
 
 %% Cylinder attribute nodes
 
@@ -75,9 +75,18 @@ tic
 LeafCylinderLibrary = generate_leaf_cylinder_library(Nodes, ...
                         LibraryDistributions, ...
                         LeafProperties, ...
-                        'nLeafObjectsPerNode',1, ...
-                        'PreventIntersections',true);
+                        'nLeafObjectsPerNode',10, ...
+                        'PreventIntersections',false);
 toc
+
+%% Save the leaf cylinder library as a .mat file
+
+% save('NewLeafCyliderLibraryExample.mat','-struct','LeafCylinderLibrary')
+% disp('---------------------')
+% disp(LeafCylinderLibrary.totalNodes)
+% s = dir('NewLeafCyliderLibraryExample.mat');         
+% disp(s.bytes)
+% return
 
 %% Initialize QSM object.
 % QSM = QSMBCylindrical('example');
@@ -100,7 +109,7 @@ TargetLADD.dTypeLADDc = 'vonmises';
 TargetLADD.cParams = [pi 0.1];
 
 % LOD inclination angle
-ParamFunctions.fun_inc_params = @(h,d,c) [1,2];
+ParamFunctions.fun_inc_params = @(h,d,c) [-1,4];
 
 % LOD azimuth angle
 ParamFunctions.fun_az_params = @(h,d,c) [3.3, 0.25];
@@ -132,7 +141,7 @@ hold on;
 % Plot leaves
 hLeaf = Leaves.plot_leaves();
 % Set leaf color
-set(hLeaf,'FaceColor',[120,150,80]./255,'EdgeColor','none');
+set(hLeaf,'FaceColor',[0,150,0]./255,'EdgeColor','none');
 
 hold off;
 axis equal;
@@ -150,14 +159,10 @@ plot_LADD_c_LCL(QSM,Leaves,TargetLADD);
 
 plot_LOD_inc_LCL(QSM,Leaves, ...
                  LeafCylinderLibrary.LeafDistributions, ...
-                 ParamFunctions,10)
+                 ParamFunctions,10);
 % plot_LOD_az_LCL
 % plot_LSD_LCL
 
-%% Save the leaf cylinder library as a .mat file
-
-return
-save('NewLeafCyliderLibraryExample.mat','-struct','LeafCylinderLibrary')
 
 
 

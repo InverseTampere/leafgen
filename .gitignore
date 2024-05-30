@@ -13,3 +13,7 @@ src/leaf_cylinder_visualization.m
 src/plot_LOD_az_LCL.m
 src/plot_LOD_inc_LCL.m
 src/plot_LSD_LCL.m
+src/NewLeafCyliderLibraryExample.mat
+src/scale_factors_test.m
+src/leaf_triangle_area.m
+src/kulmakerroin_test.m

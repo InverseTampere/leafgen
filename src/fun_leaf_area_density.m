@@ -1,5 +1,5 @@
 function relAreas = fun_leaf_area_density(CylinderParameters, ...
-                                          TargetLADD)
+                                          TargetDist)
 
 %% Function definitions
 
@@ -10,8 +10,8 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 %% Distribution functions and parameters 
 
 % Distribution function and parameters for relative height
-dTypeLADDh = TargetLADD.dTypeLADDh;
-hParams    = TargetLADD.hParams;
+dTypeLADDh = TargetDist.dTypeLADDh;
+hParams    = TargetDist.hParams;
 switch dTypeLADDh
     case 'uniform'
         fDist_h = @(h) 1;
@@ -45,8 +45,8 @@ end
 
 % Distribution function and parameters for relative distance along
 % sub-branch
-dTypeLADDd = TargetLADD.dTypeLADDd;
-dParams    = TargetLADD.dParams;
+dTypeLADDd = TargetDist.dTypeLADDd;
+dParams    = TargetDist.dParams;
 switch dTypeLADDd
     case 'uniform'
         fDist_d = @(d) 1;
@@ -79,8 +79,8 @@ switch dTypeLADDd
 end
 
 % Distribution function and parameters for compass direction
-dTypeLADDc = TargetLADD.dTypeLADDc;
-cParams    = TargetLADD.cParams;
+dTypeLADDc = TargetDist.dTypeLADDc;
+cParams    = TargetDist.cParams;
 switch dTypeLADDc
     case 'uniform'
         fDist_c = @(c) 1/(2*pi);
@@ -108,20 +108,20 @@ nCylinders = length(relativeHeight);
 %% Bins for distribution of leaf area
 
 % Heightwise bins for distributing leaf area
-if isfield(TargetLADD,'nBins_h')
-    nBinsH = TargetLADD.nBinsLADDh;
+if isfield(TargetDist,'nBins_h')
+    nBinsH = TargetDist.nBinsLADDh;
 else
     nBinsH = 10;
 end
 % Distancewise bins for distributing leaf area
-if isfield(TargetLADD,'nBins_d')
-    nBinsD = TargetLADD.nBinsLADDd;
+if isfield(TargetDist,'nBins_d')
+    nBinsD = TargetDist.nBinsLADDd;
 else
     nBinsD = 10;
 end
 % Directionwise bins for distributing leaf area
-if isfield(TargetLADD,'nBins_c')
-    nBinsC = TargetLADD.nBinsLADDc;
+if isfield(TargetDist,'nBins_c')
+    nBinsC = TargetDist.nBinsLADDc;
 else
     nBinsC = 10;
 end

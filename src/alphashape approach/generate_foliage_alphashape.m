@@ -394,7 +394,7 @@ while leafArea < candidateArea
     end
     leafArea = leafArea + sampledArea;
     % Store leaf scaling factor (same for all dimensions)
-    leafScaleFactors(iLeaf,:) = (sampledArea/baseArea)*ones(1,3);
+    leafScaleFactors(iLeaf,:) = sqrt(sampledArea/baseArea)*ones(1,3);
 
     % Unit vector of the leaf normal (y-axis assumed as north direction)
     leafNormal(iLeaf,:) = [sin(incAngles(iLeaf))*cos(azAngles(iLeaf)+pi/2),...
