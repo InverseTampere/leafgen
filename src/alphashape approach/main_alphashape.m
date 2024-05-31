@@ -28,15 +28,15 @@ LeafProperties.triangles = [1, 2, 3];
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dTypeLADDh = '';%'betamixturemodel';
+TargetDistributions.dTypeLADDh = 'betamixturemodel';
 TargetDistributions.hParams = [22 3 41 50 0.85];
 
 % LADD relative distance from stem
-TargetDistributions.dTypeLADDd = '';%'beta';
+TargetDistributions.dTypeLADDd = 'beta';
 TargetDistributions.dParams = [2 1];
 
 % LADD compass direction
-TargetDistributions.dTypeLADDc = '';%'vonmisesmixturemodel';
+TargetDistributions.dTypeLADDc = 'vonmisesmixturemodel';
 TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
@@ -65,7 +65,8 @@ totalLeafArea = 20;
                                      'alpha',1, ...
                                      'StemCoordinates',stemCoordinates, ...
                                      'VoxelEdge',0.1, ...
-                                     'PCSamplingWeights',[1 0]);
+                                     'IntersectionPrevention',false, ...
+                                     'PCSamplingWeigths',1);
 
 %% Visualize the foliage
 

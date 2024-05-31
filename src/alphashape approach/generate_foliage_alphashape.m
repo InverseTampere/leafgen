@@ -11,6 +11,7 @@ pcSamplingWeights = 0;
 voxelEdge = 0.15;
 voxelThreshold = 5;
 leafAttLabels = true(size(treePointCloud,1),1);
+intersectionPrevention = true;
 fDist_h = []; fDist_d = []; fDist_c = [];
 maxfDist_h = []; maxfDist_d = []; maxfDist_c = [];
 
@@ -34,6 +35,8 @@ while i <= NArg
                 voxelThreshold = varargin{i+1};
             case 'leafattractorlabels'
                 leafAttLabels = logical(varargin{i+1});
+            case 'intersectionprevention'
+                intersectionPrevention = varargin{i+1};
         end
     end
     i = i + 1;
@@ -432,14 +435,35 @@ leafScaleFactors = leafScaleFactors(1:iLeaf,:);
 toc
 
 %% Add leaves to the shape without intersections
-disp('Adding leaves to the model without intersections')
-tic
-Leaves = add_leaves_to_alphashape(aShape, ...
-                                  Leaves, ...
-                                  totalLeafArea, ....
-                                  leafStartPoints, ...
-                                  leafNormal, ...
-                                  leafDir, ...
-                                  leafScaleFactors);
-toc
+if intersectionPrevention == true
+    disp('Adding leaves to the model without intersections')
+    tic
+    Leaves = add_leaves_to_alphashape(aShape, ...
+                                      Leaves, ...
+                                      totalLeafArea, ....
+                                      leafStartPoints, ...
+                                      leafNormal, ...
+                                      leafDir, ...
+                                      leafScaleFactors);
+    toc
+else
+    disp('Adding leaves to the model')
+    tic
+    iLeaf = 1;
+    areaAdded = 0;
+    while areaAdded < totalLeafArea && iLeaf < size(leafStartPoints,1)
+        leafParent = NaN;
+        twigStart  = NaN;
+        Leaves.add_leaf(leafStartPoints(iLeaf,:), ...
+                        leafDir(iLeaf,:), ...
+                        leafNormal(iLeaf,:), ...
+                        leafScaleFactors(iLeaf,:), ...
+                        leafParent, ...
+                        twigStart);
+        areaAdded = areaAdded ...
+                    + (leafScaleFactors(iLeaf,1)^2)*Leaves.base_area;
+        iLeaf = iLeaf + 1;
+    end
+    toc
+end
 disp('Foliage generation finished')

@@ -30,7 +30,7 @@ end
 f = figure; clf, hold on
 
 % Check validity of distribution function type
-dType = TargetDistributions.dType_d;
+dType = TargetDistributions.dTypeLADDd;
 if ~any(strcmp(dType,{'','uniform','polynomial', ...
         'polynomialmixturemodel','weibull','weibullmixturemodel', ...
         'beta','betamixturemodel'}))
@@ -38,7 +38,7 @@ if ~any(strcmp(dType,{'','uniform','polynomial', ...
 end
 
 % Read target distribution parameters
-p = TargetDistributions.p_d;
+p = TargetDistributions.dParams;
 
 % Functions
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);

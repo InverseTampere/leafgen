@@ -57,7 +57,7 @@ targetReached = false;
 for iLeaf = 1:nLeafCandidate
     
     % Check if target area has been reached
-    if areaAccepted >= totalLeafArea;
+    if areaAccepted >= totalLeafArea
         targetReached = true;
         break;
     end
