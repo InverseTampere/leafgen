@@ -1,7 +1,8 @@
-function LeafCylLib = generate_leaf_cylinder_library(Nodes, ...
-                                                     LibraryDistributions, ...
-                                                     LeafProperties, ...
-                                                     varargin)
+function LeafCylLib = generate_leaf_cylinder_library(...
+                                        LibraryDistributions, ...
+                                        Nodes, ...
+                                        LeafProperties, ...
+                                        varargin)
 
 %% Default values
 
@@ -15,13 +16,18 @@ if LibraryDistributions.dTypeLODinc == "uniform"
     Nodes.pLODinc1 = 0;
     Nodes.pLODinc2 = 0;
 end
-
 if LibraryDistributions.dTypeLODaz == "uniform"
     Nodes.pLODaz1 = 0;
     Nodes.pLODaz2 = 0;
 end
+if LibraryDistributions.dTypeLSD == "constant"
+    Nodes.pLSD2 = 0;
+end
 
 %% Read inputs
+
+% Check the correctness of inputs
+check_library_inputs(LibraryDistributions,Nodes,LeafProperties);
 
 % Check additional parameters
 i = 1;
@@ -35,42 +41,51 @@ while i <= NArg
             case 'nleafobjectspernode'
                 assert(i < NArg && isnumeric(varargin{i+1}) && ...
                        isscalar(varargin{i+1}) && varargin{i+1} > 0, ...
-                       'Argument following ''NLeafObjectsPerNode'' should be a positive integer.');
+                       "Argument following ''NLeafObjectsPerNode''"...
+                       +" should be a positive integer.");
                 nLeafObjectsPerNode = varargin{i+1};
                 i = i + 1;
 
             case 'preventintersections'
                 assert(i < NArg && isa(varargin{i+1},'logical') && ...
                        isscalar(varargin{i+1}), ...
-                       'Argument following ''PreventIntersections'' should be a boolean.')
+                       "Argument following ''PreventIntersections''"...
+                       +" should be a boolean.")
                 intersectionPrevention = varargin{i+1};
                 i = i + 1;
 
             case 'oversamplingfactor'
                 assert(i < NArg && isnumeric(varargin{i+1}) && ...
                        isscalar(varargin{i+1}) && varargin{i+1}>1, ...
-                       'Argument following ''OverSamplingFactor'' should be a scalar above the value of 1.');
+                       "Argument following ''OverSamplingFactor''"...
+                       +" should be a scalar above the value of 1.");
                 overSamplingFactor = varargin{i+1};
                 i = i + 1;
 
             case 'twigdirectiondistribution'
                 assert(i < NArg && isa(varargin{i+1},'function_handle'),...
-                       'Argument following ''TwigDirectionDistribution'' should be a function handle.');
+                       "Argument following"...
+                       +" ''TwigDirectionDistribution'' should be a"...
+                       +" function handle.");
                 TwigDirectionDistribution.flag = true;
                 TwigDirectionDistribution.dist_fun = varargin{i+1};
                 i = i + 1;
 
             case 'phyllotaxis'
                 assert(i < NArg && isa(varargin{i+1},'struct'), ...
-                       'Argument following ''Phyllotaxis'' should be a struct.')
+                       "Argument following ''Phyllotaxis'' should be a"...
+                       +" struct.")
                 Phyllotaxis = varargin{i+1};
                 Phyllotaxis.flag = true;
                 if TwigDirectionDistribution.flag == true
-                    warning('Twig direction distribution cannot be used simultaneously with phyllotaxis enabled')
+                    warning("Twig direction distribution cannot be"...
+                            +" used simultaneously with phyllotaxis"...
+                            +" enabled")
                 end
 
             otherwise
-                warning(['Skipping unknown parameters: ''' varargin{i} '''']);
+                warning("Skipping unknown parameters:"...
+                        +" ''"+varargin{i}+"''");
         end
     end
     i = i + 1;

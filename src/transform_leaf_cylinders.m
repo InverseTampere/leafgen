@@ -1,9 +1,11 @@
-function Leaves = populate_qsm_with_leaves(QSM,LeafCylinderLibrary, ...
+function Leaves = transform_leaf_cylinders(QSM,LeafCylinderLibrary, ...
                                            TargetLADD, ...
                                            ParamFunctions, ...
                                            targetLeafArea)
 
-
+%% Check the correctness of inputs
+QSM = check_transform_inputs(QSM,TargetLADD,ParamFunctions,targetLeafArea); 
+                             
 
 %% Reading leaf cylinder library nodes
 
