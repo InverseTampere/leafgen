@@ -27,7 +27,7 @@ end
 %% Read inputs
 
 % Check the correctness of inputs
-check_library_inputs(LibraryDistributions,Nodes,LeafProperties);
+check_inputs_library(LibraryDistributions,Nodes,LeafProperties);
 
 % Check additional parameters
 i = 1;

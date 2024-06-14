@@ -4,6 +4,10 @@ function Leaves = generate_foliage_qsm_direct(QSM, ...
                                               totalLeafArea, ...
                                               varargin)
 
+%% Check the correctness of inputs
+QSM = check_inputs_direct(QSM,TargetDistributions,LeafProperties, ...
+                          totalLeafArea);
+
 %% Optional input default values
 intersectionPrevention = true;
 overSamplingFactor = 2;

@@ -1,4 +1,4 @@
-function QSM = check_transform_inputs(QSM,TargetLADD,ParamFunctions, ...
+function QSM = check_inputs_transform(QSM,TargetLADD,ParamFunctions, ...
                                       targetLeafArea)
 
 %% QSM
@@ -101,7 +101,7 @@ switch dTypeH
         end
 end
 % Relative distance along subbranch
-dTypeD = TargetLADD.dTypeLADDd;
+dTypeD  = TargetLADD.dTypeLADDd;
 dParams = TargetLADD.dParams;
 if ~any(strcmp(dTypeD,{'uniform','polynomial', ...
         'polynomialmixturemodel','weibull','weibullmixturemodel', ...
@@ -218,7 +218,7 @@ for iField = 1:length(fieldCheckPar)
     assert(fieldCheckPar(iField),"ParamFunctoins."+...
            fieldNamesPar(iField)+" is missing.")
 end
-% Assert that all field are function handles
+% Assert that all fields are function handles
 if ~isa(ParamFunctions.fun_inc_params,'function_handle')
     error("ParamFunctions.fun_inc_params has to be a function handle.")
 end

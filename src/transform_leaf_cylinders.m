@@ -4,7 +4,7 @@ function Leaves = transform_leaf_cylinders(QSM,LeafCylinderLibrary, ...
                                            targetLeafArea)
 
 %% Check the correctness of inputs
-QSM = check_transform_inputs(QSM,TargetLADD,ParamFunctions,targetLeafArea); 
+QSM = check_inputs_transform(QSM,TargetLADD,ParamFunctions,targetLeafArea); 
                              
 
 %% Reading leaf cylinder library nodes
