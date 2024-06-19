@@ -1,6 +1,10 @@
 function compassDir = xyz_to_compass_dir(leafStartPoint,stemCoordinates)
-% Index of stem coordinate with z-value below the leaf height
-iSC = find(stemCoordinates(:,3) > leafStartPoint(3),1);
+% Index of the first stem coordinate with z-value above the leaf height
+if stemCoordinates(end,3) < leafStartPoint(3)
+    iSC = size(stemCoordinates,1);
+else
+    iSC = find(stemCoordinates(:,3) > leafStartPoint(3),1);
+end
 % Relative z-position of leaf between the stem coordinate nodes
 relPos = (leafStartPoint(3)- stemCoordinates(iSC-1,3)) ...
           /(stemCoordinates(iSC,3) - stemCoordinates(iSC-1,3));

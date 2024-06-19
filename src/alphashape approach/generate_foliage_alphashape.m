@@ -219,18 +219,20 @@ maxHorzDist = max(horzDistances);
 % Maximum height of the point cloud members
 maxHeight = max(treePointCloud(:,3));
 
-%% Caculating voxel array and finding which voxels contain points
-disp('Calculating point cloud voxelization')
-
-tic
-
-% Voxel parameters
+% Axiswise extreme points
 xMin = min(treePointCloud(:,1));
 xMax = max(treePointCloud(:,1));
 yMin = min(treePointCloud(:,2));
 yMax = max(treePointCloud(:,2));
 zMin = min(treePointCloud(:,3));
 zMax = max(treePointCloud(:,3));
+
+%% Caculating voxel array and finding which voxels contain points
+disp('Calculating point cloud voxelization')
+
+tic
+
+% Voxel parameters
 nx = ceil((xMax-xMin)/voxelEdge);
 ny = ceil((yMax-yMin)/voxelEdge);
 nz = ceil((zMax-zMin)/voxelEdge);
@@ -256,13 +258,11 @@ pcRemaining = treePointCloud(leafAttLabels,:);
 voxelInd = cell(nx,ny,nz);
 voxelCenDir = zeros(nx,ny,nz);
 pcVoxels = zeros(nx,ny,nz);
-k = 0;
 for ix = 1:nx
     % Slice of point cloud corrseponding to the x voxel coordinates
     inXslice = all([(pcRemaining(:,1) < xEdges(ix+1)) ...
                     (pcRemaining(:,1) >= xEdges(ix))],2);
     pcXslice = pcRemaining(inXslice,:);
-    pcRemaining(inXslice,:) = [];
     for iy = 1:ny
         % Column of point cloud corresponding to the x and y voxel
         % coordinates
@@ -270,8 +270,6 @@ for ix = 1:nx
                           (pcXslice(:,2) >= yEdges(iy))],2);
         pcXYcolumn = pcXslice(inXYcolumn,:);
         for iz = 1:nz
-            % Increment loop counter
-            k = k + 1;
             % Cell for voxel indices
             voxelInd{ix,iy,iz} = [ix iy iz];
             % Compass direction of voxel center point wrt. stem
@@ -291,21 +289,39 @@ for ix = 1:nx
                 patch('vertices', voxelVertices, 'faces', voxelFaces, ...
                       'facecolor', 'r', 'facealpha', 0.0);
             end
-            
         end
     end
 end
+% Set point cloud sampling and voxelization information into a struct
+PCSampling.binEdges = linspace(0,1,length(pcSamplingWeights)+1);
+PCSampling.weights  = pcSamplingWeights;
+PCSampling.xEdges = xEdges;
+PCSampling.yEdges = yEdges;
+PCSampling.zEdges = zEdges;
+PCSampling.voxels = pcVoxels;
+PCSampling.voxelIndex = voxelInd;
+PCSampling.voxelCenterDirection = voxelCenDir;
+PCSampling.nPCSampled = zeros(size(pcSamplingWeights));
+PCSampling.nTotalSampled = zeros(size(pcSamplingWeights));
+PCSampling.ratio = zeros(size(pcSamplingWeights));
+if sum(pcSamplingWeights) > 0
+    PCSampling.flag = true;
+else
+    PCSampling.flag = false;
+end
 
-toc
-
-%% Point cloud sampling bins
-pcSamplingBinEdges = linspace(0,1,length(pcSamplingWeights)+1);
+toc 
 
 %% Initialize leaf object and candidate leaf area
 Leaves = LeafModelTriangle(LeafProperties.vertices, ...
                            LeafProperties.triangles);
 baseArea = Leaves.base_area;
-candidateArea = 2*totalLeafArea;
+
+if intersectionPrevention == true
+    candidateArea = 2*totalLeafArea;
+else
+    candidateArea = totalLeafArea;
+end
 
 %% Initializing leaf attribute variables
 nInit = 10000;
@@ -322,21 +338,23 @@ tic
 iLeaf = 0;
 leafArea = 0;
 iVarExt = 0;
+ic = 1;
 while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
-    if mod(iLeaf,100) == 0
-        disp(leafArea)
+    % Counter
+    if ic == floor(leafArea)
+        disp([num2str(ic),'m^2 / ',num2str(candidateArea),'m^2']);
+        ic = ic + 1;
     end
     % Sampling leaf position   
-    leafStartPoints(iLeaf,:) = sample_leaf_position(aShape, ...
-                                   fDist_h,fDist_d,fDist_c, ...
-                                   maxfDist_h,maxfDist_d,maxfDist_c, ...
-                                   maxHorzDist,maxHeight, ...
-                                   stemCoordinates, pcSamplingBinEdges, ...
-                                   pcSamplingWeights, ...
-                                   xEdges,yEdges,zEdges, ...
-                                   pcVoxels,voxelInd,voxelCenDir);
+    [leafSP,PCSampling] = sample_leaf_position(aShape, ...
+                              fDist_h,fDist_d,fDist_c, ...
+                              maxfDist_h,maxfDist_d,maxfDist_c, ...
+                              xMin,xMax,yMin,yMax,maxHeight, ...
+                              stemCoordinates,PCSampling);
+    leafStartPoints(iLeaf,:) = leafSP;
+
     % Leaf height value
     hLeaf = leafStartPoints(iLeaf,3)/maxHeight;
     % Leaf compass direction value

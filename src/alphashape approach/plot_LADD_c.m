@@ -90,7 +90,11 @@ compassDir = zeros(leafCount,1);
 if flagStemCoordinates == true
     for iLeaf = 1:leafCount
         % Index of stem coordinate with z-value below the leaf height
-        iSC = find(stemCoordinates(:,3) > leafStartPoints(iLeaf,3),1);
+        if stemCoordinates(end,3) < leafStartPoints(iLeaf,3)
+            iSC = size(stemCoordinates,1);
+        else
+            iSC = find(stemCoordinates(:,3) > leafStartPoints(iLeaf,3),1);
+        end
         % Relative z-position of leaf between the stem coordinate nodes
         relPos = (leafStartPoints(iLeaf,3)- stemCoordinates(iSC-1,3)) ...
                  /(stemCoordinates(iSC,3) - stemCoordinates(iSC-1,3));

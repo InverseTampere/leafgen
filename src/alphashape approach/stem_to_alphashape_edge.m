@@ -11,7 +11,11 @@ yCoord = 2*maxHorzDist*linspace(0,1,nPP)';
 initPP = [zeros(nPP,1) yCoord zeros(nPP,1)];
 probePoints = (rotation_matrix([0 0 1],compassValue)*initPP')' ...
     + [zeros(nPP,2) maxHeight*heightValue*ones(nPP,1)];
-iSC = find(stemCoordinates(:,3) > maxHeight*heightValue,1);
+if stemCoordinates(end,3) < maxHeight*heightValue
+    iSC = size(stemCoordinates,1);
+else
+    iSC = find(stemCoordinates(:,3) > maxHeight*heightValue,1);
+end
 relPos = (maxHeight*heightValue-stemCoordinates(iSC-1,3)) ...
     /(stemCoordinates(iSC,3)-stemCoordinates(iSC-1,3));
 stemCen = relPos*(stemCoordinates(iSC,:) - stemCoordinates(iSC-1,:)) ...

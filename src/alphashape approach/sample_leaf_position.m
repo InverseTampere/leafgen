@@ -1,12 +1,8 @@
-function leafStartPoint = sample_leaf_position(aShape, ...
-                              fDist_h,fDist_d,fDist_c, ...
-                              maxfDist_h,maxfDist_d,maxfDist_c, ...
-                              maxHorzDist,maxHeight, ...
-                              stemCoordinates, pcSamplingBinEdges, ...
-                              pcSamplingWeights, ...
-                              xEdges,yEdges,zEdges, ...
-                              pcVoxels,voxelInd,voxelCenDir)
-
+function [leafSP,PCSampling] = sample_leaf_position(aShape, ...
+                                   fDist_h,fDist_d,fDist_c, ...
+                                   maxfDist_h,maxfDist_d,maxfDist_c, ...
+                                   xMin,xMax,yMin,yMax,maxHeight, ...
+                                   stemCoordinates,PCSampling)
 
 
 % Use uniform sampling of alphashape (or point cloud) in positioning
@@ -14,15 +10,19 @@ if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
 
     uniformSampling = true;
     relHeight = rand(1);
-    iPCS = find(relHeight<pcSamplingBinEdges,1,'first') - 1;
-    if pcSamplingWeights(iPCS) >= rand(1)
+    iPCS = find(relHeight<PCSampling.binEdges,1,'first') - 1;
+    if PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS) ...
+            && PCSampling.flag == true
         % Voxels inside the point cloud sampling bin
-        izLB = find(zEdges>maxHeight*pcSamplingBinEdges(iPCS),1, ...
-                    'first') - 1;
-        izUB = find(zEdges>maxHeight*pcSamplingBinEdges(iPCS+1),1, ...
-                    'first') - 1;
-        samplingBinVoxels = pcVoxels(:,:,izLB:izUB);
+        izLB = find(PCSampling.zEdges>maxHeight ...
+                    *PCSampling.binEdges(iPCS),1,'first') - 1;
+        izUB = find(PCSampling.zEdges>=maxHeight ...
+                    *PCSampling.binEdges(iPCS+1),1,'first') - 1;
+        % Cumulative sum of voxels inside sampling bin
+        samplingBinVoxels = PCSampling.voxels(:,:,izLB:izUB);
         cumulativeSum = cumsum(samplingBinVoxels(:));
+        samplingBinVoxelInds = PCSampling.voxelIndex(:,:,izLB:izUB);
+        samplingBinVoxelIndsCol = samplingBinVoxelInds(:);
         % Check whether there are point cloud voxels inside the sampling
         % bin
         if cumulativeSum(end) > 0 
@@ -30,42 +30,53 @@ if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
             % Point cloud sampling
             cumulativePDF = cumulativeSum./cumulativeSum(end);
             k = find(cumulativePDF>rand(1),1,'first');
-            if izLB > 1
-                belowVoxels = pcVoxels(:,:,1:(izLB-1));
-                k = k + length(belowVoxels(:));
-            end
-            xyzInds = voxelInd{k};
+            % if izLB > 1
+            %     belowVoxels = PCSampling.voxels(:,:,1:(izLB-1));
+            %     k = k + length(belowVoxels(:));
+            % end
+            % xyzInds = PCSampling.voxelIndex{k};
+            xyzInds = samplingBinVoxelIndsCol{k};
             ix = xyzInds(1);
             iy = xyzInds(2);
             iz = xyzInds(3);
             % Uniformly sample a point inside the voxel
-            proposal = rand(1,3).*[xEdges(ix+1)-xEdges(ix) ...
-                                   yEdges(iy+1)-yEdges(iy) ...
-                                   zEdges(iz+1)-zEdges(iz)] ...
-                       + [xEdges(ix) yEdges(iy) zEdges(iz)];
-            leafStartPoint = proposal;
-        else
-            uniformSampling = true;
+            proposal = rand(1,3) ...
+                       .*[PCSampling.xEdges(ix+1)-PCSampling.xEdges(ix) ...
+                          PCSampling.yEdges(iy+1)-PCSampling.yEdges(iy) ...
+                          PCSampling.zEdges(iz+1)-PCSampling.zEdges(iz)]...
+                       + [PCSampling.xEdges(ix) PCSampling.yEdges(iy) ...
+                          PCSampling.zEdges(iz)];
+            % Set the sampled point as leaf start point
+            leafSP = proposal;
+            % Increment sampling counters and calculate new ratio
+            PCSampling.nPCSampled(iPCS) = PCSampling.nPCSampled(iPCS) + 1;
+            PCSampling.nTotalSampled(iPCS) = ...
+                                       PCSampling.nTotalSampled(iPCS) + 1;
+            PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS) ...
+                                     /PCSampling.nTotalSampled(iPCS);
         end
     end
 
     if uniformSampling == true
-        % Uniform sampling inside alphashape
-        proposal = [0 0 relHeight*maxHeight];
+        proposal = [0 0 0];
+        % Sample the position uniformly
         accepted = 0;
-        k = 0;
         while accepted == 0
-            proposal(1) = rand(1)*(xEdges(end)-xEdges(1)) + xEdges(1);
-            proposal(2) = rand(1)*(yEdges(end)-yEdges(1)) + yEdges(1);
+            proposal(1) = rand(1)*(xMax-xMin) + xMin;
+            proposal(2) = rand(1)*(yMax-yMin) + yMin;
+            proposal(3) = rand(1)*maxHeight;
+            % Check if proposed point is inside the alpha shape
             if inShape(aShape,proposal)
-                leafStartPoint = proposal;
+                % Set the sampled point as leaf start point
+                leafSP = proposal;
+                % Increment sampling counter and calculate new ratio
+                rh = proposal(3)/maxHeight;
+                iPCS = find(rh<PCSampling.binEdges,1,'first') - 1;
+                PCSampling.nTotalSampled(iPCS) = ...
+                                       PCSampling.nTotalSampled(iPCS) + 1;
+                PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS) ...
+                                         /PCSampling.nTotalSampled(iPCS);
                 accepted = 1;
-            end
-            k = k + 1;
-            if k > 10000
-                % No alphashape found on height level, resample height
-                proposal(3) = rand(1)*maxHeight;
-                k = 0;
             end
         end
         
@@ -76,21 +87,27 @@ if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
 % Use heightwise LADD and uniform sampling of alphashape (or point cloud) 
 % in positioning
 elseif isempty(fDist_d) && isempty(fDist_c)
-
+    
+    uniformSampling = false;
     accepted = 0;
     while accepted == 0
         % Sample height value from heightwise LADD
         hLeaf = rejection_sampling(fDist_h,maxfDist_h);
         % Find index of point cloud sampling height bin
-        iPCS = find(hLeaf<pcSamplingBinEdges,1,'first') - 1;
-        if pcSamplingWeights(iPCS) >= rand(1)
+        iPCS = find(hLeaf<PCSampling.binEdges,1,'first') - 1;
+        if all([PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS), ...
+                uniformSampling == false, ...
+                PCSampling.flag == true])
             % Corresponding height index in voxelization
-            iz = find(zEdges>hLeaf,1,'first') - 1;
-            zSlice = pcVoxels(:,:,iz);
-            zSliceInds = voxelInd(:,:,iz);
+            iz = find(PCSampling.zEdges>hLeaf,1,'first') - 1;
+            % Find all voxels for the height level
+            zSlice = PCSampling.voxels(:,:,iz);
+            zSliceInds = PCSampling.voxelIndex(:,:,iz);
             zSliceCol = zSlice(:);
             zSliceIndsCol = zSliceInds(:);
+            % If no voxels on height level, do uniform sampling
             if sum(zSliceCol) == 0
+                uniformSampling = true;
                 continue
             end
             cumulativeSum = cumsum(zSliceCol);
@@ -100,27 +117,40 @@ elseif isempty(fDist_d) && isempty(fDist_c)
             ix = xyInds(1);
             iy = xyInds(2);
             % Uniformly sample a point inside the voxel
-            proposal = rand(1,3).*[xEdges(ix+1)-xEdges(ix) ...
-                                   yEdges(iy+1)-yEdges(iy) ...
-                                   0] ...
-                       + [xEdges(ix) yEdges(iy) hLeaf];
-            leafStartPoint = proposal;
+            proposal = rand(1,3) ...
+                       .*[PCSampling.xEdges(ix+1)-PCSampling.xEdges(ix) ...
+                          PCSampling.yEdges(iy+1)-PCSampling.yEdges(iy) ...
+                          0] ...
+                       + [PCSampling.xEdges(ix) PCSampling.yEdges(iy) ...
+                          hLeaf];
+            % Set the sampled point as leaf start point
+            leafSP = proposal;
+            % Increment sampling counters and calculate new ratio
+            PCSampling.nPCSampled(iPCS) = PCSampling.nPCSampled(iPCS) + 1;
+            PCSampling.nTotalSampled(iPCS) = ...
+                                       PCSampling.nTotalSampled(iPCS) + 1;
+            PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS) ...
+                                     /PCSampling.nTotalSampled(iPCS);
             accepted = 1;
-        else
+        end
+
+        if uniformSampling == true
             % Uniform sampling inside alphashape
             proposal = [0 0 hLeaf*maxHeight];
-            k = 0;
             while accepted == 0
-                proposal(1) = rand(1)*(xEdges(end)-xEdges(1)) + xEdges(1);
-                proposal(2) = rand(1)*(yEdges(end)-yEdges(1)) + yEdges(1);
+                proposal(1) = rand(1)*(xMax-xMin) + xMin;
+                proposal(2) = rand(1)*(yMax-yMin) + yMin;
                 if inShape(aShape,proposal)
-                    leafStartPoint = proposal;
+                    % Set the proposed point as leaf start point
+                    leafSP = proposal;
+                    % Increment sampling counter and calculate new ratio
+                    rh = proposal(3)/maxHeight;
+                    iPCS = find(rh<PCSampling.binEdges,1,'first') - 1;
+                    PCSampling.nTotalSampled(iPCS) = ...
+                                       PCSampling.nTotalSampled(iPCS) + 1;
+                    PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS)...
+                                           /PCSampling.nTotalSampled(iPCS);
                     accepted = 1;
-                end
-                k = k + 1;
-                if k > 10000
-                    % No alphashape found on height level, resample height
-                    break
                 end
             end
         end
@@ -131,6 +161,7 @@ elseif isempty(fDist_d) && isempty(fDist_c)
 % Use heightwise and directionwise LADD (or point cloud) in positioning
 elseif isempty(fDist_d)
 
+    uniformSampling = false;
     accepted = 0;
     while accepted == 0
         % Proposal values for relative height and compass direction
@@ -146,15 +177,17 @@ elseif isempty(fDist_d)
         cLeaf = cProposal;
 
         % Find index of point cloud sampling height bin
-        iPCS = find(hProposal<pcSamplingBinEdges,1,'first') - 1;
-        if pcSamplingWeights(iPCS) >= rand(1) 
+        iPCS = find(hProposal<PCSampling.binEdges,1,'first') - 1;
+        if all([PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS), ...
+               uniformSampling == false, ...
+               PCSampling.flag == true])
             % Corresponding height index in voxelization
-            iz = find(zEdges>hLeaf,1,'first') - 1;
-            zSlice = pcVoxels(:,:,iz);
+            iz = find(PCSampling.zEdges>hLeaf,1,'first') - 1;
+            zSlice = PCSampling.voxels(:,:,iz);
             zSliceCol = zSlice(:);
-            zSliceInds = voxelInd(:,:,iz);
+            zSliceInds = PCSampling.voxelIndex(:,:,iz);
             zSliceIndsCol = zSliceInds(:);
-            zSliceCenDir = voxelCenDir(:,:,iz);
+            zSliceCenDir = PCSampling.voxelCenterDirection(:,:,iz);
             zSliceCenDirCol = zSliceCenDir(:);
             % Corresponding voxels around the compass direction
             sectorWidth = 2*pi/10;
@@ -163,7 +196,9 @@ elseif isempty(fDist_d)
                 2);
             sectorSliceIndsCol = zSliceIndsCol(inSector);
             sectorSliceCol = zSliceCol(inSector);
+            % If there are no voxels, do uniform sampling
             if sum(sectorSliceCol) == 0
+                uniformSampling = true;
                 continue
             end
             cumulativeSum = cumsum(sectorSliceCol);
@@ -173,13 +208,23 @@ elseif isempty(fDist_d)
             ix = xyInds(1);
             iy = xyInds(2);
             % Uniformly sample a point inside the voxel
-            proposal = rand(1,3).*[xEdges(ix+1)-xEdges(ix) ...
-                                   yEdges(iy+1)-yEdges(iy) ...
-                                   0] ...
-                       + [xEdges(ix) yEdges(iy) hLeaf];
-            leafStartPoint = proposal;
+            proposal = rand(1,3) ...
+                       .*[PCSampling.xEdges(ix+1)-PCSampling.xEdges(ix) ...
+                          PCSampling.yEdges(iy+1)-PCSampling.yEdges(iy) ...
+                          0] ...
+                       + [PCSampling.xEdges(ix) PCSampling.yEdges(iy) ...
+                          hLeaf];
+            leafSP = proposal;
+            % Increment sampling counters and calculate new ratio
+            PCSampling.nPCSampled(iPCS) = PCSampling.nPCSampled(iPCS) + 1;
+            PCSampling.nTotalSampled(iPCS) = ...
+                                       PCSampling.nTotalSampled(iPCS) + 1;
+            PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS) ...
+                                     /PCSampling.nTotalSampled(iPCS);
             accepted = 1;
-        else
+        end
+
+        if uniformSampling == true
             % Probing the edge of alpha shape
             edgeValue = stem_to_alphashape_edge(aShape, ...
                                                 hProposal, ...
@@ -198,9 +243,15 @@ elseif isempty(fDist_d)
                               - stemCoordinates(iSC-1,:)) ...
                       + stemCoordinates(iSC-1,:);
             % Calculate the leaf start point
-            leafStartPoint = (rotation_matrix([0 0 1],cLeaf) ...
+            leafSP = (rotation_matrix([0 0 1],cLeaf) ...
                               *[0 1 0]')'*dLeaf ...
                              +[stemCen(1:2) hLeaf];
+            % Increment sampling counter and calculate new ratio
+            iPCS = find(hLeaf<PCSampling.binEdges,1,'first') - 1;
+            PCSampling.nTotalSampled(iPCS) = ...
+                                       PCSampling.nTotalSampled(iPCS) + 1;
+            PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS)...
+                                     /PCSampling.nTotalSampled(iPCS);
             accepted = 1;
         end
     end
@@ -247,7 +298,7 @@ elseif isa(fDist_h,"function_handle") && isa(fDist_d,"function_handle") ...
                               - stemCoordinates(iSC-1,:)) ...
                       + stemCoordinates(iSC-1,:);
             % Calculate the leaf start point
-            leafStartPoint = (rotation_matrix([0 0 1],cLeaf) ...
+            leafSP = (rotation_matrix([0 0 1],cLeaf) ...
                               *[0 1 0]')'*dLeaf ...
                              +[stemCen(1:2) hLeaf];
             accepted = 1;

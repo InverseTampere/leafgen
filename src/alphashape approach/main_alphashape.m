@@ -28,15 +28,15 @@ LeafProperties.triangles = [1, 2, 3];
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dTypeLADDh = 'betamixturemodel';
+TargetDistributions.dTypeLADDh = ''; % 'betamixturemodel';
 TargetDistributions.hParams = [22 3 41 50 0.85];
 
 % LADD relative distance from stem
-TargetDistributions.dTypeLADDd = 'beta';
+TargetDistributions.dTypeLADDd = ''; % 'beta';
 TargetDistributions.dParams = [2 1];
 
 % LADD compass direction
-TargetDistributions.dTypeLADDc = 'vonmisesmixturemodel';
+TargetDistributions.dTypeLADDc = ''; % 'vonmisesmixturemodel';
 TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
@@ -58,7 +58,7 @@ stemCoordinates = [   0,      0,                  0;
                       0,      0,   max(pCloud(:,3))];
 %% Generate foliage
 
-totalLeafArea = 20;
+totalLeafArea = 4;
 
 [Leaves,aShape] = generate_foliage_alphashape(pCloud,TargetDistributions, ...
                                      LeafProperties,totalLeafArea, ...
@@ -66,7 +66,7 @@ totalLeafArea = 20;
                                      'StemCoordinates',stemCoordinates, ...
                                      'VoxelEdge',0.1, ...
                                      'IntersectionPrevention',false, ...
-                                     'PCSamplingWeigths',1);
+                                     'PCSamplingWeights',[1 0.5 0]);
 
 %% Visualize the foliage
 
