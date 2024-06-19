@@ -182,6 +182,11 @@ switch dTypeLODinc
         F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p);
         % Set sampling type to inverse sampling
         lod_inc_sampling = 'inverse sampling';
+    case 'delta'
+        % Peak width
+        w_inc = 0.05*pi/2;
+        % Set sampling type to delta peak sampling
+        lod_inc_sampling = 'delta peak';
 end
 % Distribution function and parameter value function for leaf azimuth angle
 % distribution
@@ -201,6 +206,11 @@ switch dTypeLODaz
         max_f_az = @(p) fun_vonmises(p(1),p(1),p(2));
         % Set sampling type to rejection sampling
         lod_az_sampling = 'rejection sampling';
+    case 'delta'
+        % Peak width
+        w_az = 0.05*2*pi;
+        % Set sampling type to delta peak sampling
+        lod_az_sampling = 'delta peak';
 end
 %% Leaf size distriubtion functions
 dTypeLSD        = TargetDistributions.dTypeLSD;
@@ -385,6 +395,18 @@ while leafArea < candidateArea
             u = rand(1);
             dParams = fun_inc_params(hLeaf,dLeaf,cLeaf);
             incAngles(iLeaf) = F_inc_inv(u,dParams);
+        case 'delta peak'
+            % Sample inclination angle using normal distribution
+            normMean = fun_inc_params(hLeaf,dLeaf,cLeaf);
+            normSTD  = 0.5*w_inc/3;
+            accepted = 0;
+            while accepted == 0
+                incProposal = randn(1)*normSTD + normMean;
+                if incProposal >= 0 && incProposal <= pi/2
+                    incAngles(iLeaf) = incProposal;
+                    accepted = 1;
+                end
+            end
     end
     % Leaf azimuth angle
     switch lod_az_sampling
@@ -402,6 +424,17 @@ while leafArea < candidateArea
                     accepted = 1;
                 end
             end
+        case 'delta peak'
+            % Sample azimuth angle using normal distribution
+            normMean = fun_az_params(hLeaf,dLeaf,cLeaf);
+            normSTD  = 0.5*w_az/3;
+            azProposal = randn(1)*normSTD + normMean;
+            if azProposal < 0
+                azProposal = 2*pi + azProposal;
+            elseif azProposal > 2*pi
+                azProposal = azProposal - 2*pi;
+            end
+            azAngles(iLeaf) = azProposal;
     end
 
     % Sampling leaf surface area with LSD

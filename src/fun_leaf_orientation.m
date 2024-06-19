@@ -48,6 +48,12 @@ switch dTypeLODinc
         % Set sampling type to inverse sampling
         lod_inc_sampling = 'inverse sampling';
 
+    case 'delta'
+        % Peak width
+        w_inc = 0.05*pi/2;
+        % Set sampling type to delta peak sampling
+        lod_inc_sampling = 'delta peak';
+
 end
 
 % Define the distribution function for leaf azimuth angle
@@ -67,6 +73,12 @@ switch dTypeLODaz
         max_f_az = @(p) fun_vonmises(p(1),p(1),p(2));
         % Set sampling type to rejection sampling
         lod_az_sampling = 'rejection sampling';
+
+    case 'delta'
+        % Peak width
+        w_az = 0.05*2*pi;
+        % Set sampling type to delta peak sampling
+        lod_az_sampling = 'delta peak';
 
 end
 
@@ -128,10 +140,24 @@ for iLeaf = 1:nLeaves
             u = rand(1);
             incAngles(iLeaf) = F_inc_inv(u,dParametersLODinc);
 
+        case 'delta peak'
+            % Sample values using normal distribution
+            normMean = dParametersLODinc;
+            normSTD  = 0.5*w_inc/3;
+            accepted = 0;
+            while accepted == 0
+                incProposal = randn(1)*normSTD + normMean;
+                if incProposal >= 0 && incProposal <= pi/2
+                    incAngles(iLeaf) = incProposal;
+                    accepted = 1;
+                end
+            end
+
     end
 
     % Sample the leaf azimuth angle
     switch lod_az_sampling
+
         case 'rejection sampling'
             % Sample azimuth angle value with acceptance-rejection
             % sampling
@@ -145,6 +171,19 @@ for iLeaf = 1:nLeaves
                     accepted = 1;
                 end
             end
+
+            case 'delta peak'
+            % Sample values using normal distribution
+            normMean = dParametersLODaz;
+            normSTD  = 0.5*w_az/3;
+            azProposal = randn(1)*normSTD + normMean;
+            if azProposal < 0
+                azProposal = 2*pi + azProposal;
+            elseif azProposal > 2*pi
+                azProposal = azProposal - 2*pi;
+            end
+            azAngles(iLeaf) = azProposal;
+            
     end
 
     % Unit vector of the leaf normal (y-axis assumed as north direction)

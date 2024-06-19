@@ -29,12 +29,12 @@ TargetDistributions.dTypeLADDc = 'vonmisesmixturemodel';
 TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
-TargetDistributions.dTypeLODinc = 'dewit';
-TargetDistributions.fun_inc_params = @(h,d,c) [1,2];
+TargetDistributions.dTypeLODinc = 'delta'; %'dewit';
+TargetDistributions.fun_inc_params = @(h,d,c) max(0,pi*(h-1/2)); %[1,2];
 
 % LOD azimuth angle
-TargetDistributions.dTypeLODaz = 'vonmises';
-TargetDistributions.fun_az_params = @(h,d,c) [3.3, 0.25];
+TargetDistributions.dTypeLODaz = 'delta'; %'vonmises';
+TargetDistributions.fun_az_params = @(h,d,c) c; %[3.3, 0.25];
 
 % LSD
 TargetDistributions.dTypeLSD = 'uniform';
