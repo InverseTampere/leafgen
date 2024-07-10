@@ -44,7 +44,7 @@ switch dTypeLODinc
         % Beta distribution density function
         f_inc = @(x,p) fun_beta(2*x/pi,p(1),p(2));
         % Inverse of cumulative density function
-        F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p);
+        F_inc_inv = @(y,p) (pi/2)*betaincinv(y,p(1),p(2));
         % Set sampling type to inverse sampling
         lod_inc_sampling = 'inverse sampling';
 

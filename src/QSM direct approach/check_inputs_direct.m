@@ -1,5 +1,5 @@
 function QSM = check_inputs_direct(QSM,TargetDistributions, ...
-                                   LeafProperties,totalLeafArea);
+                                   LeafProperties,totalLeafArea)
 
 %% QSM
 % Convert QSM to QSMBCylindrical-class object if necessary

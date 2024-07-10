@@ -88,16 +88,16 @@ if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
 % in positioning
 elseif isempty(fDist_d) && isempty(fDist_c)
     
-    uniformSampling = false;
+    uniformSampling = true;
     accepted = 0;
     while accepted == 0
         % Sample height value from heightwise LADD
-        hLeaf = rejection_sampling(fDist_h,maxfDist_h);
+        relHeight = rejection_sampling(fDist_h,maxfDist_h);
+        hLeaf = maxHeight*relHeight;
         % Find index of point cloud sampling height bin
-        iPCS = find(hLeaf<PCSampling.binEdges,1,'first') - 1;
-        if all([PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS), ...
-                uniformSampling == false, ...
-                PCSampling.flag == true])
+        iPCS = find(relHeight<PCSampling.binEdges,1,'first') - 1;
+        if PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS) ...
+               && PCSampling.flag == true
             % Corresponding height index in voxelization
             iz = find(PCSampling.zEdges>hLeaf,1,'first') - 1;
             % Find all voxels for the height level
@@ -108,35 +108,39 @@ elseif isempty(fDist_d) && isempty(fDist_c)
             % If no voxels on height level, do uniform sampling
             if sum(zSliceCol) == 0
                 uniformSampling = true;
-                continue
+            else
+                cumulativeSum = cumsum(zSliceCol);
+                cumulativePDF = cumulativeSum./cumulativeSum(end);
+                k = find(cumulativePDF>rand(1),1,'first');
+                xyInds = zSliceIndsCol{k};
+                ix = xyInds(1);
+                iy = xyInds(2);
+                % Uniformly sample a point inside the voxel
+                proposal = rand(1,3) ...
+                    .*[PCSampling.xEdges(ix+1)-PCSampling.xEdges(ix) ...
+                    PCSampling.yEdges(iy+1)-PCSampling.yEdges(iy) ...
+                    0] ...
+                    + [PCSampling.xEdges(ix) PCSampling.yEdges(iy) ...
+                    hLeaf];
+                % Set the sampled point as leaf start point
+                leafSP = proposal;
+                % Increment sampling counters and calculate new ratio
+                PCSampling.nPCSampled(iPCS) = ...
+                    PCSampling.nPCSampled(iPCS) + 1;
+                PCSampling.nTotalSampled(iPCS) = ...
+                    PCSampling.nTotalSampled(iPCS) + 1;
+                PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS) ...
+                    /PCSampling.nTotalSampled(iPCS);
+                accepted = 1;
+                uniformSampling = false;
             end
-            cumulativeSum = cumsum(zSliceCol);
-            cumulativePDF = cumulativeSum./cumulativeSum(end);
-            k = find(cumulativePDF>rand(1),1,'first');
-            xyInds = zSliceIndsCol{k};
-            ix = xyInds(1);
-            iy = xyInds(2);
-            % Uniformly sample a point inside the voxel
-            proposal = rand(1,3) ...
-                       .*[PCSampling.xEdges(ix+1)-PCSampling.xEdges(ix) ...
-                          PCSampling.yEdges(iy+1)-PCSampling.yEdges(iy) ...
-                          0] ...
-                       + [PCSampling.xEdges(ix) PCSampling.yEdges(iy) ...
-                          hLeaf];
-            % Set the sampled point as leaf start point
-            leafSP = proposal;
-            % Increment sampling counters and calculate new ratio
-            PCSampling.nPCSampled(iPCS) = PCSampling.nPCSampled(iPCS) + 1;
-            PCSampling.nTotalSampled(iPCS) = ...
-                                       PCSampling.nTotalSampled(iPCS) + 1;
-            PCSampling.ratio(iPCS) = PCSampling.nPCSampled(iPCS) ...
-                                     /PCSampling.nTotalSampled(iPCS);
-            accepted = 1;
+        else 
+            uniformSampling = true;
         end
 
         if uniformSampling == true
             % Uniform sampling inside alphashape
-            proposal = [0 0 hLeaf*maxHeight];
+            proposal = [0 0 hLeaf];
             while accepted == 0
                 proposal(1) = rand(1)*(xMax-xMin) + xMin;
                 proposal(2) = rand(1)*(yMax-yMin) + yMin;
