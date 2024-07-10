@@ -1,4 +1,4 @@
-function f = plot_LADD_c_LCL(QSM,Leaves,TargetLADD,varargin)
+function f = plot_LADD_c_QSM(QSM,Leaves,TargetLADD,varargin)
 
 % Initialize values
 nBins = 10;
@@ -21,7 +21,7 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetLADD.dTypeLADDc;
-if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixturemodel'}))
+if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixture'}))
     error("LADD compass direction distribution type not recognized.")
 end
 
@@ -46,7 +46,7 @@ if dType ~= "none"
             m = p(1); % mean
             k = p(2); % measure of concentration
             yy = fun_vonmises(xx,m,k);
-        case 'vonmisesmixturemodel'
+        case 'vonmisesmixture'
             m1 = p(1); k1 = p(2); % parameters of the first distribution
             m2 = p(3); k2 = p(4); % parameters of the second distribution
             w = p(5); % mixture model weight

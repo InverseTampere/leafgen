@@ -17,7 +17,7 @@ switch dTypeLADDh
         fDist_h = @(h) 1;
     case 'polynomial'
         fDist_h = @(h) polyval(hParams,h);
-    case 'polynomialmixturemodel'
+    case 'polynomialmixture'
         nP = (length(hParams)-1)/2; % number of polynomial coefficients
         p1 = hParams(1:nP); % coefficients of the first polynomial
         p2 = hParams((nP+1):(2*nP)); % coefficients of the second polynom.
@@ -27,7 +27,7 @@ switch dTypeLADDh
         l = hParams(1); % scale parameter
         k = hParams(2); % shape parameter
         fDist_h = @(h) fun_weibull(h,l,k);
-    case 'weibullmixturemodel'
+    case 'weibullmixture'
         l1 = hParams(1); k1 = hParams(2); % parameters of the first dist.
         l2 = hParams(3); k2 = hParams(4); % parameters of the second dist.
         w = hParams(5); % mixture model weight
@@ -36,7 +36,7 @@ switch dTypeLADDh
         a = hParams(1);
         b = hParams(2);
         fDist_h = @(h) fun_beta(h,a,b);
-    case 'betamixturemodel'
+    case 'betamixture'
         a1 = hParams(1); b1 = hParams(2); % parameters of the first dist.
         a2 = hParams(3); b2 = hParams(4); % parameters of the second dist.
         w = hParams(5); % mixture model weight
@@ -52,7 +52,7 @@ switch dTypeLADDd
         fDist_d = @(d) 1;
     case 'polynomial'
         fDist_d = @(d) polyval(dParams,d);
-    case 'polynomialmixturemodel'
+    case 'polynomialmixture'
         nP = (length(dParams)-1)/2; % order of polynomial
         p1 = dParams(1:nP); % coefficients of the first polynomial
         p2 = dParams((nP+1):(2*nP)); % coefficients of the second polynom.
@@ -62,7 +62,7 @@ switch dTypeLADDd
         l = dParams(1); % scale parameter
         k = dParams(2); % shape parameter
         fDist_d = @(d) fun_weibull(d,l,k);
-    case 'weibullmixturemodel'
+    case 'weibullmixture'
         l1 = dParams(1); k1 = dParams(2); % parameters of the first dist.
         l2 = dParams(3); k2 = dParams(4); % parameters of the second dist.
         w = dParams(5); % mixture model weight
@@ -71,7 +71,7 @@ switch dTypeLADDd
         a = dParams(1);
         b = dParams(2);
         fDist_d = @(d) fun_beta(d,a,b);
-    case 'betamixturemodel'
+    case 'betamixture'
         a1 = dParams(1); b1 = dParams(2); % parameters of the first dist.
         a2 = dParams(3); b2 = dParams(4); % parameters of the second dist.
         w = dParams(5); % mixture model weight
@@ -88,7 +88,7 @@ switch dTypeLADDc
         m = cParams(1); % mean
         k = cParams(2); % measure of concentration
         fDist_c = @(c) fun_vonmises(c,m,k);
-    case 'vonmisesmixturemodel'
+    case 'vonmisesmixture'
         m1 = cParams(1); k1 = cParams(2); % parameters of the first dist.
         m2 = cParams(3); k2 = cParams(4); % parameters of the second dist.
         w = cParams(5); % mixture model weight

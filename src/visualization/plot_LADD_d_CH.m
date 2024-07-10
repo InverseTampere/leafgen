@@ -1,4 +1,4 @@
-function f = plot_LADD_d(aShape,Leaves,TargetDistributions,varargin)
+function f = plot_LADD_d_CH(aShape,Leaves,TargetDistributions,varargin)
 
 % Initialize values
 nBins = 10;
@@ -31,9 +31,8 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetDistributions.dTypeLADDd;
-if ~any(strcmp(dType,{'','uniform','polynomial', ...
-        'polynomialmixturemodel','weibull','weibullmixturemodel', ...
-        'beta','betamixturemodel'}))
+if ~any(strcmp(dType,{'','uniform','polynomial','polynomialmixture', ...
+        'weibull','weibullmixture','beta','betamixture'}))
     error("LADD distance from stem distribution type not recognized.")
 end
 
@@ -58,7 +57,7 @@ if dType ~= ""
             yy = ones(size(xx));
         case  'polynomial'
             yy = polyval(p,xx);
-        case 'polynomialmixturemodel'
+        case 'polynomialmixture'
             nP = (length(p)-1)/2; % number of polynomial coefficients
             p1 = p(1:nP); % coefficients of the first polynomial
             p2 = p((nP+1):(2*nP)); % coefficients of the second polynomial
@@ -68,7 +67,7 @@ if dType ~= ""
             l = p(1); % scale parameter
             k = p(2); % shape parameter
             yy = fun_weibull(xx,l,k);
-        case 'weibullmixturemodel'
+        case 'weibullmixture'
             l1 = p(1); k1 = p(2); % parameters of the first distribution
             l2 = p(3); k2 = p(4); % parameters of the second distribution
             w = p(5); % mixture model weight
@@ -77,7 +76,7 @@ if dType ~= ""
             a = p(1);
             b = p(2);
             yy = fun_beta(xx,a,b);
-        case 'betamixturemodel'
+        case 'betamixture'
             a1 = p(1); b1 = p(2); % parameters of the first distribution
             a2 = p(3); b2 = p(4); % parameters of the second distribution
             w = p(5); % mixture model weight

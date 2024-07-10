@@ -1,6 +1,16 @@
+%% Clear variables and add paths
+
 clear, close all
-addpath("C:\Users\bppimo\Documents\GitHub\foliage-generation-repo\src")
-addpath("C:\Users\bppimo\Documents\GitHub\foliage-generation-repo\src\classes")
+addpath("qsm direct method")
+addpath("classes")
+addpath("common functions")
+addpath("visualization")
+
+%% Initialize QSM
+
+filename = "example data/ExampleQSM.mat";
+qsm = importdata(filename);
+QSM = QSMBCylindrical(qsm);
 
 %% Initialize leaf base geometry
 
@@ -12,12 +22,13 @@ LeafProperties.vertices = [-0.04  0.0   0.0;
 % Triangles of the leaf basis geometry
 LeafProperties.triangles = [1, 2, 3];
 
+% Twig length limits
 LeafProperties.twigLengthLimits = [0.05 0.1];
 
 %% Define target leaf distributions
 
 % LADD relative height
-TargetDistributions.dTypeLADDh = 'betamixturemodel';
+TargetDistributions.dTypeLADDh = 'betamixture';
 TargetDistributions.hParams = [22 3 41 50 0.85];
 
 % LADD relative distance from stem
@@ -25,33 +36,28 @@ TargetDistributions.dTypeLADDd = 'beta';
 TargetDistributions.dParams = [2 1];
 
 % LADD compass direction
-TargetDistributions.dTypeLADDc = 'vonmisesmixturemodel';
+TargetDistributions.dTypeLADDc = 'vonmisesmixture';
 TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
-TargetDistributions.dTypeLODinc = 'delta'; %'dewit';
-TargetDistributions.fun_inc_params = @(h,d,c) max(0,pi*(h-1/2)); %[1,2];
+TargetDistributions.dTypeLODinc = 'dewit';
+TargetDistributions.fun_inc_params = @(h,d,c) [1,2];
 
 % LOD azimuth angle
-TargetDistributions.dTypeLODaz = 'delta'; %'vonmises';
-TargetDistributions.fun_az_params = @(h,d,c) c; %[3.3, 0.25];
+TargetDistributions.dTypeLODaz = 'uniform';
+TargetDistributions.fun_az_params = @(h,d,c) [];
 
 % LSD
 TargetDistributions.dTypeLSD = 'uniform';
 TargetDistributions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
 
-%% Initialize QSM object.
-% QSM = QSMBCylindrical('example');
-filename = "qsm_Small.mat";
-load(filename); % contains the struct named "qsm"
-QSM = QSMBCylindrical(qsm);
-
 %% Generate foliage on QSM
+
 totalLeafArea = 50;
-tic
+
 Leaves = generate_foliage_qsm_direct(QSM,TargetDistributions, ...
                                      LeafProperties,totalLeafArea);
-toc
+
 %% Visualize the QSM with generated foliage
 
 figure(1), clf
@@ -73,14 +79,8 @@ xlabel('x')
 ylabel('y')
 zlabel('z')
 
-%% Plot leaf distributions
+%% Plot LADD marginal distributions
 
-plot_LADD_h_LCL(QSM,Leaves,TargetDistributions);
-plot_LADD_d_LCL(QSM,Leaves,TargetDistributions);
-plot_LADD_c_LCL(QSM,Leaves,TargetDistributions);
-
-%% Plots for debugging LOD and LSD
-
-plot_LOD_inc_LCL(QSM,Leaves,TargetDistributions,TargetDistributions,10);
-% plot_LOD_az_LCL
-% plot_LSD_LCL
+plot_LADD_h_QSM(QSM,Leaves,TargetDistributions);
+plot_LADD_d_QSM(QSM,Leaves,TargetDistributions);
+plot_LADD_c_QSM(QSM,Leaves,TargetDistributions);

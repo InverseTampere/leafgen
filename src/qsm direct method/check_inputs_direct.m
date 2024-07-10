@@ -42,9 +42,8 @@ end
 % Relative height
 dTypeH  = TargetDistributions.dTypeLADDh;
 hParams = TargetDistributions.hParams;
-if ~any(strcmp(dTypeH,{'uniform','polynomial', ...
-        'polynomialmixturemodel','weibull','weibullmixturemodel', ...
-        'beta','betamixturemodel'}))
+if ~any(strcmp(dTypeH,{'uniform','polynomial','polynomialmixture', ...
+        'weibull','weibullmixture','beta','betamixture'}))
     error("LADD height distribution type not recognized.")
 end
 switch dTypeH
@@ -56,7 +55,7 @@ switch dTypeH
             error("TargetDistributions relative height polynomial gets"...
                   +" negative values on the interval [0,1].")
         end
-    case 'polynomialmixturemodel'
+    case 'polynomialmixture'
         % Pick polynomial coefficients and weight
         nP = (length(hParams)-1)/2; % number of polynomial coefficients
         p1 = hParams(1:nP); % coefficients of the first polynomial
@@ -81,7 +80,7 @@ switch dTypeH
             error("TargetDistributions.hParams all elements have to be"...
                   +" positive for truncated Weibull distribution.")
         end
-    case 'weibullmixturemodel'
+    case 'weibullmixture'
         % Assure that all Weibull parameters are positive
         if any(hParams(1:4) <= 0)
             error("TargetDistributions.hParams all elements have to be"...
@@ -99,7 +98,7 @@ switch dTypeH
             error("TargetDistributions.hParams all elements have to be"...
                   +" positive for beta distribution.")
         end
-    case 'betamixturemodel'
+    case 'betamixture'
         % Assure that all beta parameters are positive
         if any(hParams(1:4) <= 0)
             error("TargetDistributions.hParams all elements have to be"...
@@ -115,9 +114,8 @@ end
 % Relative distance along subbranch
 dTypeD  = TargetDistributions.dTypeLADDd;
 dParams = TargetDistributions.dParams;
-if ~any(strcmp(dTypeD,{'uniform','polynomial', ...
-        'polynomialmixturemodel','weibull','weibullmixturemodel', ...
-        'beta','betamixturemodel'}))
+if ~any(strcmp(dTypeD,{'uniform','polynomial','polynomialmixture', ...
+        'weibull','weibullmixture','beta','betamixture'}))
     error("LADD distance from stem distribution type not recognized.")
 end
 switch dTypeD
@@ -130,7 +128,7 @@ switch dTypeD
                   +" subbranch polynomial gets negative values on the"...
                   +" interval [0,1].")
         end
-    case 'polynomialmixturemodel'
+    case 'polynomialmixture'
         % Pick polynomial coefficients and weight
         nP = (length(dParams)-1)/2; % number of polynomial coefficients
         p1 = dParams(1:nP); % coefficients of the first polynomial
@@ -156,7 +154,7 @@ switch dTypeD
             error("TargetDistributions.dParams all elements have to be"...
                   +" positive for truncated Weibull distribution.")
         end
-    case 'weibullmixturemodel'
+    case 'weibullmixture'
         % Assure that all Weibull parameters are positive
         if any(dParams(1:4) <= 0)
             error("TargetDistributions.dParams all elements have to be"...
@@ -174,7 +172,7 @@ switch dTypeD
             error("TargetDistributions.dParams all elements have to be"...
                   +" positive for beta distribution.")
         end
-    case 'betamixturemodel'
+    case 'betamixture'
         % Assure that all beta parameters are positive
         if any(dParams(1:4) <= 0)
             error("TargetDistributions.dParams all elements have to be"...
@@ -190,7 +188,7 @@ end
 % Compass direction
 dTypeC  = TargetDistributions.dTypeLADDc;
 cParams = TargetDistributions.cParams;
-if ~any(strcmp(dTypeC,{'uniform','vonmises','vonmisesmixturemodel'}))
+if ~any(strcmp(dTypeC,{'uniform','vonmises','vonmisesmixture'}))
     error("LADD compass direction distribution type not recognized.")
 end
 switch dTypeC

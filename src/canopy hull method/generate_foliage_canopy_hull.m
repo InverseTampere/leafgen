@@ -1,4 +1,4 @@
-function [Leaves,aShape] = generate_foliage_alphashape(treePointCloud, ...
+function [Leaves,aShape] = generate_foliage_canopy_hull(treePointCloud, ...
                                                    TargetDistributions, ...
                                                    LeafProperties, ...
                                                    totalLeafArea, ...
@@ -57,7 +57,7 @@ switch dTypeLADDh
     case 'polynomial'
         fDist_h = @(h) polyval(hParams,h);
         maxfDist_h = max([0,polynomial_upper_limit(hParams)]);
-    case 'polynomialmixturemodel'
+    case 'polynomialmixture'
         nP = (length(hParams)-1)/2; % number of polynomial coefficients
         p1 = hParams(1:nP); % coefficients of the first polynomial
         p2 = hParams((nP+1):(2*nP)); % coefficients of the second polynom.
@@ -69,7 +69,7 @@ switch dTypeLADDh
         k = hParams(2); % shape parameter
         fDist_h = @(h) fun_weibull(h,l,k);
         maxfDist_h = weibull_upper_limit(l,k);
-    case 'weibullmixturemodel'
+    case 'weibullmixture'
         l1 = hParams(1); k1 = hParams(2); % parameters of the first dist.
         l2 = hParams(3); k2 = hParams(4); % parameters of the second dist.
         w = hParams(5); % mixture model weight
@@ -80,7 +80,7 @@ switch dTypeLADDh
         b = hParams(2);
         fDist_h = @(h) fun_beta(h,a,b);
         maxfDist_h = beta_upper_limit(a,b);
-    case 'betamixturemodel'
+    case 'betamixture'
         a1 = hParams(1); b1 = hParams(2); % parameters of the first dist.
         a2 = hParams(3); b2 = hParams(4); % parameters of the second dist.
         w = hParams(5); % mixture model weight
@@ -98,7 +98,7 @@ switch dTypeLADDd
     case 'polynomial'
         fDist_d = @(d) polyval(dParams,d);
         maxfDist_d = max([0,polynomial_upper_limit(dParams)]);
-    case 'polynomialmixturemodel'
+    case 'polynomialmixture'
         nP = (length(dParams)-1)/2; % order of polynomial
         p1 = dParams(1:nP); % coefficients of the first polynomial
         p2 = dParams((nP+1):(2*nP)); % coefficients of the second polynom.
@@ -110,7 +110,7 @@ switch dTypeLADDd
         k = dParams(2); % shape parameter
         fDist_d = @(d) fun_weibull(d,l,k);
         maxfDist_d = weibull_upper_limit(l,k);
-    case 'weibullmixturemodel'
+    case 'weibullmixture'
         l1 = dParams(1); k1 = dParams(2); % parameters of the first dist.
         l2 = dParams(3); k2 = dParams(4); % parameters of the second dist.
         w = dParams(5); % mixture model weight
@@ -121,7 +121,7 @@ switch dTypeLADDd
         b = dParams(2);
         fDist_d = @(d) fun_beta(d,a,b);
         maxfDist_d = beta_upper_limit(a,b);
-    case 'betamixturemodel'
+    case 'betamixture'
         a1 = dParams(1); b1 = dParams(2); % parameters of the first dist.
         a2 = dParams(3); b2 = dParams(4); % parameters of the second dist.
         w = dParams(5); % mixture model weight
@@ -140,7 +140,7 @@ switch dTypeLADDc
         k = cParams(2); % measure of concentration
         fDist_c = @(c) fun_vonmises(c,m,k);
         maxfDist_c = fDist_c(m);
-    case 'vonmisesmixturemodel'
+    case 'vonmisesmixture'
         m1 = cParams(1); k1 = cParams(2); % parameters of the first dist.
         m2 = cParams(3); k2 = cParams(4); % parameters of the second dist.
         w = cParams(5); % mixture model weight
@@ -254,11 +254,14 @@ yCenters = 0.5*(yEdges(1:end-1)+yEdges(2:end));
 zCenters = 0.5*(zEdges(1:end-1)+zEdges(2:end));
 
 % Initialize visualizaiton of point cloud voxelization
-figure, clf, hold on, grid on, axis equal, view(3)
-plot3(treePointCloud(:,1),treePointCloud(:,2),treePointCloud(:,3), ...
-      'g.','MarkerSize',0.5)
-protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 1 0 1];
-voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
+if any(pcSamplingWeights) == true
+    figure, clf, hold on, grid on, axis equal, view(3)
+    plot3(treePointCloud(:,1),treePointCloud(:,2),treePointCloud(:,3), ...
+        'g.','MarkerSize',0.5)
+    protoVertices = [0 0 0; 0 1 0; 1 1 0; 1 0 0; 0 0 1; 0 1 1; 1 1 1; 
+                     1 0 1];
+    voxelFaces = [1 2 3 4; 2 6 7 3; 4 3 7 8; 1 5 8 4; 1 2 6 5; 5 6 7 8];
+end
 
 % Pick the leaf attractor points from point cloud (if not supplied by user, 
 % all point cloud points act as leaf attractors)
@@ -293,11 +296,13 @@ for ix = 1:nx
             % voxel value to 1, otherwise 0
             if sum(inXYZvoxel) >= voxelThreshold
                 pcVoxels(ix,iy,iz) = 1;
-                % Visualize the voxel
-                voxelVertices = voxelEdge*protoVertices ...
-                                + [xEdges(ix) yEdges(iy) zEdges(iz)];
-                patch('vertices', voxelVertices, 'faces', voxelFaces, ...
-                      'facecolor', 'r', 'facealpha', 0.0);
+                if any(pcSamplingWeights) == true
+                    % Visualize the voxel
+                    voxelVertices = voxelEdge*protoVertices ...
+                                    + [xEdges(ix) yEdges(iy) zEdges(iz)];
+                    patch('vertices',voxelVertices,'faces',voxelFaces, ...
+                          'facecolor','r','facealpha',0.0);
+                end
             end
         end
     end
@@ -352,17 +357,12 @@ ic = 1;
 while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
-    % Counter
-    if ic == floor(leafArea)
-        disp([num2str(ic),'m^2 / ',num2str(candidateArea),'m^2']);
-        ic = ic + 1;
-    end
     % Sampling leaf position   
     [leafSP,PCSampling] = sample_leaf_position(aShape, ...
                               fDist_h,fDist_d,fDist_c, ...
                               maxfDist_h,maxfDist_d,maxfDist_c, ...
                               xMin,xMax,yMin,yMax,maxHeight, ...
-                              stemCoordinates,PCSampling);
+                              maxHorzDist,stemCoordinates,PCSampling);
     leafStartPoints(iLeaf,:) = leafSP;
 
     % Leaf height value

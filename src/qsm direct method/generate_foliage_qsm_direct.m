@@ -90,13 +90,9 @@ CylinderParameters.compass_direction = ...
 relativeCylinderLeafArea = fun_leaf_area_density(CylinderParameters, ...
                                                  TargetDistributions);
 
-% Scale by target area to get cylinder leaf area budgets
-cylinderLeafArea = totalLeafArea*relativeCylinderLeafArea;
-
 %% Initialize leaf object and candidate leaf area
 Leaves = LeafModelTriangle(LeafProperties.vertices, ...
                            LeafProperties.triangles);
-baseArea = Leaves.base_area;
 candidateArea = overSamplingFactor*totalLeafArea;
 cylinderCandidateLeafArea = candidateArea*relativeCylinderLeafArea;
 

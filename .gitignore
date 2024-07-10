@@ -1,19 +1,3 @@
 
-src/To Do.txt
-src/main_twig_dir_test.m
-src/plot_leaf_cylinder_library_objects.m
 *.asv
-*debug.m
-src/alphahull approach/To Do alphashape.txt
-src/alphashape approach/To Do alphashape.txt
-src/LeafCyliderLibraryExample.mat
-src/qsm_Small.mat
-src/discretization_effect_test.m
-src/leaf_cylinder_visualization.m
-src/plot_LOD_az_LCL.m
-src/plot_LOD_inc_LCL.m
-src/plot_LSD_LCL.m
-src/NewLeafCyliderLibraryExample.mat
-src/scale_factors_test.m
-src/leaf_triangle_area.m
-src/kulmakerroin_test.m
+src/other/
