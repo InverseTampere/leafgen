@@ -258,19 +258,24 @@ for iLeaf = 1:nLeaves
         twigStartSide = cross(twigStartRadDir,leafNormal(iLeaf,:));
     end
     twigStartSide = twigStartSide/norm(twigStartSide);
-    % Twig direction
-    if Phyllotaxis.flag == true && isfield(Phyllotaxis,'twigDirectionAngle')
+    
+    % Twig and leaf direction
+    if Phyllotaxis.flag == true && isfield(Phyllotaxis, ...
+                                           'twigAxialInclinationAngle')
         rotAxis = cross(cylinderAxis,twigStartRadDir);
         rotAxis = rotAxis/norm(rotAxis);
-        rmTwig = rotation_matrix(rotAxis,Phyllotaxis.twigDirectionAngle);
+        rmTwig = rotation_matrix(rotAxis, ...
+                                 Phyllotaxis.twigAxialInclinationAngle);
         twigDir =  (rmTwig*cylinderAxis')';
+        leafDir(iLeaf,:) = cross(leafNormal(iLeaf,:),twigStartSide);
+        leafDir = leafDir/norm(leafDir);
     else
         twigDir = cross(leafNormal(iLeaf,:),twigStartSide);
         twigDir = twigDir/norm(twigDir);
+        % Set leaf direction to be the same as twig direction
+        leafDir(iLeaf,:) = twigDir;
     end
-    % Set leaf direction to be the same as twig direction
-    leafDir(iLeaf,:) = twigDir;
-
+    
     % Lengthwise twig start location on cylinder axis
     if Phyllotaxis.flag == true
         twigStartPosAxis = nodeRelPosAxis*len;
@@ -306,11 +311,11 @@ for iLeaf = 1:nLeaves
             twigStartSide = twigStartSide/norm(twigStartSide);
             % Twig direction
             if Phyllotaxis.flag == true && ...
-               isfield(Phyllotaxis,'twigDirectionAngle')
+               isfield(Phyllotaxis,'twigAxialInclinationAngle')
                 rotAxis = cross(cylinderAxis,twigStartRadDir);
                 rotAxis = rotAxis/norm(rotAxis);
                 rmTwig = rotation_matrix(rotAxis, ...
-                                         Phyllotaxis.twigDirectionAngle);
+                                         Phyllotaxis.twigAxialInclinationAngle);
                 twigDir =  (rmTwig*cylinderAxis')';
             else
                 twigDir = cross(leafNormal(iLeaf,:),twigStartSide);

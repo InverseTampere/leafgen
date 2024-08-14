@@ -36,8 +36,8 @@ TargetDistributions.dTypeLADDd = 'beta';
 TargetDistributions.dParams = [2 1];
 
 % LADD compass direction
-TargetDistributions.dTypeLADDc = 'vonmisesmixture';
-TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
+TargetDistributions.dTypeLADDc = 'vonmises';
+TargetDistributions.cParams = [5/4*pi 0.1];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';
