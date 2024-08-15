@@ -19,7 +19,7 @@ switch dTypeLODinc
 
     case 'uniform'
         % Uniform distribution
-        f_inc = @(x,p) 2/pi;
+        f_inc = @(x,p) 2/pi*ones(size(x));
         max_f_inc = @(p) 2/pi;
         % Set sampling type to rejection sampling
         lod_inc_sampling = 'rejection sampling';
@@ -61,7 +61,7 @@ switch dTypeLODaz
 
     case 'uniform'
         % Uniform distribution
-        f_az = @(x,p) 1/(2*pi);
+        f_az = @(x,p) 1/(2*pi)*ones(size(x));
         max_f_az = @(p) 1/(2*pi);
         % Set sampling type to rejection sampling
         lod_az_sampling = 'rejection sampling';

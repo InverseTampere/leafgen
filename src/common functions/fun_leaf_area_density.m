@@ -14,7 +14,7 @@ dTypeLADDh = TargetDist.dTypeLADDh;
 hParams    = TargetDist.hParams;
 switch dTypeLADDh
     case 'uniform'
-        fDist_h = @(h) 1;
+        fDist_h = @(h) 1*ones(size(h));
     case 'polynomial'
         fDist_h = @(h) polyval(hParams,h);
     case 'polynomialmixture'
@@ -49,7 +49,7 @@ dTypeLADDd = TargetDist.dTypeLADDd;
 dParams    = TargetDist.dParams;
 switch dTypeLADDd
     case 'uniform'
-        fDist_d = @(d) 1;
+        fDist_d = @(d) 1*ones(size(d));
     case 'polynomial'
         fDist_d = @(d) polyval(dParams,d);
     case 'polynomialmixture'
@@ -83,7 +83,7 @@ dTypeLADDc = TargetDist.dTypeLADDc;
 cParams    = TargetDist.cParams;
 switch dTypeLADDc
     case 'uniform'
-        fDist_c = @(c) 1/(2*pi);
+        fDist_c = @(c) 1/(2*pi)*ones(size(c));
     case 'vonmises'
         m = cParams(1); % mean
         k = cParams(2); % measure of concentration

@@ -52,7 +52,7 @@ dTypeLADDh = TargetDistributions.dTypeLADDh;
 hParams    = TargetDistributions.hParams;
 switch dTypeLADDh
     case 'uniform'
-        fDist_h = @(h) 1;
+        fDist_h = @(h) 1*ones(size(h));
         maxfDist_h = 1;
     case 'polynomial'
         fDist_h = @(h) polyval(hParams,h);
@@ -93,7 +93,7 @@ dTypeLADDd = TargetDistributions.dTypeLADDd;
 dParams    = TargetDistributions.dParams;
 switch dTypeLADDd
     case 'uniform'
-        fDist_d = @(d) 1;
+        fDist_d = @(d) 1*ones(size(d));
         maxfDist_d = 1;
     case 'polynomial'
         fDist_d = @(d) polyval(dParams,d);
@@ -133,7 +133,7 @@ dTypeLADDc = TargetDistributions.dTypeLADDc;
 cParams    = TargetDistributions.cParams;
 switch dTypeLADDc
     case 'uniform'
-        fDist_c = @(c) 1/(2*pi);
+        fDist_c = @(c) 1/(2*pi)*ones(size(c));
         maxfDist_c = 1/(2*pi);
     case 'vonmises'
         m = cParams(1); % mean
@@ -157,7 +157,7 @@ fun_inc_params = TargetDistributions.fun_inc_params;
 switch dTypeLODinc
     case 'uniform'
         % Uniform distribution
-        f_inc = @(x,p) 2/pi;
+        f_inc = @(x,p) 2/pi*ones(size(x));
         max_f_inc = @(p) 2/pi;
         % Set sampling type to rejection sampling
         lod_inc_sampling = 'rejection sampling';
@@ -195,7 +195,7 @@ fun_az_params = TargetDistributions.fun_az_params;
 switch dTypeLODaz
     case 'uniform'
         % Uniform distribution
-        f_az = @(x,p) 1/(2*pi);
+        f_az = @(x,p) 1/(2*pi)*ones(size(x));
         max_f_inc = @(p) 1/(2*pi);
         % Set sampling type to rejection sampling
         lod_az_sampling = 'rejection sampling';
