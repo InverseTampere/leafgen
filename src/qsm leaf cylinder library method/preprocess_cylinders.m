@@ -1,6 +1,7 @@
 function [NewCylinderParameters,originalIndex] = preprocess_cylinders(...
                                                     CylinderParameters, ...
-                                                    lengthLimits ...
+                                                    lengthLimits, ...
+                                                    lengthType ...
                                                     )
 
 % Read minimum and maximum cylinder lenghts
@@ -111,8 +112,22 @@ for iCyl = 1:nCyl
         continue
     end
 
+    % Check if cylinder is too long or too short
+    if lengthType == "absolute"
+        cylTooLong  = (cylLength(iCyl) > lMax);
+        cylTooShort = (cylLength(iCyl) < lMin);
+    elseif lengthType == "relative branch"
+        if indexInBranch(iCyl) == 1
+            cylRelLen = relativePosition(iCyl);
+        else
+            cylRelLen = relativePosition(iCyl) - relativePosition(iCyl-1);
+        end
+        cylTooLong  = (cylRelLen > lMax);
+        cylTooShort = (cylRelLen < lMin);
+    end
+    
     % Cut too long cylinders into multiple shorter ones
-    if cylLength(iCyl) > lMax
+    if cylTooLong == true
         k = ceil(cylLength(iCyl)/lMax);
         newLen = cylLength(iCyl)/k;
         % Make sure the cylinders are longer than the minimum required
@@ -180,7 +195,7 @@ for iCyl = 1:nCyl
         end
 
 
-    elseif cylLength(iCyl) < lMin
+    elseif cylTooShort == true
         % Branch index of the current cylinder
         biCyl = branchIndex(iCyl);
         % Combined length of the included cylinders
