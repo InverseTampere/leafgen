@@ -309,5 +309,14 @@ for iCyl = 1:length(cylinderLeafArea)
                                   
 clearvars LibraryObj
 
+end
+
+% Display a warning if generated leaf area is lower than target leaf area
+if Leaves.leaf_area/targetLeafArea < 0.99
+    warning("Final leaf area " + num2str(Leaves.leaf_area) + " m^2 is " ...
+            + num2str(targetLeafArea-Leaves.leaf_area) + " m^2 lower " ...
+            + "than the target leaf area " + num2str(targetLeafArea) ...
+            + " m^2.")
+end
 
 end
