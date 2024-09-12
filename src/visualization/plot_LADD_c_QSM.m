@@ -41,7 +41,7 @@ binEdges = linspace(0,2*pi,nBins+1);
 if dType ~= "none"
     switch dType
         case 'uniform'
-            yy = 1/(2*pi);
+            yy = 1/(2*pi)*ones(size(xx));
         case 'vonmises'
             m = p(1); % mean
             k = p(2); % measure of concentration
