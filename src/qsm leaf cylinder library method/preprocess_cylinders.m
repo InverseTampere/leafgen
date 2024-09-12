@@ -1,11 +1,11 @@
 function [NewCylinderParameters,originalIndex] = preprocess_cylinders(...
                                                     CylinderParameters, ...
-                                                    Nodes ...
+                                                    lengthLimits ...
                                                     )
 
-% Leaf cylinder library minimum and maximum cylinder lenghts
-lMin = Nodes.cylinderLength(1);
-lMax = Nodes.cylinderLength(end);
+% Read minimum and maximum cylinder lenghts
+lMin = lengthLimits(1);
+lMax = lengthLimits(end);
 
 % Read cylinder parameters (unsorted)
 relativeHeight_US   = CylinderParameters.relative_height;
