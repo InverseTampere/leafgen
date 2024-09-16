@@ -163,6 +163,9 @@ end
 %% Partition of leaf surface area with respect to along-branch distance 
 %  from the base of subbranch
 
+% Set cylinder endpoint as the reference point for position in branch
+referencePoint = "end";
+
 % Relative along-branch distances from base
 relativeDistanceFromBase = zeros(nCylinders,1);
 indexVector = (1:1:nCylinders)';
@@ -181,10 +184,15 @@ for iBranch = 1:max(branchIndex) % stem index 0 is skipped automatically
     end
     % Cumulative sum of the lengths
     bcLengthsCumulative = cumsum(bcLengths);
-    % Cumulative distance of cylinder midpoints in sub-branch
-    midPointCumulative = bcLengthsCumulative - 0.5*bcLengths;
-    % Relative position in subbranch
-    relDistInSubBranch = midPointCumulative/bcLengthsCumulative(end);
+    if referencePoint == "end"
+        % Relative position in subbranch
+        relDistInSubBranch = bcLengthsCumulative/bcLengthsCumulative(end);
+    elseif referencePoint == "middle"
+        % Cumulative distance of cylinder midpoints in sub-branch
+        midPointCumulative = bcLengthsCumulative - 0.5*bcLengths;
+        % Relative position in subbranch
+        relDistInSubBranch = midPointCumulative/bcLengthsCumulative(end);
+    end
     k = 1;
     for j = 1:length(bcIndexes)
         bcInd = bcIndexes(j);
