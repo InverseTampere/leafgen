@@ -128,11 +128,21 @@ for iCyl = 1:nCyl
     
     % Cut too long cylinders into multiple shorter ones
     if cylTooLong == true
-        k = ceil(cylLength(iCyl)/lMax);
+        if lengthType == "absolute"
+            k = ceil(cylLength(iCyl)/lMax);
+        elseif lengthType == "relative branch"
+            k = ceil(cylRelLen/lMax);
+        end
         newLen = cylLength(iCyl)/k;
         % Make sure the cylinders are longer than the minimum required
         % lenght, otherwise accept the original cylinder
-        if newLen > lMin
+        longerThanMinimum = false;
+        if lengthType == "absolute"
+            longerThanMinimum = (newLen > lMin);
+        elseif lengthType == "relative branch"
+            longerThanMinimum = (cylRelLen/k > lMin);
+        end
+        if longerThanMinimum == true
             for ii = 1:k
                 newInd = newInd + 1;
                 % New start point
@@ -210,9 +220,24 @@ for iCyl = 1:nCyl
         ii = iCyl;
         % Combine cylinders until minimum length is achieved or the
         % cylinders in branch run out
-        while combLen < lMin && biNext == biCyl
+        if lengthType == "absolute"
+            combLenUnderMin = (comblen < lMin);
+        elseif lengthType == "relative branch"
+            branchLength = sum(cylLength(branchIndex == biCyl));
+            combLenUnderMin = (combLen/branchLength < lMin);
+        end
+        while combLenUnderMin && biNext == biCyl
+            % Increment cylinder counter
             ii = ii + 1;
+            % Combine next cylinder
             combLen = combLen + cylLength(ii);
+            % Check if combined length is still under minimum length
+            if lengthType == "absolute"
+                combLenUnderMin = (comblen < lMin);
+            elseif lengthType == "branch relative"
+                combLenUnderMin = (combLen/branchLength < lMin);
+            end
+            % Update branch index of the next cylinder
             if ii+1 <= nCyl
                 biNext = branchIndex(ii+1);
             else

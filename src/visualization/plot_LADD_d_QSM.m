@@ -37,7 +37,7 @@ fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
 xx = 0:0.001:1;
 
 % Bins for the histogram of accepted leaves
-binEdges = linspace(0,1,nBins+1);
+binEdges = linspace(0,1,nBins+1)';
 
 %% Plot the target distribution function
 
@@ -87,55 +87,74 @@ end
 %% Histogram based on accepted leaves
 
 % Extracting QSM and leaf information
-branchIndex = QSM.cylinder_branch_index;
-cylinderLength = QSM.cylinder_length;
-nBlocks = QSM.block_count;
-leafParents = Leaves.leaf_parent;
-leafCount = Leaves.leaf_count;
-leafScale = Leaves.leaf_scale;
-leafBaseArea = Leaves.base_area;
+cylinderStartPoint  = QSM.cylinder_start_point;
+cylinderAxis        = QSM.cylinder_axis;
+cylinderBranchIndex = QSM.cylinder_branch_index;
+cylinderLength      = QSM.cylinder_length;
+cylinderCount       = QSM.block_count;
+twigStartPoint = Leaves.twig_start_point;
+leafParents    = Leaves.leaf_parent;
+leafCount      = Leaves.leaf_count;
+leafScale      = Leaves.leaf_scale;
+leafBaseArea   = Leaves.base_area;
 
 % Area of each leaf (leaf scaling identical in every dimension)
 leafAreas = (leafScale(:,1).^2)*leafBaseArea;
 
-% Relative along-branch distances from base
-relativeDistanceFromBase = zeros(nBlocks,1);
-indexVector = (1:1:nBlocks)';
-for iBranch = 1:max(branchIndex) % stem index 0 is skipped automatically
-    % Indexes of QSM cylinders belonging in branch
-    bcIndexes = indexVector(branchIndex == iBranch);
-    if sum(bcIndexes) == 0
+% Cylinder index vector
+cylIndices = (1:1:cylinderCount)';
+
+% Leaf index vector
+leafIndices = (1:1:leafCount)';
+
+%Leaf area histogram variable
+leafHist = zeros(nBins,1);
+
+for iBranch = 0:max(cylinderBranchIndex)
+    % Indices of QSM cylinders belonging in branch
+    bcIndices = cylIndices(cylinderBranchIndex == iBranch);
+    if sum(bcIndices) == 0
         % the branch has no cylinders
         continue
     end
-    bcIndexes = nonzeros(bcIndexes);
     % Lengths of corresponding cylinders
-    bcLengths = zeros(length(bcIndexes),1);
+    bcLengths = zeros(length(bcIndices),1);
     for j = 1:length(bcLengths)
-        bcLengths(j) = cylinderLength(bcIndexes(j));
+        bcLengths(j) = cylinderLength(bcIndices(j));
     end
     % Cumulative sum of the lengths
     bcLengthsCumulative = cumsum(bcLengths);
-    % Cumulative distance of cylinder midpoints in sub-branch
-    midPointCumulative = bcLengthsCumulative - 0.5*bcLengths;
-    % Relative position in subbranch
-    relDistInSubBranch = midPointCumulative/bcLengthsCumulative(end);
-    k = 1;
-    for j = 1:length(bcIndexes)
-        bcInd = bcIndexes(j);
-        relativeDistanceFromBase(bcInd) = relDistInSubBranch(k);
-        k = k + 1;
-    end
-end
 
-% Calculate weighted histogram for the leaf area wrt. distance along
-% sub-branch
-leafHist = zeros(nBins,1);
-for iLeaf = 1:leafCount
-    relDist = relativeDistanceFromBase(leafParents(iLeaf));
-    for iBin = 1:nBins
-        if relDist > binEdges(iBin) && relDist <= binEdges(iBin+1)
-               leafHist(iBin) = leafHist(iBin) + leafAreas(iLeaf);
+    % Branch cylinder edges relative to subbranch distance
+    bcRelEdges = [0; bcLengthsCumulative]/bcLengthsCumulative(end);
+
+    % Loop over branch cylinders
+    for iBC = 1:length(bcIndices)
+        % Find the indices of the leaves attached to the cylinder
+        childLeafInds = leafIndices(leafParents == bcIndices(iBC));
+        % If cylinder has no leaves, advance to the next cylinder
+        if isempty(childLeafInds) == true
+            continue
+        end
+        % Vetor from cylinder start to twig start
+        cylStartToTwigStart = twigStartPoint(childLeafInds,:) ...
+                              - cylinderStartPoint(bcIndices(iBC),:);
+        % Projection to cylinder axis
+        cylAxis = cylinderAxis(bcIndices(iBC),:);
+        twigStartProj = cylStartToTwigStart*cylAxis' ...
+                       .*cylAxis./(norm(cylAxis).^2);
+        % Leaf start point values as relative branch distance
+        leafRelPos = sqrt(sum(twigStartProj.^2,2)) ...
+                     ./cylinderLength(bcIndices(iBC)) ...
+                     *(bcRelEdges(iBC+1)-bcRelEdges(iBC)) ...
+                     + bcRelEdges(iBC);
+        % Collect leaf area to correct bins
+        for iBin = 1:nBins
+            indsInBin = childLeafInds(and(leafRelPos>binEdges(iBin), ...
+                                          leafRelPos<=binEdges(iBin+1)));
+            if isempty(indsInBin) == false
+                leafHist(iBin) = leafHist(iBin)+sum(leafAreas(indsInBin));
+            end
         end
     end
 end
