@@ -30,12 +30,23 @@ iLeaf = 0;
 iCyl = 1;
 targetReached = 0;
 while targetReached == 0
-    
-    if areaMissingPerCyl(iCyl) > 0
+    % Leaf size distribution parameters for cylinder
+    params = fun_param(relH(iCyl),relD(iCyl),cDir(iCyl));
+    % Mean leaf
+    switch dType
+        case 'constant'
+            meanArea = params;
+        case 'uniform'
+            meanArea = (params(2)-params(1))/2;
+        case 'normal'
+            meanArea = params(1);
+    end
+
+    % Add leaf if necessary
+    if areaMissingPerCyl(iCyl) >= meanArea
         % Increment leaf count
         iLeaf = iLeaf + 1;
         % Sample leaf size
-        params = fun_param(relH(iCyl),relD(iCyl),cDir(iCyl));
         switch dType
             case 'constant'
                 sampledArea = params;
@@ -52,7 +63,7 @@ while targetReached == 0
     end
 
     % Check if target area is reached
-    if iCyl == nCyl && areaMissingPerCyl(end) <= 0
+    if iCyl == nCyl && areaMissingPerCyl(end) < meanArea
         targetReached = 1;
         nLeaves = iLeaf;
     end
