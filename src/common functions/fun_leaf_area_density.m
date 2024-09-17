@@ -220,7 +220,7 @@ for iBin = 1:nBinsD
     binAreas_d(iBin) = trapz(xTemp_d,yTemp_d);
 end
 % Normalize bin areas
-binAreas_h = binAreas_h/sum(binAreas_h);
+binAreas_d = binAreas_d/sum(binAreas_d);
 
 % Sort tree cylinders to distance bins
 binIndex_d = zeros(nCylinders,1);
