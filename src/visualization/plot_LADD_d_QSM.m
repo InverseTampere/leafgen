@@ -81,7 +81,7 @@ if dType ~= "none"
     end
     % Normalization
     yy = yy/trapz(xx,yy);
-    plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
+    plot(xx,yy,'r:','LineWidth',2,'DisplayName',"Target distribution")
 end
 
 %% Histogram based on accepted leaves
@@ -171,7 +171,7 @@ leafHistFD = leafHistFD/sum(leafHistFD);
 leafHistFD = leafHistFD./diff(binEdges);
 
 % Plotting the histogram 
-custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.5,...
+custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.3,...
                 'DisplayName','Accepted leaf area','flipxy',0)
 xlabel("relative sub-branch distance")
 ylabel("leaf area frequency density [m^2]")

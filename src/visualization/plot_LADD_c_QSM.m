@@ -61,23 +61,33 @@ if dType ~= "none"
     end
     % Normalization
     yy = yy/trapz(xx,yy);
-    plot(xx,yy,'r-','LineWidth',2,'DisplayName',"Target distribution")
+    plot(xx,yy,'r:','LineWidth',2,'DisplayName',"Target distribution")
 end
 
 %% Histogram based on accepted leaves
 
 % % Extracting QSM and leaf information
-leafScale = Leaves.leaf_scale;
-leafBaseArea = Leaves.base_area;
-cylinderStartPoint = QSM.cylinder_start_point;
+leafScale      = Leaves.leaf_scale;
+leafBaseArea   = Leaves.base_area;
 leafStartPoint = Leaves.leaf_start_point;
-leafCount = Leaves.leaf_count;
+leafCount      = Leaves.leaf_count;
+cylinderStartPoint = QSM.cylinder_start_point;
+cylinderAxis       = QSM.cylinder_axis;
+cylinderLength     = QSM.cylinder_length;
+
+% Maximum cylinder length
+maxLen = max(cylinderLength);
+% Normalized cylinder lengths
+cylLenNorm = cylinderLength./maxLen;
+% Cylinder midpoints
+midPoints = cylinderStartPoint + 0.5*cylinderLength.*cylinderAxis;
+% Set the mean value of cylinder locations on xy-plane weighted with 
+% cylinder length as the origin
+xyOrigin = sum(cylLenNorm.*midPoints(:,1:2),1)./sum(cylLenNorm);
 
 % Area of each leaf (leaf scaling identical in every dimension)
 leafAreas = (leafScale(:,1).^2)*leafBaseArea;
 
-% Set the mean value of cylinder locations on xy-plane as the origin
-xyOrigin = mean(cylinderStartPoint(:,1:2));
 % Coordinates of the leaf start points on xy-plane
 leafCoord = leafStartPoint(:,1:2);
 % Unit vectors pointing the direction of cylinder start point coordinates
@@ -121,7 +131,7 @@ leafHistFD = leafHistFD/sum(leafHistFD);
 leafHistFD = leafHistFD./diff(binEdges);
 
 % Plotting the histogram 
-custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.5,...
+custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.3,...
                 'DisplayName','Accepted leaf area','flipxy',0)
 xlabel("direction")
 ylabel("leaf area frequency density [m^2]")

@@ -7,6 +7,10 @@ cylinderAxis = CylinderParameters.axis;
 cylinderAxis = cylinderAxis./sqrt(sum(cylinderAxis.^2,2)); % normalization
 % Cylinder length
 cylinderLength = CylinderParameters.length;
+% Maximum cylinder length
+maxLen = max(cylinderLength);
+% Normalized cylinder lengths
+cylLenNorm = cylinderLength./maxLen;
 
 % Cylinder midpoints
 midPoints = startPoints + 0.5*cylinderLength.*cylinderAxis;
@@ -14,8 +18,9 @@ midPoints = startPoints + 0.5*cylinderLength.*cylinderAxis;
 % Horizontal projection of midpoints
 midPointsHorz = [midPoints(:,1:2) zeros(length(midPoints(:,3)),1)];
 
-% Horizontal mean of cylinder midpoints
-meanPoint = mean(midPointsHorz,1);
+% Horizontal mean of cylinder midpoints weighted by normalized cylinder 
+% length
+meanPoint = sum(cylLenNorm.*midPointsHorz,1)./sum(cylLenNorm);
 
 % Position vectors of horizontal cylinder midpoints wrt mean of midpoints
 posVecHorz = midPointsHorz - meanPoint;
