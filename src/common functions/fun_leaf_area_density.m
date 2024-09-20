@@ -266,8 +266,8 @@ binAreas_a = zeros(nBinsC,1);
 for iBin = 1:nBinsC
     xTemp_a = linspace(binEdges_a(iBin),binEdges_a(iBin+1),1000);
     yTemp_a = fDist_c(xTemp_a);
-    % Integrate function values over bin width (polar integration)
-    binAreas_a(iBin) = 0.5*trapz(xTemp_a,yTemp_a.^2);
+    % Integrate function values over bin width
+    binAreas_a(iBin) = trapz(xTemp_a,yTemp_a);
 end
 % Normalize bin areas
 binAreas_a = binAreas_a/sum(binAreas_a);
