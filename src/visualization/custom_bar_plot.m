@@ -1,5 +1,8 @@
 function [] = custom_bar_plot(binEdges,binValues,varargin)
 
+faceColor = 'b';
+faceAlpha = 0.5;
+displayName = '';
 flipxy = 0;
 
 % Check additional parameters.
