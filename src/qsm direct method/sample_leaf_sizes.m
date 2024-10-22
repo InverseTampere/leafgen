@@ -54,6 +54,10 @@ while targetReached == 0
                 sampledArea = (params(2)-params(1))*rand(1) + params(1);
             case 'normal'
                 sampledArea = sqrt(params(2))*randn(1) + params(1);
+                % Resample negative and zero values
+                while sampledArea <= 0
+                    sampledArea = sqrt(params(2))*randn(1) + params(1);
+                end
         end
         leafScaleFactors(iLeaf,:) = sqrt(sampledArea/baseArea)*ones(1,3);
         leafParent(iLeaf) = iCyl;

@@ -32,6 +32,11 @@ else
             case 'normal'
                 sampledArea = sqrt(dParameters(2))*randn(1) ...
                               + dParameters(1);
+                % Resample negative and zero values
+                while sampledArea <= 0
+                    sampledArea = sqrt(dParameters(2))*randn(1) ...
+                                  + dParameters(1);
+                end
         end
         areaAdded = areaAdded + sampledArea;
         % Store leaf scaling factor (same for all dimensions)
