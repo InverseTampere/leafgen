@@ -221,7 +221,7 @@ for iCyl = 1:nCyl
         % Combine cylinders until minimum length is achieved or the
         % cylinders in branch run out
         if lengthType == "absolute"
-            combLenUnderMin = (comblen < lMin);
+            combLenUnderMin = (combLen < lMin);
         elseif lengthType == "relative branch"
             branchLength = sum(cylLength(branchIndex == biCyl));
             combLenUnderMin = (combLen/branchLength < lMin);
@@ -233,7 +233,7 @@ for iCyl = 1:nCyl
             combLen = combLen + cylLength(ii);
             % Check if combined length is still under minimum length
             if lengthType == "absolute"
-                combLenUnderMin = (comblen < lMin);
+                combLenUnderMin = (combLen < lMin);
             elseif lengthType == "branch relative"
                 combLenUnderMin = (combLen/branchLength < lMin);
             end
