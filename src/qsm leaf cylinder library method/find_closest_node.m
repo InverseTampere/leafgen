@@ -2,7 +2,7 @@ function [V,I] = find_closest_node(nodes,value)
 
 % Find the node closest to the given value
 
-if length(nodes) == 1
+if isscalar(nodes)
     I = 1;
 elseif value > max(nodes)
     I = length(nodes);
