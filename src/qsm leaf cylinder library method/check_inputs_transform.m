@@ -213,7 +213,7 @@ fieldNamesPar = ["fun_inc_params", ...
                  "fun_size_params", ...
                  ];
 for iField = 1:length(fieldCheckPar)
-    assert(fieldCheckPar(iField),"ParamFunctoins."+...
+    assert(fieldCheckPar(iField),"ParamFunctions."+...
            fieldNamesPar(iField)+" is missing.")
 end
 % Assert that all fields are function handles
@@ -225,6 +225,19 @@ if ~isa(ParamFunctions.fun_az_params,'function_handle')
 end
 if ~isa(ParamFunctions.fun_size_params,'function_handle')
     error("ParamFunctions.fun_size_params has to be a function handle.")
+end
+% Assert that parameter functions provide two element parameter vector
+if length(ParamFunctions.fun_inc_params(0,0,0)) ~= 2
+    error("ParamFunctions.fun_inc_params has to output a parameter" + ...
+          " vector with two elements.")
+end
+if length(ParamFunctions.fun_az_params(0,0,0)) ~= 2
+    error("ParamFunctions.fun_az_params has to output a parameter" + ...
+          " vector with two elements.")
+end
+if length(ParamFunctions.fun_size_params(0,0,0)) ~= 2
+    error("ParamFunctions.fun_size_params has to output a parameter" + ...
+          " vector with two elements.")
 end
 
 %% Target leaf area
