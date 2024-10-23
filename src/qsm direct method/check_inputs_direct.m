@@ -39,6 +39,8 @@ for iField = 1:length(fieldCheckTar)
     assert(fieldCheckTar(iField),"TargetDistributions."...
            +fieldNamesTar(iField)+" is missing.")
 end
+
+%% Check the validity of LADD distribution names and parameters
 % Relative height
 dTypeH  = TargetDistributions.dTypeLADDh;
 hParams = TargetDistributions.hParams;
@@ -214,7 +216,7 @@ switch dTypeC
                   +" is not on the interval [0,1].")
         end
 end
-% Parameter functions
+%% Check validity of LOD parameter functions
 % Assert that all fields are function handles
 if ~isa(TargetDistributions.fun_inc_params,'function_handle')
     error("TargetDistributions.fun_inc_params has to be a function"...
@@ -223,6 +225,8 @@ end
 if ~isa(TargetDistributions.fun_az_params,'function_handle')
     error("TargetDistributions.fun_az_params has to be a function handle.")
 end
+
+%% Check validity of LSD parameter function
 if ~isa(TargetDistributions.fun_size_params,'function_handle')
     error("TargetDistributions.fun_size_params has to be a function"...
           +" handle.")
