@@ -84,3 +84,12 @@ zlabel('z')
 plot_LADD_h_QSM(QSM,Leaves,TargetDistributions);
 plot_LADD_d_QSM(QSM,Leaves,TargetDistributions);
 plot_LADD_c_QSM(QSM,Leaves,TargetDistributions);
+
+%% Export leaves and QSM in OBJ-format
+
+% Precision parameter for export
+precision = 5;
+
+% Exporting to obj files
+Leaves.export_geometry('OBJ',true,'leaves_export.obj',precision);
+QSM.export('OBJ','qsm_export.obj','Precision',precision);

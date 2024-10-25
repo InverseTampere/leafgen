@@ -113,3 +113,11 @@ plot_LADD_d_CH(aShape,Leaves,TargetDistributions, ...
                'StemCoordinates',stemCoordinates);
 plot_LADD_c_CH(aShape,Leaves,TargetDistributions, ...
                'StemCoordinates',stemCoordinates);
+
+%% Export leaves in OBJ-format
+
+% Precision parameter for export
+precision = 5;
+
+% Exporting to obj file
+Leaves.export_geometry('OBJ',false,'leaves_exportF.obj',precision);
