@@ -458,7 +458,7 @@ while leafArea < candidateArea
 
     % Sampling leaf direction uniformly
     if abs(dot(leafNormal(iLeaf,:),[0 0 1])) > 0.999
-        dirVec = [0 0 1];
+        dirVec = [0 1 0];
     else
         dirVec = cross(leafNormal(iLeaf,:),[0 0 1]);
         dirVec = dirVec/norm(dirVec);
