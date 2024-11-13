@@ -142,7 +142,7 @@ for iLeaf = 1:nLeafCandidate
         end
         
         % Compute leaf center point
-        cen = origin + scale(2)*dir;
+        cen = origin + 0.5*scale(2)*Leaves.base_dimensions(2)*dir;
         
         % Compute leaf triangles for intersection computations
         leafTris = Leaves.triangles(origin, dir, normal, scale);
