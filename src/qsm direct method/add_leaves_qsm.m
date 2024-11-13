@@ -1,17 +1,17 @@
 function Leaves = add_leaves_qsm(QSM,Leaves,leafScaleFactors,leafParent,...
-                                 leafDir,leafNormal,twigStart,twigEnd,...
-                                 totalLeafArea)
+                                 leafDir,leafNormal,petioleStart, ...
+                                 petioleEnd,totalLeafArea)
 
-%% Maximum leaf scaling and twig length
+%% Maximum leaf scaling and petiole length
 maxLeafSize = max(max(leafScaleFactors))*max(Leaves.base_dimensions);
-maxTwigLen = max(sum((twigEnd-twigStart).^2,2));
+maxPetioleLen = max(sum((petioleEnd-petioleStart).^2,2));
 
 %% Voxelization parameters
 
 % Extreme values of cylinder QSM
 treeBox = QSM.tree_limits;
-minPoint = treeBox(1,:) - maxLeafSize - maxTwigLen;
-maxPoint = treeBox(2,:) + maxLeafSize + maxTwigLen;
+minPoint = treeBox(1,:) - maxLeafSize - maxPetioleLen;
+maxPoint = treeBox(2,:) + maxLeafSize + maxPetioleLen;
 
 % Compute voxelization of cylinder QSM
 QSMVoxelization = QSM.toVoxels(maxLeafSize, minPoint, maxPoint);
@@ -79,7 +79,7 @@ for iLeaf = 1:nLeafCandidate
     for iTransform = 1:nTransform+1
         
         % Paramenters of the current leaf
-        origin = twigEnd(iLeaf,:);
+        origin = petioleEnd(iLeaf,:);
         dir    = leafDir(iLeaf,:);
         normal = leafNormal(iLeaf,:);
         scale  = leafScaleFactors(iLeaf,:);
@@ -192,8 +192,8 @@ for iLeaf = 1:nLeafCandidate
         % Set the parent of accepted leaf as NaN
         parent = leafParent(iLeaf);
         
-        % Twig start point
-        twig = twigStart(iLeaf,:);
+        % Petiole start point
+        petiole = petioleStart(iLeaf,:);
 
         % If inclination of normal is above pi/2, mirror normal to other
         % side
@@ -207,7 +207,7 @@ for iLeaf = 1:nLeafCandidate
                                                normal,...
                                                scale,...
                                                parent,...
-                                               twig,...
+                                               petiole,...
                                                leafTris);
         
         % Add leaf to voxelization

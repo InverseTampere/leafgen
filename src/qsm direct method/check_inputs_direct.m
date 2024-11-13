@@ -232,7 +232,7 @@ if ~isa(TargetDistributions.fun_size_params,'function_handle')
           +" handle.")
 end
 
-%% Check the leaf base geometry and twig length limits
+%% Check the leaf base geometry and petiole length limits
 if size(LeafProperties.vertices,2) ~= 3
     error("LeafProperties.vertices should have a size (nVertices x 3).")
 end
@@ -242,14 +242,14 @@ end
 if max(LeafProperties.triangles,[],'all') > size(LeafProperties.vertices,1)
     error("LeafProperties.triangles refers to too large vertice indices.")
 end
-if any(LeafProperties.twigLengthLimits < 0) || ...
-        ~all(LeafProperties.twigLengthLimits ...
-             == sort(LeafProperties.twigLengthLimits))
-    error("LeafProperties.twigLengthLimits can contain only positive"...
+if any(LeafProperties.petioleLengthLimits < 0) || ...
+        ~all(LeafProperties.petioleLengthLimits ...
+             == sort(LeafProperties.petioleLengthLimits))
+    error("LeafProperties.petioleLengthLimits can contain only positive"...
           +" values in ascending order.")
 end
-if length(LeafProperties.twigLengthLimits) ~= 2
-    error("LeafProperties.twigLengthLimits can contain only two elements.")
+if length(LeafProperties.petioleLengthLimits) ~= 2
+    error("LeafProperties.petioleLengthLimits can contain only two elements.")
 end
 
 %% Total leaf area

@@ -37,7 +37,7 @@ Nodes.cylinderInclinationAngle = [pi/4 3*pi/4];
 Nodes.cylinderAzimuthAngle = [pi/4 3*pi/4 5*pi/4 7*pi/4];
 Nodes.cylinderLeafArea = [0.2 0.5];
 
-%% Leaf and twig properties
+%% Leaf and petiole properties
 
 % Vertices of the leaf basis geometry
 LeafProperties.vertices = [-0.04  0.0   0.0;
@@ -47,8 +47,8 @@ LeafProperties.vertices = [-0.04  0.0   0.0;
 % Triangles of the leaf basis geometry
 LeafProperties.triangles = [1,  2,  3];
 
-% Twig length limits
-LeafProperties.twigLengthLimits = [0.05 0.1];
+% Petiole length limits
+LeafProperties.petioleLengthLimits = [0.05 0.1];
 
 %% Generate leaf cylinder library
  

@@ -1,6 +1,6 @@
-function Leaves = add_leaves(Leaves,len,rad,inc,az,ar,twigStart, ...
-                             twigEnd,leafDir,leafNormal, ...
-                             leafScaleFactors,maxLeafSize,maxTwigLen)
+function Leaves = add_leaves(Leaves,len,rad,inc,az,ar,petioleStart, ...
+                             petioleEnd,leafDir,leafNormal, ...
+                             leafScaleFactors,maxLeafSize,maxPetioleLen)
 
 %% Initialize cylinder as QSM
 
@@ -23,8 +23,8 @@ QSM = QSMBCylindrical(sp,ax,len,rad,par,BI);
 
 % Extreme values of cylinder QSM
 treeBox = QSM.tree_limits;
-minPoint = treeBox(1,:) - maxLeafSize - maxTwigLen;
-maxPoint = treeBox(2,:) + maxLeafSize + maxTwigLen;
+minPoint = treeBox(1,:) - maxLeafSize - maxPetioleLen;
+maxPoint = treeBox(2,:) + maxLeafSize + maxPetioleLen;
 
 % Compute voxelization of cylinder QSM
 QSMVoxelization = QSM.toVoxels(maxLeafSize, minPoint, maxPoint);
@@ -92,7 +92,7 @@ for iLeaf = 1:nLeafCandidate
     for iTransform = 1:nTransform+1
         
         % Paramenters of the current leaf
-        origin = twigEnd(iLeaf,:);
+        origin = petioleEnd(iLeaf,:);
         dir    = leafDir(iLeaf,:);
         normal = leafNormal(iLeaf,:);
         scale  = leafScaleFactors(iLeaf,:);
@@ -205,8 +205,8 @@ for iLeaf = 1:nLeafCandidate
         % Set the parent of accepted leaf as NaN
         parent = nan;
         
-        % Twig start point
-        twig = twigStart(iLeaf,:);
+        % Petiole start point
+        petiole = petioleStart(iLeaf,:);
 
         % If inclination of normal is above pi/2, mirror normal to other
         % side
@@ -220,7 +220,7 @@ for iLeaf = 1:nLeafCandidate
                                                normal,...
                                                scale,...
                                                parent,...
-                                               twig,...
+                                               petiole,...
                                                leafTris);
         
         % Add leaf to voxelization

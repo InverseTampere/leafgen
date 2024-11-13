@@ -1,12 +1,12 @@
-function [leafDir,leafNormal,twigStart,twigEnd] = fun_leaf_orientation( ...
+function [leafDir,leafNormal,petioleStart,petioleEnd] = fun_leaf_orientation( ...
                                                     len,rad,inc,az, ...
                                                     nLeaves, ...
-                                                    twigLengthLimits, ...
+                                                    petioleLengthLimits,...
                                                     dTypeLODinc, ...
                                                     dTypeLODaz, ...
                                                     dParametersLODinc, ...
                                                     dParametersLODaz, ...
-                                                    TwigDirDistribution,...
+                                                    PetioleDirDistribution,...
                                                     Phyllotaxis)
 
 % Function definitions
@@ -91,14 +91,14 @@ incAngles = zeros(nLeaves,1);
 azAngles  = zeros(nLeaves,1);
 leafNormal = zeros(nLeaves,3);
 leafDir = zeros(nLeaves,3);
-twigStart = zeros(nLeaves,3);
-twigEnd = zeros(nLeaves,3);
+petioleStart = zeros(nLeaves,3);
+petioleEnd = zeros(nLeaves,3);
 
 if Phyllotaxis.flag == true
     % Relative lengthwise node position on cylinder axis (starts from the
     % end tip of the cylinder)
     nodeRelPosAxis = 1;
-    % Set the radial direction angle value for the first twig
+    % Set the radial direction angle value for the first petiole
     if isfield(Phyllotaxis,'initialRadialAngle')
         nodeRotationAngle = Phyllotaxis.initialRadialAngle;
     else
@@ -191,16 +191,16 @@ for iLeaf = 1:nLeaves
                            sin(incAngles(iLeaf))*sin(azAngles(iLeaf)+pi/2),...
                            cos(incAngles(iLeaf))];
 
-    % Define twig and leaf direction
+    % Define petiole and leaf direction
     if isfield(Phyllotaxis,'nodeRotation')
         phi = nodeRotationAngle;
-    elseif TwigDirDistribution.flag == true % user-supplied distribution
-        f_twig_dir = TwigDirDistribution.dist_fun;
-        maxVal = max(f_twig_dir(0:0.001:2*pi,len,rad,inc,az)) + 0.1;
+    elseif PetioleDirDistribution.flag == true % user-supplied distribution
+        f_petiole_dir = PetioleDirDistribution.dist_fun;
+        maxVal = max(f_petiole_dir(0:0.001:2*pi,len,rad,inc,az)) + 0.1;
         accepted = 0;
         while accepted == 0
             proposal = rand(1)*2*pi;
-            funValue = f_twig_dir(proposal,len,rad,inc,az);
+            funValue = f_petiole_dir(proposal,len,rad,inc,az);
             vertValue = rand(1)*maxVal;
             if vertValue < funValue
                 phi = proposal;
@@ -223,10 +223,10 @@ for iLeaf = 1:nLeaves
         if upmostRadDir(3) < 0
             upmostRadDir = -upmostRadDir;
         end
-        % Find twig start radial direction by rotating upmost direction 
+        % Find petiole start radial direction by rotating upmost direction 
         % wrt. cylinder axis
-        twigStartRadDir = rotation_matrix(cylinderAxis,phi)*upmostRadDir';
-        twigStartRadDir = twigStartRadDir';
+        petioleStartRadDir = rotation_matrix(cylinderAxis,phi)*upmostRadDir';
+        petioleStartRadDir = petioleStartRadDir';
 
     % If inclination angle is close to zero, choose the northmost
     % direction on the plane defined by leaf normal as the reference
@@ -235,101 +235,102 @@ for iLeaf = 1:nLeaves
         if cylinderAxis(3) > 0
             northmostDir = cross([-1 0 0],cylinderAxis);
             northmostDir = northmostDir/norm(northmostDir);
-            twigStartRadDir = rotation_matrix(cylinderAxis,phi) ...
+            petioleStartRadDir = rotation_matrix(cylinderAxis,phi) ...
                               *northmostDir';
         else
             northmostDir = cross([ 1 0 0],cylinderAxis);
             northmostDir = northmostDir/norm(northmostDir);
-            twigStartRadDir = rotation_matrix(-cylinderAxis,phi) ...
+            petioleStartRadDir = rotation_matrix(-cylinderAxis,phi) ...
                               *northmostDir';
         end
-        twigStartRadDir = twigStartRadDir';
+        petioleStartRadDir = petioleStartRadDir';
     end
     
-    % Side direction of twig start point
-    if norm(twigStartRadDir-leafNormal(iLeaf,:)) > 1e-3 && ...
-       norm(twigStartRadDir+leafNormal(iLeaf,:)) > 1e-3 % cross prod ok
-        twigStartSide = cross(twigStartRadDir,leafNormal(iLeaf,:));
-    else % radial direction of twig start parallel to leaf normal
-        % Make a small perturbation to radial twig start direction
-        twigStartRadDir = rotation_matrix(cylinderAxis,pi/6-(rand(1)*pi/3)) ...
-                          *twigStartRadDir';
-        twigStartRadDir = twigStartRadDir';
-        twigStartSide = cross(twigStartRadDir,leafNormal(iLeaf,:));
+    % Side direction of petiole start point
+    if norm(petioleStartRadDir-leafNormal(iLeaf,:)) > 1e-3 && ...
+       norm(petioleStartRadDir+leafNormal(iLeaf,:)) > 1e-3 % cross prod ok
+        petioleStartSide = cross(petioleStartRadDir,leafNormal(iLeaf,:));
+    else % radial direction of petiole start parallel to leaf normal
+        % Make a small perturbation to radial petiole start direction
+        petioleStartRadDir = rotation_matrix(cylinderAxis,pi/6-(rand(1)*pi/3)) ...
+                          *petioleStartRadDir';
+        petioleStartRadDir = petioleStartRadDir';
+        petioleStartSide = cross(petioleStartRadDir,leafNormal(iLeaf,:));
     end
-    twigStartSide = twigStartSide/norm(twigStartSide);
+    petioleStartSide = petioleStartSide/norm(petioleStartSide);
     
-    % Twig and leaf direction
+    % Petiole and leaf direction
     if Phyllotaxis.flag == true && isfield(Phyllotaxis, ...
-                                           'twigAxialInclinationAngle')
-        rotAxis = cross(cylinderAxis,twigStartRadDir);
+                                           'petioleAxialInclinationAngle')
+        rotAxis = cross(cylinderAxis,petioleStartRadDir);
         rotAxis = rotAxis/norm(rotAxis);
-        rmTwig = rotation_matrix(rotAxis, ...
-                                 Phyllotaxis.twigAxialInclinationAngle);
-        twigDir =  (rmTwig*cylinderAxis')';
-        leafDir(iLeaf,:) = cross(leafNormal(iLeaf,:),twigStartSide);
+        rmPetiole = rotation_matrix(rotAxis, ...
+                                 Phyllotaxis.petioleAxialInclinationAngle);
+        petioleDir =  (rmPetiole*cylinderAxis')';
+        leafDir(iLeaf,:) = cross(leafNormal(iLeaf,:),petioleStartSide);
         leafDir = leafDir/norm(leafDir);
     else
-        twigDir = cross(leafNormal(iLeaf,:),twigStartSide);
-        twigDir = twigDir/norm(twigDir);
-        % Set leaf direction to be the same as twig direction
-        leafDir(iLeaf,:) = twigDir;
+        petioleDir = cross(leafNormal(iLeaf,:),petioleStartSide);
+        petioleDir = petioleDir/norm(petioleDir);
+        % Set leaf direction to be the same as petiole direction
+        leafDir(iLeaf,:) = petioleDir;
     end
     
-    % Lengthwise twig start location on cylinder axis
+    % Lengthwise petiole start location on cylinder axis
     if Phyllotaxis.flag == true
-        twigStartPosAxis = nodeRelPosAxis*len;
+        petioleStartPosAxis = nodeRelPosAxis*len;
         nodeRelPosAxis = (nodeRelPosAxis*len-Phyllotaxis.nodeDistance)/len;
     else
-        twigStartPosAxis = rand(1)*len;
+        petioleStartPosAxis = rand(1)*len;
     end
-    % Start and end points of the twig
-    twigStart(iLeaf,:) = twigStartPosAxis*cylinderAxis ...
-                         + rad*twigStartRadDir;
-    twigLen = (twigLengthLimits(2)-twigLengthLimits(1))*rand(1) ... 
-              + twigLengthLimits(1);
-    twigEnd(iLeaf,:) = twigStart(iLeaf,:) + twigLen*twigDir;
+    % Start and end points of the petiole
+    petioleStart(iLeaf,:) = petioleStartPosAxis*cylinderAxis ...
+                         + rad*petioleStartRadDir;
+    petioleLen = (petioleLengthLimits(2)-petioleLengthLimits(1))*rand(1) ... 
+              + petioleLengthLimits(1);
+    petioleEnd(iLeaf,:) = petioleStart(iLeaf,:) + petioleLen*petioleDir;
 
     % If the phyllotaxis pattern has multiple leaves per node, add them
     if Phyllotaxis.flag == true && Phyllotaxis.nNodeLeaves > 1
         for iPhyl = 1:Phyllotaxis.nNodeLeaves-1
             leafNormal(iLeaf+iPhyl,:) = leafNormal(iLeaf,:);
             rmPhyl = rotation_matrix(cylinderAxis, ...
-                                     Phyllotaxis.twigSeparationAngle);
-            twigStartRadDir = (rmPhyl*twigStartRadDir')';
-            % Side direction of twig start point
-            if norm(twigStartRadDir-leafNormal(iLeaf,:)) > 1e-3 && ...
-                    norm(twigStartRadDir+leafNormal(iLeaf,:)) > 1e-3 
-                twigStartSide = cross(twigStartRadDir,leafNormal(iLeaf,:));
+                                     Phyllotaxis.petioleSeparationAngle);
+            petioleStartRadDir = (rmPhyl*petioleStartRadDir')';
+            % Side direction of petiole start point
+            if norm(petioleStartRadDir-leafNormal(iLeaf,:)) > 1e-3 && ...
+                    norm(petioleStartRadDir+leafNormal(iLeaf,:)) > 1e-3 
+                petioleStartSide = cross(petioleStartRadDir,leafNormal(iLeaf,:));
             else
-                % Make a small perturbation to radial twig start direction
+                % Make a small perturbation to radial petiole start 
+                % direction
                 prtb = pi/6-(rand(1)*pi/3);
-                twigStartRadDir = (rotation_matrix(cylinderAxis,prtb) ...
-                                   *twigStartRadDir')';
-                twigStartSide = cross(twigStartRadDir,leafNormal(iLeaf,:));
+                petioleStartRadDir = (rotation_matrix(cylinderAxis,prtb) ...
+                                   *petioleStartRadDir')';
+                petioleStartSide = cross(petioleStartRadDir,leafNormal(iLeaf,:));
             end
-            twigStartSide = twigStartSide/norm(twigStartSide);
-            % Twig direction
+            petioleStartSide = petioleStartSide/norm(petioleStartSide);
+            % Petiole direction
             if Phyllotaxis.flag == true && ...
-               isfield(Phyllotaxis,'twigAxialInclinationAngle')
-                rotAxis = cross(cylinderAxis,twigStartRadDir);
+               isfield(Phyllotaxis,'petioleAxialInclinationAngle')
+                rotAxis = cross(cylinderAxis,petioleStartRadDir);
                 rotAxis = rotAxis/norm(rotAxis);
-                rmTwig = rotation_matrix(rotAxis, ...
-                                         Phyllotaxis.twigAxialInclinationAngle);
-                twigDir =  (rmTwig*cylinderAxis')';
+                rmPetiole = rotation_matrix(rotAxis, ...
+                                Phyllotaxis.petioleAxialInclinationAngle);
+                petioleDir =  (rmPetiole*cylinderAxis')';
             else
-                twigDir = cross(leafNormal(iLeaf,:),twigStartSide);
-                twigDir = twigDir/norm(twigDir);
+                petioleDir = cross(leafNormal(iLeaf,:),petioleStartSide);
+                petioleDir = petioleDir/norm(petioleDir);
             end
-            % Set leaf direction to be the same as twig direction
-            leafDir(iLeaf+iPhyl,:) = twigDir;
-            % Start and end points of the twig
-            twigStart(iLeaf+iPhyl,:) = twigStartPosAxis*cylinderAxis ...
-                                       + rad*twigStartRadDir;
-            twigLen = (twigLengthLimits(2)-twigLengthLimits(1))*rand(1) ...
-                      + twigLengthLimits(1);
-            twigEnd(iLeaf+iPhyl,:) = twigStart(iLeaf+iPhyl,:) ...
-                                     + twigLen*twigDir;
+            % Set leaf direction to be the same as petiole direction
+            leafDir(iLeaf+iPhyl,:) = petioleDir;
+            % Start and end points of the petiole
+            petioleStart(iLeaf+iPhyl,:) = petioleStartPosAxis*cylinderAxis ...
+                                       + rad*petioleStartRadDir;
+            petioleLen = (petioleLengthLimits(2)-petioleLengthLimits(1))*rand(1) ...
+                      + petioleLengthLimits(1);
+            petioleEnd(iLeaf+iPhyl,:) = petioleStart(iLeaf+iPhyl,:) ...
+                                     + petioleLen*petioleDir;
         end
         skipIndices = Phyllotaxis.nNodeLeaves-1;
     end
@@ -353,8 +354,8 @@ if Phyllotaxis.flag == true
     if totalAddedLeaves < nLeaves
         leafNormal = leafNormal(1:totalAddedLeaves,:);
         leafDir = leafDir(1:totalAddedLeaves,:);
-        twigStart = twigStart(1:totalAddedLeaves,:);
-        twigEnd = twigEnd(1:totalAddedLeaves,:);
+        petioleStart = petioleStart(1:totalAddedLeaves,:);
+        petioleEnd = petioleEnd(1:totalAddedLeaves,:);
     end
 end
 

@@ -5,13 +5,19 @@ function Leaves = generate_foliage_qsm_direct(QSM, ...
                                               varargin)
 
 %% Check the correctness of inputs
+
+if isfield(LeafProperties,'twigLengthLimits')
+    LeafProperties.petioleLengthLimits = LeafProperties.twigLengthLimits;
+    LeafProperties = rmfield(LeafProperties,'twigLengthLimits');
+end
+
 QSM = check_inputs_direct(QSM,TargetDistributions,LeafProperties, ...
                           totalLeafArea);
 
 %% Optional input default values
 intersectionPrevention = true;
 overSamplingFactor = 2;
-TwigDirectionDistribution.flag = false;
+PetioleDirectionDistribution.flag = false;
 Phyllotaxis.flag = false;
 
 %% Read optional inputs
@@ -39,11 +45,11 @@ while i <= NArg
                 overSamplingFactor = varargin{i+1};
                 i = i + 1;
 
-            case 'twigdirectiondistribution'
+            case 'petioledirectiondistribution'
                 assert(i < NArg && isa(varargin{i+1},'function_handle'),...
-                       'Argument following ''TwigDirectionDistribution'' should be a function handle.');
-                TwigDirectionDistribution.flag = true;
-                TwigDirectionDistribution.dist_fun = varargin{i+1};
+                       'Argument following ''PetioleDirectionDistribution'' should be a function handle.');
+                PetioleDirectionDistribution.flag = true;
+                PetioleDirectionDistribution.dist_fun = varargin{i+1};
                 i = i + 1;
 
             case 'phyllotaxis'
@@ -51,8 +57,8 @@ while i <= NArg
                        'Argument following ''Phyllotaxis'' should be a struct.')
                 Phyllotaxis = varargin{i+1};
                 Phyllotaxis.flag = true;
-                if TwigDirectionDistribution.flag == true
-                    warning('Twig direction distribution cannot be used simultaneously with phyllotaxis enabled')
+                if PetioleDirectionDistribution.flag == true
+                    warning('Petiole direction distribution cannot be used simultaneously with phyllotaxis enabled')
                 end
 
             otherwise
@@ -110,12 +116,12 @@ cylinderCandidateLeafArea = candidateArea*relativeCylinderLeafArea;
                                                 cylinderCandidateLeafArea);
 
 %% Sample leaf orientations
-[leafDir,leafNormal,twigStart,twigEnd] = sample_leaf_orientations(...
+[leafDir,leafNormal,petioleStart,petioleEnd] = sample_leaf_orientations(...
                                              CylinderParameters,...
                                              leafParentPP,...
                                              TargetDistributions,...
                                              LeafProperties,...
-                                             TwigDirectionDistribution,...
+                                             PetioleDirectionDistribution,...
                                              Phyllotaxis);
 
 %% Randomize the order of leaves
@@ -124,8 +130,8 @@ leafScaleFactors = leafScaleFactors(randOrder,:);
 leafParent       = leafParentPP(randOrder,:);
 leafDir          = leafDir(randOrder,:);
 leafNormal       = leafNormal(randOrder,:);
-twigStart        = twigStart(randOrder,:);
-twigEnd          = twigEnd(randOrder,:);
+petioleStart        = petioleStart(randOrder,:);
+petioleEnd          = petioleEnd(randOrder,:);
 
 %% Add leaves on QSM
 
@@ -139,16 +145,16 @@ end
 % Add leaves to the model
 if intersectionPrevention == true
     Leaves = add_leaves_qsm(QSM,Leaves,leafScaleFactors,leafParent,...
-                            leafDir,leafNormal,twigStart,twigEnd,...
+                            leafDir,leafNormal,petioleStart,petioleEnd,...
                             totalLeafArea);
 else
     iLeaf = 1;
     totalArea = 0;
     nLeaves = size(leafScaleFactors,1);
     while totalArea < totalLeafArea && iLeaf < nLeaves
-        Leaves.add_leaf(twigEnd(iLeaf,:),leafDir(iLeaf,:),...
+        Leaves.add_leaf(petioleEnd(iLeaf,:),leafDir(iLeaf,:),...
                         leafNormal(iLeaf,:),leafScaleFactors(iLeaf,:), ...
-                        1,twigStart(iLeaf,:));
+                        1,petioleStart(iLeaf,:));
         totalArea = totalArea ...
                     + (leafScaleFactors(iLeaf,1)^2)*Leaves.base_area;
         iLeaf = iLeaf + 1;

@@ -107,7 +107,7 @@ classdef LeafModelTriangle < LeafModel
                 ob.leaf_scale       = zeros(N,3);
                 
                 ob.leaf_parent      = zeros(N,1);
-                ob.twig_start_point = zeros(N,3);
+                ob.petiole_start_point = zeros(N,3);
                 
                 ob.leaf_triangle_vertices = nan(N,9,ob.triangle_count);
                 ob.leaf_triangle_normals = nan(N,3,ob.triangle_count);
@@ -142,8 +142,9 @@ classdef LeafModelTriangle < LeafModel
             ob.leaf_scale       = ob.leaf_scale(1:ob.leaf_count,:);
             
             ob.leaf_parent      = ob.leaf_parent(1:ob.leaf_count,:);
-            ob.twig_start_point = ob.twig_start_point(1:ob.leaf_count,:);
-
+            ob.petiole_start_point = ...
+                            ob.petiole_start_point(1:ob.leaf_count,:);
+            %-
             ob.leaf_triangle_vertices = ...
                             ob.leaf_triangle_vertices(1:ob.leaf_count,:,:);
             %-
@@ -156,7 +157,7 @@ classdef LeafModelTriangle < LeafModel
         end
 
         function [index,area] = add_leaf(ob, origin, dir, normal, scale,...
-                                         parent, twig, tris)
+                                         parent, petiole, tris)
         % Add a leaf with input parameters to the leaf collection.
 
             % Object index for new leaf.
@@ -201,7 +202,7 @@ classdef LeafModelTriangle < LeafModel
             ob.leaf_scale(index,:) = scale;
             
             ob.leaf_parent(index,:) = parent;
-            ob.twig_start_point(index,:) = twig;
+            ob.petiole_start_point(index,:) = petiole;
             
             % Leaf area of new leaf is received by
             % scaling the area of the base by the 
@@ -691,7 +692,7 @@ classdef LeafModelTriangle < LeafModel
                         % Print line type.
                         fprintf(fid,'L ');
                         % Print leaf parameters.
-                        fprintf(fid,[fmt ' '],ob.twig_start_point(iLeaf,:));
+                        fprintf(fid,[fmt ' '],ob.petiole_start_point(iLeaf,:));
                         fprintf(fid,[fmt ' '],ob.leaf_start_point(iLeaf,:));
                         fprintf(fid,[fmt ' '],ob.leaf_direction(iLeaf,:));
                         fprintf(fid,[fmt ' '],ob.leaf_normal(iLeaf,:));

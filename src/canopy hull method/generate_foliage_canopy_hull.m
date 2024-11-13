@@ -353,7 +353,6 @@ tic
 iLeaf = 0;
 leafArea = 0;
 iVarExt = 0;
-ic = 1;
 while leafArea < candidateArea
     % Increase leaf index
     iLeaf = iLeaf + 1;
@@ -504,13 +503,13 @@ else
     areaAdded = 0;
     while areaAdded < totalLeafArea && iLeaf < size(leafStartPoints,1)
         leafParent = NaN;
-        twigStart  = NaN;
+        petioleStart  = NaN;
         Leaves.add_leaf(leafStartPoints(iLeaf,:), ...
                         leafDir(iLeaf,:), ...
                         leafNormal(iLeaf,:), ...
                         leafScaleFactors(iLeaf,:), ...
                         leafParent, ...
-                        twigStart);
+                        petioleStart);
         areaAdded = areaAdded ...
                     + (leafScaleFactors(iLeaf,1)^2)*Leaves.base_area;
         iLeaf = iLeaf + 1;

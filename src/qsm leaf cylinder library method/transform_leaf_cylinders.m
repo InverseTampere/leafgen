@@ -204,20 +204,22 @@ for iCyl = 1:length(cylinderLeafArea)
         libObjAxis = [abs(sin(incNode))*libObjHorzAxis cos(incNode)];
         libObjAxis = libObjAxis/norm(libObjAxis);
     end
-    % Vector from twig start to leaf start
-    twigToLeaf = LibraryObj.leaf_start_point - LibraryObj.twig_start_point;
-    % Twig start point axis-wise translation
-    twigStartPoints = (sfLen-1)*(LibraryObj.twig_start_point*libObjAxis') ...
-                      .*libObjAxis + LibraryObj.twig_start_point;
-    % Twig start point radius-wise translation
-    radVecTwig = twigStartPoints - (twigStartPoints*libObjAxis') ...
+    % Vector from petiole start to leaf start
+    petioleToLeaf = LibraryObj.leaf_start_point ...
+                    - LibraryObj.petiole_start_point;
+    % Petiole start point axis-wise translation
+    petioleStartPoints = (sfLen-1)* ...
+                         (LibraryObj.petiole_start_point*libObjAxis') ...
+                         .*libObjAxis + LibraryObj.petiole_start_point;
+    % Petiole start point radius-wise translation
+    radVecPetiole = petioleStartPoints - (petioleStartPoints*libObjAxis') ...
                  .*libObjAxis;
-    twigStartPoints = (twigStartPoints*libObjAxis').*libObjAxis ...
-                      + sfRad*radVecTwig;
+    petioleStartPoints = (petioleStartPoints*libObjAxis').*libObjAxis ...
+                      + sfRad*radVecPetiole;
     % Translated leaf start points
-    leafStartPoints = twigStartPoints + twigToLeaf;
+    leafStartPoints = petioleStartPoints + petioleToLeaf;
 
-    % Leaf and twig start point and leaf direction and normal rotation 
+    % Leaf and petiole start point and leaf direction and normal rotation 
     % around the origin
     leafDirections = LibraryObj.leaf_direction;
     leafNormals = LibraryObj.leaf_normal;
@@ -238,12 +240,12 @@ for iCyl = 1:length(cylinderLeafArea)
     end    
     % Inclination angle rotations
     leafStartPoints = (incRM*leafStartPoints')';
-    twigStartPoints = (incRM*twigStartPoints')';
+    petioleStartPoints = (incRM*petioleStartPoints')';
     leafDirections  = (incRM*leafDirections')';
     leafNormals     = (incRM*leafNormals')';
     % Azimuth angle rotations
     leafStartPoints = (azRM*leafStartPoints')';
-    twigStartPoints = (azRM*twigStartPoints')';
+    petioleStartPoints = (azRM*petioleStartPoints')';
     leafDirections  = (azRM*leafDirections')';
     leafNormals     = (azRM*leafNormals')';
 
@@ -277,36 +279,36 @@ for iCyl = 1:length(cylinderLeafArea)
     % TRANSLATE THE LEAVES TO THE CORRECT POSITION
     leafStartPoints = CylinderParameters.start_point(iCyl,:) ...
                       + leafStartPoints;
-    twigStartPoints = CylinderParameters.start_point(iCyl,:) ...
-                      + twigStartPoints;
+    petioleStartPoints = CylinderParameters.start_point(iCyl,:) ...
+                         + petioleStartPoints;
 
     % ADD LEAVES TO THE TREE-LEAF MODEL
     if iCyl == 1 && endIndex > 0
         Leaves.leaf_count = endIndex;
         Leaves.leaf_area = sum(leafBaseArea*(leafScales(1:endIndex,1).^2));
-        Leaves.leaf_start_point = leafStartPoints(1:endIndex,:);
-        Leaves.leaf_scale       = leafScales(1:endIndex,:);
-        Leaves.leaf_direction   = leafDirections(1:endIndex,:);
-        Leaves.leaf_normal      = leafNormals(1:endIndex,:);
-        Leaves.leaf_parent      = leafParent*ones(endIndex,1);
-        Leaves.twig_start_point = twigStartPoints(1:endIndex,:);
+        Leaves.leaf_start_point    = leafStartPoints(1:endIndex,:);
+        Leaves.leaf_scale          = leafScales(1:endIndex,:);
+        Leaves.leaf_direction      = leafDirections(1:endIndex,:);
+        Leaves.leaf_normal         = leafNormals(1:endIndex,:);
+        Leaves.leaf_parent         = leafParent*ones(endIndex,1);
+        Leaves.petiole_start_point = petioleStartPoints(1:endIndex,:);
     elseif endIndex > 0
         Leaves.leaf_count = Leaves.leaf_count + endIndex;
-        Leaves.leaf_area = Leaves.leaf_area ...
-                           + sum(leafBaseArea ...
-                                 *(leafScales(1:endIndex,1).^2));
-        Leaves.leaf_start_point = cat(1,Leaves.leaf_start_point, ...
+        Leaves.leaf_area           = Leaves.leaf_area ...
+                                     + sum(leafBaseArea ...
+                                           *(leafScales(1:endIndex,1).^2));
+        Leaves.leaf_start_point    = cat(1,Leaves.leaf_start_point, ...
                                       leafStartPoints(1:endIndex,:));
-        Leaves.leaf_scale       = cat(1,Leaves.leaf_scale, ...
+        Leaves.leaf_scale          = cat(1,Leaves.leaf_scale, ...
                                       leafScales(1:endIndex,:));
-        Leaves.leaf_direction   = cat(1,Leaves.leaf_direction, ...
+        Leaves.leaf_direction      = cat(1,Leaves.leaf_direction, ...
                                       leafDirections(1:endIndex,:));
-        Leaves.leaf_normal      = cat(1,Leaves.leaf_normal, ...
+        Leaves.leaf_normal         = cat(1,Leaves.leaf_normal, ...
                                       leafNormals(1:endIndex,:));
-        Leaves.leaf_parent      = cat(1,Leaves.leaf_parent, ...
+        Leaves.leaf_parent         = cat(1,Leaves.leaf_parent, ...
                                       leafParent*ones(endIndex,1));
-        Leaves.twig_start_point = cat(1,Leaves.twig_start_point, ...
-                                      twigStartPoints(1:endIndex,:));
+        Leaves.petiole_start_point = cat(1,Leaves.petiole_start_point, ...
+                                      petioleStartPoints(1:endIndex,:));
     end
                                   
 clearvars LibraryObj

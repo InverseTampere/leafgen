@@ -41,7 +41,7 @@ classdef LeafModel < handle
         leaf_parent = zeros(0,1);
         
         % Start point of petiole (on block surface).
-        twig_start_point = zeros(0,3);
+        petiole_start_point = zeros(0,3);
 
 	end
 
@@ -57,7 +57,7 @@ classdef LeafModel < handle
 	methods (Abstract)
 
         % Add single leaf with given parameters.
-		add_leaf(ob, origin, dir, normal, scale, parent, twig, tris)
+		add_leaf(ob, origin, dir, normal, scale, parent, petiole, tris)
         
         % Convert leaves to triangles for intersection computations with
         % blocks.

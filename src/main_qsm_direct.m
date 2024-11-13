@@ -22,8 +22,8 @@ LeafProperties.vertices = [-0.04  0.0   0.0;
 % Triangles of the leaf basis geometry
 LeafProperties.triangles = [1, 2, 3];
 
-% Twig length limits
-LeafProperties.twigLengthLimits = [0.05 0.1];
+% Petiole length limits
+LeafProperties.petioleLengthLimits = [0.05 0.1];
 
 %% Define target leaf distributions
 

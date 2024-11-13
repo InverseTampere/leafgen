@@ -164,8 +164,8 @@ for iLeaf = 1:nLeafCandidate
         % Set the parent of accepted leaf as NaN
         parent = nan;
         
-        % Set the twig start point of accepted leaf as NaN
-        twig = nan;
+        % Set the petiole start point of accepted leaf as NaN
+        petiole = nan;
         
         % No intersections: leaf is accepted and inserted into model
         [leafIndex,leafArea] = Leaves.add_leaf(origin,...
@@ -173,7 +173,7 @@ for iLeaf = 1:nLeafCandidate
                                                normal,...
                                                scale,...
                                                parent,...
-                                               twig,...
+                                               petiole,...
                                                leafTris);
         
         % Add leaf to voxelization

@@ -92,11 +92,11 @@ cylinderAxis        = QSM.cylinder_axis;
 cylinderBranchIndex = QSM.cylinder_branch_index;
 cylinderLength      = QSM.cylinder_length;
 cylinderCount       = QSM.block_count;
-twigStartPoint = Leaves.twig_start_point;
-leafParents    = Leaves.leaf_parent;
-leafCount      = Leaves.leaf_count;
-leafScale      = Leaves.leaf_scale;
-leafBaseArea   = Leaves.base_area;
+petioleStartPoint = Leaves.petiole_start_point;
+leafParents       = Leaves.leaf_parent;
+leafCount         = Leaves.leaf_count;
+leafScale         = Leaves.leaf_scale;
+leafBaseArea      = Leaves.base_area;
 
 % Area of each leaf (leaf scaling identical in every dimension)
 leafAreas = (leafScale(:,1).^2)*leafBaseArea;
@@ -136,15 +136,15 @@ for iBranch = 0:max(cylinderBranchIndex)
         if isempty(childLeafInds) == true
             continue
         end
-        % Vetor from cylinder start to twig start
-        cylStartToTwigStart = twigStartPoint(childLeafInds,:) ...
+        % Vetor from cylinder start to petiole start
+        cylStartToPetioleStart = petioleStartPoint(childLeafInds,:) ...
                               - cylinderStartPoint(bcIndices(iBC),:);
         % Projection to cylinder axis
         cylAxis = cylinderAxis(bcIndices(iBC),:);
-        twigStartProj = cylStartToTwigStart*cylAxis' ...
+        petioleStartProj = cylStartToPetioleStart*cylAxis' ...
                        .*cylAxis./(norm(cylAxis).^2);
         % Leaf start point values as relative branch distance
-        leafRelPos = sqrt(sum(twigStartProj.^2,2)) ...
+        leafRelPos = sqrt(sum(petioleStartProj.^2,2)) ...
                      ./cylinderLength(bcIndices(iBC)) ...
                      *(bcRelEdges(iBC+1)-bcRelEdges(iBC)) ...
                      + bcRelEdges(iBC);
