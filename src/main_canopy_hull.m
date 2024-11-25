@@ -1,14 +1,14 @@
 %% Clear variables and add paths
 
 clear, close all
-addpath("canopy hull method")
+addpath("canopy-hull-method")
 addpath("classes")
-addpath("common functions")
+addpath("common-functions")
 addpath("visualization")
 
 %% Point cloud
 
-filename = 'example data/examplePC.mat';
+filename = 'example-data/examplePC.mat';
 pCloud = importdata(filename);
 pCloud = double(pCloud);
 

@@ -1,9 +1,9 @@
 %% Clear variables and add paths
 
 clear, close all
-addpath("qsm leaf cylinder library method")
+addpath("qsm-leaf-cylinder-library-method")
 addpath("classes")
-addpath("common functions")
+addpath("common-functions")
 addpath("visualization")
 
 %% Library LOD and LSD types
@@ -65,7 +65,7 @@ end
 
 %% Initialize QSM
 
-filename = "example data/ExampleQSM.mat";
+filename = "example-data/ExampleQSM.mat";
 qsm = importdata(filename);
 QSM = QSMBCylindrical(qsm);
 

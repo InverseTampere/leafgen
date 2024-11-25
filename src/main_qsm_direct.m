@@ -1,14 +1,14 @@
 %% Clear variables and add paths
 
 clear, close all
-addpath("qsm direct method")
+addpath("qsm-direct-method")
 addpath("classes")
-addpath("common functions")
+addpath("common-functions")
 addpath("visualization")
 
 %% Initialize QSM
 
-filename = "example data/ExampleQSM.mat";
+filename = "example-data/ExampleQSM.mat";
 qsm = importdata(filename);
 QSM = QSMBCylindrical(qsm);
 
