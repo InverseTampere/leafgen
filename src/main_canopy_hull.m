@@ -120,4 +120,4 @@ plot_LADD_c_CH(aShape,Leaves,TargetDistributions, ...
 precision = 5;
 
 % Exporting to obj file
-Leaves.export_geometry('OBJ',false,'leaves_exportF.obj',precision);
+Leaves.export_geometry('OBJ',false,'leaves_export.obj',precision);
