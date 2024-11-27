@@ -55,7 +55,7 @@ cylinderLeafArea = targetLeafArea*relativeCylinderLeafArea;
 
 % Initialize LeafModelTriangle class object
 Leaves = LeafModelTriangle(LeafCylinderLibrary.LeafBaseModel.vertices, ...
-                           LeafCylinderLibrary.LeafBaseModel.tris);
+                           LeafCylinderLibrary.LeafBaseModel.triangles);
 
 for iCyl = 1:length(cylinderLeafArea)
 

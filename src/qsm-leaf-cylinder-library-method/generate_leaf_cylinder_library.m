@@ -106,8 +106,8 @@ LeafCylLib.LeafDistributions = LibraryDistributions;
 LeafCylLib.Nodes = Nodes;
 
 % Leaf base information
-LeafCylLib.LeafBaseModel.vertices = LeafProperties.vertices;
-LeafCylLib.LeafBaseModel.tris     = LeafProperties.triangles;
+LeafCylLib.LeafBaseModel.vertices  = LeafProperties.vertices;
+LeafCylLib.LeafBaseModel.triangles = LeafProperties.triangles;
 
 % Other properties
 LeafCylLib.Properties.petioleLengthLimits = ...
