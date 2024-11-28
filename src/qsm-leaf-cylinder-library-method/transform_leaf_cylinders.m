@@ -310,7 +310,7 @@ for iCyl = 1:length(cylinderLeafArea)
         Leaves.petiole_start_point = cat(1,Leaves.petiole_start_point, ...
                                       petioleStartPoints(1:endIndex,:));
     end
-                                  
+
 clearvars LibraryObj
 
 end
