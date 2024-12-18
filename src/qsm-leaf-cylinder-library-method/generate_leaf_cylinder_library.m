@@ -11,6 +11,7 @@ intersectionPrevention = true;
 overSamplingFactor = 2;
 PetioleDirectionDistribution.flag = false;
 Phyllotaxis.flag = false;
+defineParallelWorkers = false;
 
 if LibraryDistributions.dTypeLODinc == "uniform"
     Nodes.pLODinc1 = 0;
@@ -46,7 +47,8 @@ while i <= NArg
 
             case 'nleafobjectspernode'
                 assert(i < NArg && isnumeric(varargin{i+1}) && ...
-                       isscalar(varargin{i+1}) && varargin{i+1} > 0, ...
+                       isscalar(varargin{i+1}) && varargin{i+1} > 0 && ...
+                       round(varargin{i+1}) == varargin{i+1}, ...
                        "Argument following ''NLeafObjectsPerNode''"...
                        +" should be a positive integer.");
                 nLeafObjectsPerNode = varargin{i+1};
@@ -86,8 +88,17 @@ while i <= NArg
                 if PetioleDirectionDistribution.flag == true
                     warning("Petiole direction distribution cannot be"...
                             +" used simultaneously with phyllotaxis"...
-                            +" enabled")
+                            +" enabled.")
                 end
+
+            case 'parallelworkers'
+                assert(i < NArg &&  isnumeric(varargin{i+1}) && ...
+                       isscalar(varargin{i+1}) && varargin{i+1} > 0 && ...
+                       round(varargin{i+1}) == varargin{i+1}, ...
+                       "Argument following ''ParallelWorkers''"...
+                       +" should be a positive integer.")
+                nWorkers = varargin{i+1};
+                defineParallelWorkers = true;
 
             otherwise
                 warning("Skipping unknown parameters:"...
@@ -136,85 +147,76 @@ nInc = length(Nodes.cylinderInclinationAngle);
 nAz  = length(Nodes.cylinderAzimuthAngle);
 nAr  = length(Nodes.cylinderLeafArea);
 
+% Save the order of library varialbes
+LeafCylLib.Properties.VariableDescription = ...
+    ["(1) cylinder length", ...
+     "(2) cylinder radius", ...
+     "(3) cylinder inclination angle",...
+     "(4) cylinder azimuth angle",...
+     "(5) cylinder leaf area",...
+     "(6) LOD inclination angle distribution parameter 1",...
+     "(7) LOD inclination angle distribution parameter 2",...
+     "(8) LOD azimuth angle distribution parameter 1",...
+     "(9) LOD azimuth angle distribution parameter 2",...
+     "(10) LSD distribution parameter 1",...
+     "(11) LSD distribution parameter 2",...
+     "(12) number of Leaves objects per library node"];
+
 % Number of nodes per library variable
 nNodesPerLibVar = [nLen,nRad,nInc,nAz,nAr,nLODinc1,nLODinc2,nLODaz1,...
                    nLODaz2,nLSD1,nLSD2,nLeafObjectsPerNode];
+LeafCylLib.Properties.nNodesPerLibVar = nNodesPerLibVar;
 
 % Total number of nodes
-LeafCylLib.totalNodes = prod(nNodesPerLibVar);
+totalNodes = prod(nNodesPerLibVar);
+LeafCylLib.Properties.totalNodes = totalNodes;
 
-% Initializing the cell for leaf-cylinder library (empty cell element added
-% to dimensions with only one node to ensure 12-dimensional size for the 
-% cell variable)
-LeafObjects = cell(nNodesPerLibVar + (nNodesPerLibVar==1));
+% Initializing the struct for leaf objects of the library
+LeafObjects(totalNodes).Leaves = [];
 
-% Total number of iterations
-nIter = prod(nNodesPerLibVar);
-iIter = 0;
-wb = waitbar(iIter/nIter,num2str(iIter/nIter),...
+% Manually define the number of parallel workers if supplied by user
+if defineParallelWorkers == true
+    parpool(nWorkers);
+else 
+    parpool
+end
+
+% Initialize a waitbar for the parfor loop
+dq = parallel.pool.DataQueue;
+wb = waitbar(0/totalNodes,num2str(0/totalNodes),...
              'Name','Progress bar');
+wb.UserData = [0 totalNodes];
+afterEach(dq,@(varargin) waitbarUpdate(wb))
 
 % Create Leaves objects for the library
-for  iLODinc1 = 1:nLODinc1
-    for iLODinc2 = 1:nLODinc2
-    for iLODaz1  = 1:nLODaz1
-    for iLODaz2  = 1:nLODaz2
-    for iLSD1    = 1:nLSD1
-    for iLSD2    = 1:nLSD2
+parfor iNode = 1:totalNodes
 
-    for iCyl = 1:nLeafObjectsPerNode % loop over the desired amount of 
-                                       % leaf-cylinders for each node
+    % Make broadcast variables local to speed up parfor loop
+    NodesLocal = Nodes;
+    LeafPropertiesLocal = LeafProperties;
+    LibraryDistributionsLocal = LibraryDistributions;
 
-    % Loop over cylinder attributes
-    for iLen = 1:nLen
-    len = Nodes.cylinderLength(iLen);
+    % Find the library variable indices
+    [iLen,iRad,iInc,iAz,iAr,iLODinc1,iLODinc2,iLODaz1,iLODaz2,iLSD1, ...
+     iLSD2,~] = ind2sub(nNodesPerLibVar,iNode);
 
-    for iRad = 1:nRad
-    rad = Nodes.cylinderRadius(iRad);
-
-    for iInc = 1:nInc
-    inc = Nodes.cylinderInclinationAngle(iInc);
-
-    for iAz  = 1:nAz
-    az  = Nodes.cylinderAzimuthAngle(iAz);
-
-    for iAr  = 1:nAr
-    ar  = Nodes.cylinderLeafArea(iAr);
-
-    % Waitbar update
-    iIter = iIter + 1;
-    waitbar(iIter/nIter,wb, ...
-            sprintf('Leaf cylinder generation in progress\n%d/%d', ...
-                    iIter,nIter) ...
-           );
-
-    % If cylinder inclination is vertical pick already made leaf cylinder
-    % if possible (cylinder azimuth loses significance for vertical 
-    % cylinder)
-    if all([(inc < 1e-6 || abs(inc-pi) < 1e-6), ...
-            iAz > 1, ...
-            PetioleDirectionDistribution.flag == false, ...
-            Phyllotaxis.flag == false])
-        Leaves = LeafObjects{iLen,iRad,iInc,1,iAr,iLODinc1,iLODinc2, ...
-                               iLODaz1,iLODaz2,iLSD1,iLSD2,iCyl};
-        LeafObjects{iLen,iRad,iInc,iAz,iAr,iLODinc1,iLODinc2,iLODaz1, ...
-                      iLODaz2,iLSD1,iLSD2,iCyl} = Leaves;
-        clearvars Leaves;
-        % Skip to next iteration of the active for-loop
-        continue
-    end
-
+    % Cylinder attribute values
+    len = NodesLocal.cylinderLength(iLen);
+    rad = NodesLocal.cylinderRadius(iRad);
+    inc = NodesLocal.cylinderInclinationAngle(iInc);
+    az  = NodesLocal.cylinderAzimuthAngle(iAz);
+    ar  = NodesLocal.cylinderLeafArea(iAr);
 
     % Initialize Leaves object
-    Leaves = LeafModelTriangle(LeafProperties.vertices, ...
-                               LeafProperties.triangles);
+    Leaves = LeafModelTriangle(LeafPropertiesLocal.vertices, ...
+                               LeafPropertiesLocal.triangles);
 
     % Sample leaves from leaf size function
     leafScaleFactors = fun_leaf_size(overSamplingFactor*ar, ...
                                      Leaves.base_area, ...
-                                     LibraryDistributions.dTypeLSD, ...
-                                     [Nodes.pLSD1(iLSD1), ...
-                                      Nodes.pLSD2(iLSD2)]);
+                                     LibraryDistributionsLocal.dTypeLSD,...
+                                     [NodesLocal.pLSD1(iLSD1), ...
+                                      NodesLocal.pLSD2(iLSD2)]);
     nLeaves = size(leafScaleFactors,1);
     maxLeafSize = max(max(leafScaleFactors))*max(Leaves.base_dimensions);
 
@@ -224,11 +226,11 @@ for  iLODinc1 = 1:nLODinc1
     [leafDir,leafNormal,petioleStart,petioleEnd] = fun_leaf_orientation(...
         len,rad,inc,az, ...
         nLeaves, ...
-        LeafProperties.petioleLengthLimits, ...
-        LibraryDistributions.dTypeLODinc, ...
-        LibraryDistributions.dTypeLODaz, ...
-        [Nodes.pLODinc1(iLODinc1), Nodes.pLODinc2(iLODinc2)], ...
-        [Nodes.pLODaz1(iLODaz1), Nodes.pLODaz2(iLODaz2)], ...
+        LeafPropertiesLocal.petioleLengthLimits, ...
+        LibraryDistributionsLocal.dTypeLODinc, ...
+        LibraryDistributionsLocal.dTypeLODaz, ...
+        [NodesLocal.pLODinc1(iLODinc1), NodesLocal.pLODinc2(iLODinc2)], ...
+        [NodesLocal.pLODaz1(iLODaz1), NodesLocal.pLODaz2(iLODaz2)], ...
         PetioleDirectionDistribution, ...
         Phyllotaxis ...
         );
@@ -238,7 +240,7 @@ for  iLODinc1 = 1:nLODinc1
         Leaves = add_leaves(Leaves,len,rad,inc,az,ar,petioleStart, ...
                             petioleEnd,leafDir,leafNormal, ...
                             leafScaleFactors,maxLeafSize, ...
-                            max(LeafProperties.petioleLengthLimits));
+                            max(LeafPropertiesLocal.petioleLengthLimits));
     else
         iLeaf = 1;
         totalArea = 0;
@@ -256,32 +258,34 @@ for  iLODinc1 = 1:nLODinc1
         end
     end
 
-    % Add Leaves object to the node cell
-    LeafObjects{iLen,iRad,iInc,iAz,iAr,iLODinc1,iLODinc2,iLODaz1,iLODaz2,...
-               iLSD1,iLSD2,iCyl} = Leaves;
-    clearvars Leaves;
+    % Add Leaves object to the library struct
+    LeafObjects(iNode).Leaves = Leaves;
+    Leaves = [];
 
-    end % cylinderLeafArea
-    end % cylinderAzimuthAngle
-    end % cylinderInclinationAngle
-    end % cylinderRadius
-    end % cylinderLenght
+    % Update waitbar
+    send(dq,iNode);
 
-    end % nLeafCylindersPerNode
+end
 
-    end % LSD2
-    end % LSD1
-    end % LODaz2
-    end % LODaz1
-    end % LODinc2
-end     % LODinc1
+% Close waitbar
+close(wb);
 
+% Closing the parallel pool
+delete(gcp('nocreate'));
+
+% Assigning the leaf object struct to the leaf cylinder library
 LeafCylLib.LeafObjects = LeafObjects;
 
-% Delete waitbar
-delete(wb)
+% Function for waitbar update of parfor loop
+    function waitbarUpdate(wb)
+        iters = wb.UserData;
+        iters(1) = iters(1) + 1;
+        waitbar(iters(1)/iters(2),wb, ...
+                sprintf('Leaf cylinder generation in progress\n%d/%d', ...
+                iters(1),iters(2)));
+        wb.UserData = iters;
+    end
 
-%
 end
 
 
