@@ -40,7 +40,7 @@ end
 dTypeH  = TargetDistributions.dTypeLADDh;
 hParams = TargetDistributions.hParams;
 if ~any(strcmp(dTypeH,{'uniform','polynomial','polynomialmixture', ...
-        'weibull','weibullmixture','beta','betamixture'}))
+        'weibull','weibullmixture','beta','betamixture',''}))
     error("LADD height distribution type not recognized.")
 end
 switch dTypeH
@@ -112,7 +112,7 @@ end
 dTypeD  = TargetDistributions.dTypeLADDd;
 dParams = TargetDistributions.dParams;
 if ~any(strcmp(dTypeD,{'uniform','polynomial','polynomialmixture', ...
-        'weibull','weibullmixture','beta','betamixture'}))
+        'weibull','weibullmixture','beta','betamixture',''}))
     error("LADD distance from stem distribution type not recognized.")
 end
 switch dTypeD
@@ -185,7 +185,7 @@ end
 % Compass direction
 dTypeC  = TargetDistributions.dTypeLADDc;
 cParams = TargetDistributions.cParams;
-if ~any(strcmp(dTypeC,{'uniform','vonmises','vonmisesmixture'}))
+if ~any(strcmp(dTypeC,{'uniform','vonmises','vonmisesmixture',''}))
     error("LADD compass direction distribution type not recognized.")
 end
 switch dTypeC
