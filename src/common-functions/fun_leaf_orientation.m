@@ -50,7 +50,7 @@ switch dTypeLODinc
 
     case 'delta'
         % Peak width
-        w_inc = 0.05*pi/2;
+        w_inc = 0.06*pi/2;
         % Set sampling type to delta peak sampling
         lod_inc_sampling = 'delta peak';
 
@@ -76,7 +76,7 @@ switch dTypeLODaz
 
     case 'delta'
         % Peak width
-        w_az = 0.05*2*pi;
+        w_az = 0.06*2*pi;
         % Set sampling type to delta peak sampling
         lod_az_sampling = 'delta peak';
 
