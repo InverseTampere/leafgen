@@ -8,7 +8,7 @@ function LeafCylLib = generate_leaf_cylinder_library(...
 
 nLeafObjectsPerNode = 3;
 intersectionPrevention = true;
-overSamplingFactor = 2;
+overSamplingFactor = 10;
 PetioleDirectionDistribution.flag = false;
 Phyllotaxis.flag = false;
 defineParallelWorkers = false;
