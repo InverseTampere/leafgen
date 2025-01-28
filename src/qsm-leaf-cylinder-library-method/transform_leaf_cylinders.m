@@ -59,7 +59,8 @@ Leaves = LeafModelTriangle(LeafCylinderLibrary.LeafBaseModel.vertices, ...
 
 for iCyl = 1:length(cylinderLeafArea)
 
-    if cylinderLeafArea(iCyl) < 1e-6
+    % If cylinder leaf area budget is under 1cm^2 omit cylinder
+    if cylinderLeafArea(iCyl) < 0.01^2
         continue
     end
 
@@ -263,15 +264,21 @@ for iCyl = 1:length(cylinderLeafArea)
     % library object
     if cylinderLeafArea(iCyl) > LibraryObj.leaf_area
         endIndex = LibraryObj.leaf_count;
-    else % Reduce leaves to correspond to the leaf area budget of the cyl
+    elseif  cylinderLeafArea(iCyl) > 0.5*leafBaseArea*(leafScales(1,1)^2)
+        % Reduce leaves to correspond to the leaf area budget of the cyl
         remainingArea = LibraryObj.leaf_area;
+        nLeavesInObj = LibraryObj.leaf_count;
         k = 0;
-        while remainingArea > cylinderLeafArea(iCyl)
+        nExcessLeaves = 0;
+        while remainingArea > cylinderLeafArea(iCyl) && k < nLeavesInObj
             remainingArea = remainingArea - leafBaseArea ...
                             *(leafScales(end-k,1)^2);
             k = k + 1;
+            nExcessLeaves = k - 1;
         end
-        endIndex = LibraryObj.leaf_count - k;
+        endIndex = LibraryObj.leaf_count - nExcessLeaves;
+    else % leaf area budget is under 0.5 times leaf size -> omit cylinder
+        continue
     end
 
     % TRANSLATE THE LEAVES TO THE CORRECT POSITION
@@ -311,6 +318,39 @@ for iCyl = 1:length(cylinderLeafArea)
 
 clearvars LibraryObj
 
+end
+
+% If target area is surpassed, remove leaves until target is reached
+if Leaves.leaf_area > targetLeafArea
+    % Randomize leaf order
+    randOrder = randperm(Leaves.leaf_count);
+    Leaves.leaf_start_point = Leaves.leaf_start_point(randOrder,:);
+    Leaves.leaf_scale = Leaves.leaf_scale(randOrder,:);
+    Leaves.leaf_direction = Leaves.leaf_direction(randOrder,:);
+    Leaves.leaf_normal = Leaves.leaf_normal(randOrder,:);
+    Leaves.leaf_parent = Leaves.leaf_parent(randOrder);
+    Leaves.petiole_start_point = Leaves.petiole_start_point(randOrder,:);
+    % Remove leaves until just above target area
+    reducedArea = Leaves.leaf_area;
+    k = 0;
+    nRemove = 0;
+    while reducedArea > targetLeafArea
+        reducedArea = reducedArea - ...
+                      Leaves.base_area*Leaves.leaf_scale(end-k,1).^2;
+        k = k + 1;
+        nRemove = k - 1;
+    end
+    newEndInd = Leaves.leaf_count - nRemove;
+    Leaves.leaf_count = newEndInd;
+    Leaves.leaf_area = Leaves.leaf_area - ...
+                       Leaves.base_area* ...
+                          sum(Leaves.leaf_scale((end-nRemove+1):end,1).^2);
+    Leaves.leaf_start_point = Leaves.leaf_start_point(1:newEndInd,:);
+    Leaves.leaf_scale = Leaves.leaf_scale(1:newEndInd,:);
+    Leaves.leaf_direction = Leaves.leaf_direction(1:newEndInd,:);
+    Leaves.leaf_normal = Leaves.leaf_normal(1:newEndInd,:);
+    Leaves.leaf_parent = Leaves.leaf_parent(1:newEndInd);
+    Leaves.petiole_start_point = Leaves.petiole_start_point(1:newEndInd,:);
 end
 
 % Display a warning if generated leaf area is lower than target leaf area
