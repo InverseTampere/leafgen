@@ -66,9 +66,7 @@ end
 %% Initialize QSM
 
 filename = "example-data/ExampleQSM.mat";
-qsm = importdata(filename);
-QSM = QSMBCylindrical(qsm);
-
+QSM = importdata(filename);
 
 %% Define target LADD marginal distributions
 
@@ -99,14 +97,15 @@ ParamFunctions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
 
 targetLeafArea = 50;
 
-Leaves = transform_leaf_cylinders(QSM,LeafCylinderLibrary,TargetLADD,...
-                                  ParamFunctions,targetLeafArea);
+[Leaves,QSMbc] = transform_leaf_cylinders(QSM,LeafCylinderLibrary, ...
+                                          TargetLADD,ParamFunctions, ...
+                                          targetLeafArea);
 
 %% Visualize the QSM with generated foliage
 
 figure(1), clf
 % Plot QSM
-hQSM = QSM.plot_model();
+hQSM = QSMbc.plot_model();
 % Set bark color
 set(hQSM,'FaceColor',[150,100,50]./255,'EdgeColor','none');
 
@@ -125,9 +124,9 @@ zlabel('z')
 
 %% Plot LADD marginal distributions
 
-plot_LADD_h_QSM(QSM,Leaves,TargetLADD);
-plot_LADD_d_QSM(QSM,Leaves,TargetLADD);
-plot_LADD_c_QSM(QSM,Leaves,TargetLADD);
+plot_LADD_h_QSM(QSMbc,Leaves,TargetLADD);
+plot_LADD_d_QSM(QSMbc,Leaves,TargetLADD);
+plot_LADD_c_QSM(QSMbc,Leaves,TargetLADD);
 
 %% Export leaves and QSM in OBJ-format
 
@@ -136,4 +135,4 @@ precision = 5;
 
 % Exporting to obj files
 Leaves.export_geometry('OBJ',true,'leaves_export.obj',precision);
-QSM.export('OBJ','qsm_export.obj','Precision',precision);
+QSMbc.export('OBJ','qsm_export.obj','Precision',precision);

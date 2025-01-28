@@ -1,8 +1,19 @@
-function Leaves = generate_foliage_qsm_direct(QSM, ...
+function [Leaves,QSM] = generate_foliage_qsm_direct(qsm, ...
                                               TargetDistributions, ...
                                               LeafProperties, ...
                                               totalLeafArea, ...
                                               varargin)
+
+%% Initialize struct-based QSM as QSMBCylindrical-class object
+
+if isa(qsm,'struct')
+    QSM = QSMBCylindrical(qsm);
+elseif isa(qsm,'QSMBCylindrical')
+    QSM = qsm;
+else
+    error("Invalid QSM type. Input QSM should be a struct or " + ...
+          "a QSMBCylindrical-class object.")
+end
 
 %% Check the correctness of inputs
 
