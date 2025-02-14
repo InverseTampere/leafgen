@@ -48,11 +48,9 @@ switch dTypeLODinc
         % Set sampling type to inverse sampling
         lod_inc_sampling = 'inverse sampling';
 
-    case 'delta'
-        % Peak width
-        w_inc = 0.06*pi/2;
-        % Set sampling type to delta peak sampling
-        lod_inc_sampling = 'delta peak';
+    case 'constant'
+        % Set sampling type to constant
+        lod_inc_sampling = 'constant';
 
 end
 
@@ -74,11 +72,9 @@ switch dTypeLODaz
         % Set sampling type to rejection sampling
         lod_az_sampling = 'rejection sampling';
 
-    case 'delta'
-        % Peak width
-        w_az = 0.06*2*pi;
-        % Set sampling type to delta peak sampling
-        lod_az_sampling = 'delta peak';
+    case 'constant'
+        % Set sampling type to constant
+        lod_az_sampling = 'constant';
 
 end
 
@@ -140,18 +136,8 @@ for iLeaf = 1:nLeaves
             u = rand(1);
             incAngles(iLeaf) = F_inc_inv(u,dParametersLODinc);
 
-        case 'delta peak'
-            % Sample values using normal distribution
-            normMean = dParametersLODinc;
-            normSTD  = 0.5*w_inc/3;
-            accepted = 0;
-            while accepted == 0
-                incProposal = randn(1)*normSTD + normMean;
-                if incProposal >= 0 && incProposal <= pi/2
-                    incAngles(iLeaf) = incProposal;
-                    accepted = 1;
-                end
-            end
+        case 'constant'
+            incAngles(iLeaf) = dParametersLODinc(1);
 
     end
 
@@ -172,17 +158,8 @@ for iLeaf = 1:nLeaves
                 end
             end
 
-            case 'delta peak'
-            % Sample values using normal distribution
-            normMean = dParametersLODaz;
-            normSTD  = 0.5*w_az/3;
-            azProposal = randn(1)*normSTD + normMean;
-            if azProposal < 0
-                azProposal = 2*pi + azProposal;
-            elseif azProposal > 2*pi
-                azProposal = azProposal - 2*pi;
-            end
-            azAngles(iLeaf) = azProposal;
+        case 'constant'
+            azAngles(iLeaf) = dParametersLODaz(1);
             
     end
 

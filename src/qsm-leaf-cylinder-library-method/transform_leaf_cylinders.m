@@ -174,11 +174,19 @@ for iCyl = 1:length(cylinderLeafArea)
                 CylinderParameters.relative_height, ...
                 CylinderParameters.relative_distance_along_subbranch, ...
                 CylinderParameters.compass_direction);
+    % Add dummy element for constant inclination angle
+    if isscalar(pInc)
+        pInc = [pInc(1) 0];
+    end
     % Leaf azimuth angle distribution parameter values for the cylinder
     pAz  = ParamFunctions.fun_az_params( ...
                 CylinderParameters.relative_height, ...
                 CylinderParameters.relative_distance_along_subbranch, ...
                 CylinderParameters.compass_direction);
+    % Add dummy element for constant azimuth angle
+    if isscalar(pAz)
+        pAz = [pAz(1) 0];
+    end
     % LOD nodes
     [~,iLodInc1] = find_closest_node(Nodes.pLODinc1,pInc(1));
     [~,iLodInc2] = find_closest_node(Nodes.pLODinc2,pInc(2));
@@ -191,6 +199,11 @@ for iCyl = 1:length(cylinderLeafArea)
                 CylinderParameters.relative_height, ...
                 CylinderParameters.relative_distance_along_subbranch, ...
                 CylinderParameters.compass_direction);
+    % Add dummy element for constant leaf size
+    if isscalar(pSize)
+        pSize = [pSize(1) 0];
+    end
+    % LSD nodes
     [~,iLsd1] = find_closest_node(Nodes.pLSD1,pSize(1));
     [~,iLsd2] = find_closest_node(Nodes.pLSD2,pSize(2));
 

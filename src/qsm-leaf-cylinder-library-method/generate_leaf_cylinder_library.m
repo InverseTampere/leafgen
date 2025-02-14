@@ -13,13 +13,19 @@ PetioleDirectionDistribution.flag = false;
 Phyllotaxis.flag = false;
 defineParallelWorkers = false;
 
-if LibraryDistributions.dTypeLODinc == "uniform"
-    Nodes.pLODinc1 = 0;
-    Nodes.pLODinc2 = 0;
+switch LibraryDistributions.dTypeLODinc
+    case "uniform"
+        Nodes.pLODinc1 = 0;
+        Nodes.pLODinc2 = 0;
+    case "constant"
+        Nodes.pLODinc2 = 0;
 end
-if LibraryDistributions.dTypeLODaz == "uniform"
-    Nodes.pLODaz1 = 0;
-    Nodes.pLODaz2 = 0;
+switch LibraryDistributions.dTypeLODaz
+    case "uniform"
+        Nodes.pLODaz1 = 0;
+        Nodes.pLODaz2 = 0;
+    case "constant"
+        Nodes.pLODaz2 = 0;
 end
 if LibraryDistributions.dTypeLSD == "constant"
     Nodes.pLSD2 = 0;

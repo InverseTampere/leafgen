@@ -80,7 +80,7 @@ end
 %% Check the validity of distribution parameters
 % LOD inclination angle distribution parameters
 dTypeInc = LibraryDistributions.dTypeLODinc;
-if ~any(strcmp(dTypeInc,{'uniform','spherical','dewit','beta'}))
+if ~any(strcmp(dTypeInc,{'uniform','spherical','dewit','beta','constant'}))
     error("LOD inclination angle distribution type not recognized.")
 end
 switch dTypeInc
@@ -118,10 +118,17 @@ switch dTypeInc
             error("In case of beta distribution, Nodes.pLODinc2 can"...
                   +" contain only positive values in ascending order.")
         end
+    case 'constant'
+        if any(Nodes.pLODinc1 <= 0) || ...
+                ~all(Nodes.pLODinc1 == sort(Nodes.pLODinc1))
+            error("In case of constant leaf inclination angle, " ...
+                  +"Nodes.pLODinc1 can contain only positive values in " ...
+                  +"ascending order.")
+        end
 end
 % LOD azimuth angle distribution parameters
 dTypeAz = LibraryDistributions.dTypeLODaz;
-if ~any(strcmp(dTypeAz,{'uniform','vonmises'}))
+if ~any(strcmp(dTypeAz,{'uniform','vonmises','constant'}))
     error("LOD azimuth angle distribution type not recognized.")
 end
 switch dTypeAz
@@ -142,7 +149,13 @@ switch dTypeAz
             error("In case of von Mises distribution, Nodes.pLODaz2"...
                   +" can contain only positive values in ascending order.")
         end
-
+    case 'constant'
+        if any(Nodes.pLODaz1 <= 0) || ...
+                ~all(Nodes.pLODaz1 == sort(Nodes.pLODaz1))
+            error("In case of constant leaf azimuth angle, " ...
+                  +"Nodes.pLODaz1 can contain only positive values in " ...
+                  +"ascending order.")
+        end
 end
 % LSD distribution parameters
 dTypeLSD = LibraryDistributions.dTypeLSD;
