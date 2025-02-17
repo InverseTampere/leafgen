@@ -33,12 +33,16 @@ for iCyl = 1:length(CylinderParameters.relative_height)
         % Cylinder inclination angle
         inc = acos(dot(axis,[0 0 1]));
         % Cylinder azimuth angle (counterclockwise wrt. north direction)
-        axisXY = [axis(1) axis(2) 0];
-        axisXY = axisXY/norm(axisXY);
-        if axis(1) <= 0
-            az = dot(axisXY,[0 1 0]);
+        if dot(axis,[0 0 1]) > 0.999 % vertical axis
+            az = 0;
         else
-            az = 2*pi - dot(axisXY,[0 1 0]);
+            axisXY = [axis(1) axis(2) 0];
+            axisXY = axisXY/norm(axisXY);
+            if axis(1) <= 0
+                az = acos(dot(axisXY,[0 1 0]));
+            else
+                az = 2*pi - acos(dot(axisXY,[0 1 0]));
+            end
         end
     
         % LOD distribution types and parameters
@@ -53,7 +57,7 @@ for iCyl = 1:length(CylinderParameters.relative_height)
                                                             svCoords(2),...
                                                             svCoords(3));
         % Sample leaf orientation and petiole coordinates
-        [dir,nor,tws,twe] = fun_leaf_orientation(len,rad,inc,az, ...
+        [dir,nor,ps,pe] = fun_leaf_orientation(len,rad,inc,az, ...
                                               nLeavesCyl, ...
                                               petioleLengthLimits, ...
                                               dTypeLODinc, ...
@@ -62,14 +66,15 @@ for iCyl = 1:length(CylinderParameters.relative_height)
                                               dParametersLODaz, ...
                                               PetiolegDirectionDistribution,...
                                               Phyllotaxis);
-        leafDir(iLeaf:(iLeaf+(nLeavesCyl-1)),:) = dir;
-        leafNor(iLeaf:(iLeaf+(nLeavesCyl-1)),:) = nor;
-        petioleS(iLeaf:(iLeaf+(nLeavesCyl-1)),:) = ...
-                              tws + CylinderParameters.start_point(iCyl,:);
-        petioleE(iLeaf:(iLeaf+(nLeavesCyl-1)),:) = ...
-                              twe + CylinderParameters.start_point(iCyl,:);
+        nLeavesAdded = size(dir,1);
+        leafDir(iLeaf:(iLeaf+(nLeavesAdded-1)),:) = dir;
+        leafNor(iLeaf:(iLeaf+(nLeavesAdded-1)),:) = nor;
+        petioleS(iLeaf:(iLeaf+(nLeavesAdded-1)),:) = ...
+                              ps + CylinderParameters.start_point(iCyl,:);
+        petioleE(iLeaf:(iLeaf+(nLeavesAdded-1)),:) = ...
+                              pe + CylinderParameters.start_point(iCyl,:);
 
-        iLeaf = iLeaf + nLeavesCyl;
+        iLeaf = iLeaf + nLeavesAdded;
     end
 end
 
