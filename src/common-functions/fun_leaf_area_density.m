@@ -102,6 +102,7 @@ relativeHeight = CylinderParameters.relative_height;
 startPoint     = CylinderParameters.start_point;
 branchIndex    = CylinderParameters.branch_index;
 cylinderLength = CylinderParameters.length;
+cylinderAxis   = CylinderParameters.axis;
 
 nCylinders = length(relativeHeight);
 
@@ -234,17 +235,26 @@ end
 
 %% Partition of leaf surface area with respect to angular direction
 
+% Cylinder middle points
+midPoint = startPoint + 0.5*cylinderLength.*cylinderAxis;
 % % Coordinate of stem base as origin on the xy-plane
 % xyOrigin = startPoint(1,1:2);
 % Set the mean value of cylinder locations on xy-plane as the origin
-xyOrigin = mean(startPoint(:,1:2));
-% Coordinates of the cylinder start points on xy-plane
-cylCoord = startPoint(:,1:2);
-% Unit vectors pointing the direction of cylinder start point coordinates
+xyOrigin = mean(midPoint(:,1:2));
+% Coordinates of the cylinder middle points on xy-plane
+cylCoord = midPoint(:,1:2);
+% Unit vectors pointing the direction of cylinder middle point coordinates
 cylDir = zeros(nCylinders,2);
 for j = 1:nCylinders
-    temp = cylCoord(j,:) - xyOrigin;
-    cylDir(j,:) = temp/norm(temp);
+    if norm(cylCoord(j,:)-xyOrigin) < 1e-6 % midpoint right above set origin
+        % Allocate cylinder direction randomly
+        temp = (rotation_matrix([0 0 1],rand(1)*2*pi)*[0 1 0]')';
+        cylDir(j,:) = temp(1:2)/norm(temp(1:2));
+    else 
+        % Find cylinder midpoint direction in xy plane
+        temp = cylCoord(j,:) - xyOrigin;
+        cylDir(j,:) = temp/norm(temp);
+    end
 end
 % North set as the zero angle
 northDir = [0 1];
