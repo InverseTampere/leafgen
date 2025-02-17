@@ -267,9 +267,14 @@ for iLeaf = 1:nLeaves
               + petioleLengthLimits(1);
     petioleEnd(iLeaf,:) = petioleStart(iLeaf,:) + petioleLen*petioleDir;
 
-    % If the phyllotaxis pattern has multiple leaves per node, add them
-    if Phyllotaxis.flag == true && Phyllotaxis.nNodeLeaves > 1
-        for iPhyl = 1:Phyllotaxis.nNodeLeaves-1
+    % If the phyllotaxis pattern has multiple leaves per node, add them, if
+    % there is room left
+    phylAdded = 0;
+    nLeavesLeft = nLeaves - 1;
+    if Phyllotaxis.flag == true
+    if Phyllotaxis.nNodeLeaves > 1 && nLeavesLeft > 0
+        leavesToAdd = min([nLeavesLeft, Phyllotaxis.nNodeLeaves-1]);
+        for iPhyl = 1:leavesToAdd
             leafNormal(iLeaf+iPhyl,:) = leafNormal(iLeaf,:);
             rmPhyl = rotation_matrix(cylinderAxis, ...
                                      Phyllotaxis.petioleSeparationAngle);
@@ -308,8 +313,10 @@ for iLeaf = 1:nLeaves
                       + petioleLengthLimits(1);
             petioleEnd(iLeaf+iPhyl,:) = petioleStart(iLeaf+iPhyl,:) ...
                                      + petioleLen*petioleDir;
+            phylAdded = phylAdded + 1;
         end
-        skipIndices = Phyllotaxis.nNodeLeaves-1;
+        skipIndices = phylAdded;
+    end
     end
 
     if Phyllotaxis.flag == true
@@ -327,7 +334,7 @@ end
 
 if Phyllotaxis.flag == true
     % Remove empty rows if necessary
-    totalAddedLeaves = iLeaf + Phyllotaxis.nNodeLeaves - 1;
+    totalAddedLeaves = iLeaf + phylAdded;
     if totalAddedLeaves < nLeaves
         leafNormal = leafNormal(1:totalAddedLeaves,:);
         leafDir = leafDir(1:totalAddedLeaves,:);
