@@ -114,6 +114,15 @@ plot_LADD_d_CH(aShape,Leaves,TargetDistributions, ...
 plot_LADD_c_CH(aShape,Leaves,TargetDistributions, ...
                'StemCoordinates',stemCoordinates);
 
+%% Plot LOD marginal distributions
+
+plot_LOD_inc_CH(aShape,Leaves,'StemCoordinates',stemCoordinates,'VariableIntervals',[0 1 0 1 0 pi]);
+plot_LOD_az_CH(aShape,Leaves,'StemCoordinates',stemCoordinates,'VariableIntervals',[0 1 0 1 pi 2*pi]);
+
+%% Plot LSD
+
+plot_LSD_CH(aShape,Leaves,'StemCoordinates',stemCoordinates,'VariableIntervals',[0 1 0 1 0 pi]);
+
 %% Export leaves in OBJ-format
 
 % Precision parameter for export
