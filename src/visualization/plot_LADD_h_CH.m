@@ -28,7 +28,7 @@ if ~any(strcmp(dType,{'','uniform','polynomial','polynomialmixture', ...
 end
 
 % Read target distribution parameters
-p = TargetDistributions.hParams;
+p = TargetDistributions.pLADDh;
 
 % Functions
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);

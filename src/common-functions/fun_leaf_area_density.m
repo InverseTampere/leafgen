@@ -11,87 +11,87 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 
 % Distribution function and parameters for relative height
 dTypeLADDh = TargetDist.dTypeLADDh;
-hParams    = TargetDist.hParams;
+pLADDh    = TargetDist.pLADDh;
 switch dTypeLADDh
     case 'uniform'
         fDist_h = @(h) 1*ones(size(h));
     case 'polynomial'
-        fDist_h = @(h) polyval(hParams,h);
+        fDist_h = @(h) polyval(pLADDh,h);
     case 'polynomialmixture'
-        nP = (length(hParams)-1)/2; % number of polynomial coefficients
-        p1 = hParams(1:nP); % coefficients of the first polynomial
-        p2 = hParams((nP+1):(2*nP)); % coefficients of the second polynom.
-        w = hParams(end); % mixture model weight
+        nP = (length(pLADDh)-1)/2; % number of polynomial coefficients
+        p1 = pLADDh(1:nP); % coefficients of the first polynomial
+        p2 = pLADDh((nP+1):(2*nP)); % coefficients of the second polynom.
+        w = pLADDh(end); % mixture model weight
         fDist_h = @(h) w*polyval(p1,h) + (1-w)*polyval(p2,h);
     case 'weibull'
-        l = hParams(1); % scale parameter
-        k = hParams(2); % shape parameter
+        l = pLADDh(1); % scale parameter
+        k = pLADDh(2); % shape parameter
         fDist_h = @(h) fun_weibull(h,l,k);
     case 'weibullmixture'
-        l1 = hParams(1); k1 = hParams(2); % parameters of the first dist.
-        l2 = hParams(3); k2 = hParams(4); % parameters of the second dist.
-        w = hParams(5); % mixture model weight
+        l1 = pLADDh(1); k1 = pLADDh(2); % parameters of the first dist.
+        l2 = pLADDh(3); k2 = pLADDh(4); % parameters of the second dist.
+        w = pLADDh(5); % mixture model weight
         fDist_h = @(h) w*fun_weibull(h,l1,k1) + (1-w)*fun_weibull(h,l2,k2);
     case 'beta'
-        a = hParams(1);
-        b = hParams(2);
+        a = pLADDh(1);
+        b = pLADDh(2);
         fDist_h = @(h) fun_beta(h,a,b);
     case 'betamixture'
-        a1 = hParams(1); b1 = hParams(2); % parameters of the first dist.
-        a2 = hParams(3); b2 = hParams(4); % parameters of the second dist.
-        w = hParams(5); % mixture model weight
+        a1 = pLADDh(1); b1 = pLADDh(2); % parameters of the first dist.
+        a2 = pLADDh(3); b2 = pLADDh(4); % parameters of the second dist.
+        w = pLADDh(5); % mixture model weight
         fDist_h = @(h) w*fun_beta(h,a1,b1) + (1-w)*fun_beta(h,a2,b2);
 end
 
 % Distribution function and parameters for relative distance along
 % sub-branch
 dTypeLADDd = TargetDist.dTypeLADDd;
-dParams    = TargetDist.dParams;
+pLADDd    = TargetDist.pLADDd;
 switch dTypeLADDd
     case 'uniform'
         fDist_d = @(d) 1*ones(size(d));
     case 'polynomial'
-        fDist_d = @(d) polyval(dParams,d);
+        fDist_d = @(d) polyval(pLADDd,d);
     case 'polynomialmixture'
-        nP = (length(dParams)-1)/2; % order of polynomial
-        p1 = dParams(1:nP); % coefficients of the first polynomial
-        p2 = dParams((nP+1):(2*nP)); % coefficients of the second polynom.
-        w = dParams(end); % mixture model weight
+        nP = (length(pLADDd)-1)/2; % order of polynomial
+        p1 = pLADDd(1:nP); % coefficients of the first polynomial
+        p2 = pLADDd((nP+1):(2*nP)); % coefficients of the second polynom.
+        w = pLADDd(end); % mixture model weight
         fDist_d = @(d) w*polyval(p1,d) + (1-w)*polyval(p2,d);
     case 'weibull'
-        l = dParams(1); % scale parameter
-        k = dParams(2); % shape parameter
+        l = pLADDd(1); % scale parameter
+        k = pLADDd(2); % shape parameter
         fDist_d = @(d) fun_weibull(d,l,k);
     case 'weibullmixture'
-        l1 = dParams(1); k1 = dParams(2); % parameters of the first dist.
-        l2 = dParams(3); k2 = dParams(4); % parameters of the second dist.
-        w = dParams(5); % mixture model weight
+        l1 = pLADDd(1); k1 = pLADDd(2); % parameters of the first dist.
+        l2 = pLADDd(3); k2 = pLADDd(4); % parameters of the second dist.
+        w = pLADDd(5); % mixture model weight
         fDist_d = @(d) w*fun_weibull(d,l1,k1) + (1-w)*fun_weibull(d,l2,k2);
     case 'beta'
-        a = dParams(1);
-        b = dParams(2);
+        a = pLADDd(1);
+        b = pLADDd(2);
         fDist_d = @(d) fun_beta(d,a,b);
     case 'betamixture'
-        a1 = dParams(1); b1 = dParams(2); % parameters of the first dist.
-        a2 = dParams(3); b2 = dParams(4); % parameters of the second dist.
-        w = dParams(5); % mixture model weight
+        a1 = pLADDd(1); b1 = pLADDd(2); % parameters of the first dist.
+        a2 = pLADDd(3); b2 = pLADDd(4); % parameters of the second dist.
+        w = pLADDd(5); % mixture model weight
         fDist_d = @(d) w*fun_beta(d,a1,b1) + (1-w)*fun_beta(d,a2,b2);
 end
 
 % Distribution function and parameters for compass direction
 dTypeLADDc = TargetDist.dTypeLADDc;
-cParams    = TargetDist.cParams;
+pLADDc    = TargetDist.pLADDc;
 switch dTypeLADDc
     case 'uniform'
         fDist_c = @(c) 1/(2*pi)*ones(size(c));
     case 'vonmises'
-        m = cParams(1); % mean
-        k = cParams(2); % measure of concentration
+        m = pLADDc(1); % mean
+        k = pLADDc(2); % measure of concentration
         fDist_c = @(c) fun_vonmises(c,m,k);
     case 'vonmisesmixture'
-        m1 = cParams(1); k1 = cParams(2); % parameters of the first dist.
-        m2 = cParams(3); k2 = cParams(4); % parameters of the second dist.
-        w = cParams(5); % mixture model weight
+        m1 = pLADDc(1); k1 = pLADDc(2); % parameters of the first dist.
+        m2 = pLADDc(3); k2 = pLADDc(4); % parameters of the second dist.
+        w = pLADDc(5); % mixture model weight
         fDist_c = @(c) w*fun_vonmises(c,m1,k1) ...
                        + (1-w)*fun_vonmises(c,m2,k2);
 end

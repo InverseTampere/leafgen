@@ -55,7 +55,7 @@ LeafProperties.petioleLengthLimits = [0.05 0.1];
 LeafCylinderLibrary = generate_leaf_cylinder_library( ...
                           LibraryDistributions,Nodes,LeafProperties);
 
-%% Save the library for later use if needed
+%% Save the library for later use if neheded
 
 saveLibrary = false;
 
@@ -72,15 +72,15 @@ QSM = importdata(filename);
 
 % LADD relative height
 TargetLADD.dTypeLADDh = 'beta';
-TargetLADD.hParams = [4.5 1];
+TargetLADD.pLADDh = [4.5 1];
 
 % LADD relative distance along sub-branch
 TargetLADD.dTypeLADDd = 'beta';
-TargetLADD.dParams = [7 1];
+TargetLADD.pLADDd = [7 1];
 
 % LADD compass direction
 TargetLADD.dTypeLADDc = 'vonmises';
-TargetLADD.cParams = [pi 0.1];
+TargetLADD.pLADDc = [pi 0.1];
 
 %% Define parameter functions for LOD and LSD 
 

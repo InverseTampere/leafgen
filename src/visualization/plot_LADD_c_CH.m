@@ -35,7 +35,7 @@ if ~any(strcmp(dType,{'','uniform','vonmises','vonmisesmixture'}))
 end
 
 % Read target distribution parameters
-p = TargetDistributions.cParams;
+p = TargetDistributions.pLADDc;
 
 % Functions
 fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));

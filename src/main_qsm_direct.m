@@ -31,15 +31,15 @@ LeafProperties.petioleLengthLimits = [0.08 0.10];
 
 % LADD relative height
 TargetDistributions.dTypeLADDh = 'beta';
-TargetDistributions.hParams = [22 3];
+TargetDistributions.pLADDh = [22 3];
 
 % LADD relative branch distance
 TargetDistributions.dTypeLADDd = 'weibull';
-TargetDistributions.dParams = [3.3 2.8];
+TargetDistributions.pLADDd = [3.3 2.8];
 
 % LADD compass direction
 TargetDistributions.dTypeLADDc = 'vonmises';
-TargetDistributions.cParams = [5/4*pi 0.1];
+TargetDistributions.pLADDc = [5/4*pi 0.1];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';

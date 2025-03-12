@@ -27,7 +27,7 @@ if ~any(strcmp(dType,{'none','uniform','polynomial','polynomialmixture',...
 end
 
 % Read target distribution parameters
-p = TargetLADD.dParams;
+p = TargetLADD.pLADDd;
 
 % Functions
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);

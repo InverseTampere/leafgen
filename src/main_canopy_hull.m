@@ -33,15 +33,15 @@ LeafProperties.triangles = [1, 2, 3];
 
 % LADD relative height
 TargetDistributions.dTypeLADDh = 'betamixture';
-TargetDistributions.hParams = [22 3 41 50 0.85];
+TargetDistributions.pLADDh = [22 3 41 50 0.85];
 
 % LADD relative distance from stem
 TargetDistributions.dTypeLADDd = 'beta';
-TargetDistributions.dParams = [2 1];
+TargetDistributions.pLADDd = [2 1];
 
 % LADD compass direction
 TargetDistributions.dTypeLADDc = 'vonmisesmixture';
-TargetDistributions.cParams = [pi 0.1 6/5*pi 0.1 0.6];
+TargetDistributions.pLADDc = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';
