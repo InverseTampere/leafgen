@@ -43,15 +43,15 @@ TargetDistributions.pLADDc = [5/4*pi 0.1];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';
-TargetDistributions.fun_inc_params = @(h,d,c) [1 2];
+TargetDistributions.fun_pLODinc = @(h,d,c) [1 2];
 
 % LOD azimuth angle
 TargetDistributions.dTypeLODaz = 'uniform';
-TargetDistributions.fun_az_params = @(h,d,c) [];
+TargetDistributions.fun_pLODaz = @(h,d,c) [];
 
 % LSD
 TargetDistributions.dTypeLSD = 'uniform';
-TargetDistributions.fun_size_params = @(h,d,c) [0.0021 0.0038];
+TargetDistributions.fun_pLSD = @(h,d,c) [0.0021 0.0038];
 
 %% Generate foliage on QSM
 

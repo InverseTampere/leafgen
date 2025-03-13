@@ -8,7 +8,7 @@ baseArea = Leaves.base_area;
 
 % LSD type and parameter function
 dType = TargetDistributions.dTypeLSD;
-fun_param = TargetDistributions.fun_size_params;
+fun_param = TargetDistributions.fun_pLSD;
 
 % Total number of cylinders
 nCyl = length(cylinderCandidateLeafArea);

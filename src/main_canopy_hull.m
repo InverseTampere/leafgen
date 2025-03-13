@@ -45,15 +45,15 @@ TargetDistributions.pLADDc = [pi 0.1 6/5*pi 0.1 0.6];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';
-TargetDistributions.fun_inc_params = @(h,d,c) [1,2];
+TargetDistributions.fun_pLODinc = @(h,d,c) [1,2];
 
 % LOD azimuth angle
 TargetDistributions.dTypeLODaz = 'vonmises';
-TargetDistributions.fun_az_params = @(h,d,c) [3.3, 0.25];
+TargetDistributions.fun_pLODaz = @(h,d,c) [3.3, 0.25];
 
 % LSD
 TargetDistributions.dTypeLSD = 'uniform';
-TargetDistributions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
+TargetDistributions.fun_pLSD = @(h,d,c) [0.0021, 0.0038];
 
 
 %% Stem coordinates
@@ -116,12 +116,18 @@ plot_LADD_c_CH(aShape,Leaves,TargetDistributions, ...
 
 %% Plot LOD marginal distributions
 
-plot_LOD_inc_CH(aShape,Leaves,'StemCoordinates',stemCoordinates,'VariableIntervals',[0 1 0 1 0 pi]);
-plot_LOD_az_CH(aShape,Leaves,'StemCoordinates',stemCoordinates,'VariableIntervals',[0 1 0 1 pi 2*pi]);
+plot_LOD_inc_CH(aShape,Leaves, ...
+                'StemCoordinates',stemCoordinates, ...
+                'VariableIntervals',[0 1 0 1 0 pi]);
+plot_LOD_az_CH(aShape,Leaves, ...
+               'StemCoordinates',stemCoordinates, ...
+               'VariableIntervals',[0 1 0 1 pi 2*pi]);
 
 %% Plot LSD
 
-plot_LSD_CH(aShape,Leaves,'StemCoordinates',stemCoordinates,'VariableIntervals',[0 1 0 1 0 pi]);
+plot_LSD_CH(aShape,Leaves, ...
+            'StemCoordinates',stemCoordinates, ...
+            'VariableIntervals',[0 1 0 1 0 pi]);
 
 %% Export leaves in OBJ-format
 

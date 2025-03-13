@@ -55,7 +55,7 @@ LeafProperties.petioleLengthLimits = [0.05 0.1];
 LeafCylinderLibrary = generate_leaf_cylinder_library( ...
                           LibraryDistributions,Nodes,LeafProperties);
 
-%% Save the library for later use if neheded
+%% Save the library for later use if needed
 
 saveLibrary = false;
 
@@ -85,13 +85,13 @@ TargetLADD.pLADDc = [pi 0.1];
 %% Define parameter functions for LOD and LSD 
 
 % LOD inclination angle
-ParamFunctions.fun_inc_params = @(h,d,c) [-1,4];
+ParamFunctions.fun_pLODinc = @(h,d,c) [-1,4];
 
 % LOD azimuth angle
-ParamFunctions.fun_az_params = @(h,d,c) [3.3, 0.25];
+ParamFunctions.fun_pLODaz = @(h,d,c) [3.3, 0.25];
 
 % LSD
-ParamFunctions.fun_size_params = @(h,d,c) [0.0021, 0.0038];
+ParamFunctions.fun_pLSD = @(h,d,c) [0.0021, 0.0038];
 
 %% Populate QSM with leaves using leaf cylinder library
 

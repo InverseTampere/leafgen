@@ -157,8 +157,8 @@ end
 %% Leaf orientation distribution functions
 % Distribution funtion and parameter value function for leaf inclination
 % angle distribution
-dTypeLODinc    = TargetDistributions.dTypeLODinc;
-fun_inc_params = TargetDistributions.fun_inc_params;
+dTypeLODinc = TargetDistributions.dTypeLODinc;
+fun_pLODinc = TargetDistributions.fun_pLODinc;
 switch dTypeLODinc
     case 'uniform'
         % Uniform distribution
@@ -193,8 +193,8 @@ switch dTypeLODinc
 end
 % Distribution function and parameter value function for leaf azimuth angle
 % distribution
-dTypeLODaz    = TargetDistributions.dTypeLODaz;
-fun_az_params = TargetDistributions.fun_az_params;
+dTypeLODaz = TargetDistributions.dTypeLODaz;
+fun_pLODaz = TargetDistributions.fun_pLODaz;
 switch dTypeLODaz
     case 'uniform'
         % Uniform distribution
@@ -214,8 +214,8 @@ switch dTypeLODaz
         lod_az_sampling = 'constant';
 end
 %% Leaf size distriubtion functions
-dTypeLSD        = TargetDistributions.dTypeLSD;
-fun_size_params = TargetDistributions.fun_size_params;
+dTypeLSD = TargetDistributions.dTypeLSD;
+fun_pLSD = TargetDistributions.fun_pLSD;
 %% Generate alpha shape on the point cloud
 disp('---------------------------------------')
 disp('Generating alphashape on point cloud')
@@ -382,7 +382,7 @@ while leafArea < candidateArea
             accepted = 0;
             while accepted == 0
                 incProposal = rand(1)*pi/2;
-                pars = fun_inc_params(hLeaf,dLeaf,cLeaf);
+                pars = fun_pLODinc(hLeaf,dLeaf,cLeaf);
                 funValue = f_inc(incProposal,pars);
                 vertValue = rand(1)*max_f_inc(pars);
                 if vertValue < funValue
@@ -393,10 +393,10 @@ while leafArea < candidateArea
         case 'inverse sampling'
             % Sample inclination angle by inverse transform sampling
             u = rand(1);
-            pars = fun_inc_params(hLeaf,dLeaf,cLeaf);
+            pars = fun_pLODinc(hLeaf,dLeaf,cLeaf);
             incAngles(iLeaf) = F_inc_inv(u,pars);
         case 'constant'
-            pars = fun_inc_params(hLeaf,dLeaf,cLeaf);
+            pars = fun_pLODinc(hLeaf,dLeaf,cLeaf);
             incAngles(iLeaf) = pars;
     end
     % Leaf azimuth angle
@@ -407,7 +407,7 @@ while leafArea < candidateArea
             accepted = 0;
             while accepted == 0
                 azProposal = rand(1)*2*pi;
-                pars = fun_az_params(hLeaf,dLeaf,cLeaf);
+                pars = fun_pLODaz(hLeaf,dLeaf,cLeaf);
                 funValue = f_az(azProposal,pars);
                 vertValue = rand(1)*max_f_az(pars);
                 if vertValue < funValue
@@ -416,20 +416,20 @@ while leafArea < candidateArea
                 end
             end
         case 'constant'
-            pars = fun_az_params(hLeaf,dLeaf,cLeaf);
+            pars = fun_pLODaz(hLeaf,dLeaf,cLeaf);
             azAngles(iLeaf) = pars;
     end
 
     % Sampling leaf surface area with LSD
     switch dTypeLSD
         case 'uniform'
-            pars = fun_size_params(hLeaf,dLeaf,cLeaf);
+            pars = fun_pLSD(hLeaf,dLeaf,cLeaf);
             sampledArea = (pars(2)-pars(1))*rand(1) + pars(1);
         case 'normal'
-            pars = fun_size_params(hLeaf,dLeaf,cLeaf);
+            pars = fun_pLSD(hLeaf,dLeaf,cLeaf);
             sampledArea = sqrt(pars(2))*randn(1) + pars(1);
         case 'constant'
-            pars = fun_size_params(hLeaf,dLeaf,cLeaf);
+            pars = fun_pLSD(hLeaf,dLeaf,cLeaf);
             sampledArea = pars;
     end
     leafArea = leafArea + sampledArea;
