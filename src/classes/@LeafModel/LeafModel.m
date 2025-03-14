@@ -1,4 +1,5 @@
-% This file is part of QSM-FaNNI.
+% This a modified version of a file originally sourced from the QSM-FaNNI 
+% library.
 % 
 % QSM-FaNNI is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -12,6 +13,9 @@
 % 
 % You should have received a copy of the GNU General Public License
 % along with QSM-FaNNI.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Modified on November 13th 2024:
+% All instances of the word "twig" changed to "petiole"
 
 classdef LeafModel < handle
 % LeafModel is an abstract class for holding leaf information. Leaf
