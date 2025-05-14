@@ -33,7 +33,7 @@ cylinderCount       = QSM.block_count;
 petioleStartPoint = Leaves.petiole_start_point;
 leafParents       = Leaves.leaf_parent;
 leafCount         = Leaves.leaf_count;
-
+leafNormals       = Leaves.leaf_normal;
 
 % RELATIVE HEIGHT
 
@@ -41,7 +41,6 @@ leafHeights = Leaves.leaf_start_point(:,3);
 maxHeight = max([max(leafHeights) max(QSM.cylinder_end_point(:,3)) ...
                  max(QSM.cylinder_start_point(:,3))]);
 leafRelHei = leafHeights./maxHeight;
-
 
 % RELATIVE DISTANCE ALONG SUBBRANCH
 
@@ -149,7 +148,7 @@ else
 end
 
 % Calculate azimuth angles of leaf normals within the interval
-horzDir = Leaves.leaf_start_point(intervalInds,1:2);
+horzDir = leafNormals(intervalInds,1:2);
 normHD  = sqrt(sum(horzDir.^2,2));
 horzDir = horzDir((normHD > 1e-6),:);
 horzDir = horzDir./sqrt(sum(horzDir.^2,2));

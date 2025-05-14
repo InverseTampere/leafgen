@@ -30,6 +30,7 @@ f = figure; clf, hold on
 % Extracting leaf information
 leafCount = Leaves.leaf_count;
 leafStartPoints = Leaves.leaf_start_point;
+leafNormals = Leaves.leaf_normal;
 
 % RELATIVE HEIGHT
 
@@ -208,7 +209,7 @@ else
 end
 
 % Calculate azimuth angles of leaf normals within the interval
-horzDir = Leaves.leaf_start_point(intervalInds,1:2);
+horzDir = leafNormals(intervalInds,1:2);
 normHD  = sqrt(sum(horzDir.^2,2));
 horzDir = horzDir((normHD > 1e-6),:);
 horzDir = horzDir./sqrt(sum(horzDir.^2,2));
