@@ -199,7 +199,7 @@ switch dTypeLODaz
     case 'uniform'
         % Uniform distribution
         f_az = @(x,p) 1/(2*pi)*ones(size(x));
-        max_f_inc = @(p) 1/(2*pi);
+        max_f_az = @(p) 1/(2*pi);
         % Set sampling type to rejection sampling
         lod_az_sampling = 'rejection sampling';
     case 'vonmises'
