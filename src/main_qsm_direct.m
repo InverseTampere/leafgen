@@ -50,31 +50,36 @@ TargetDistributions.dTypeLODaz = 'uniform';
 TargetDistributions.fun_pLODaz = @(h,d,c) [];
 
 % LSD
-TargetDistributions.dTypeLSD = 'uniform';
-TargetDistributions.fun_pLSD = @(h,d,c) [0.0021 0.0038];
+TargetDistributions.dTypeLSD = 'normal';
+TargetDistributions.fun_pLSD = @(h,d,c) [0.004 0.00025^2];
 
-%% Generate foliage on QSM
+%% Set the target leaf area
 
 totalLeafArea = 50;
+
+%% Generate foliage on QSM
 
 [Leaves,QSMbc] = generate_foliage_qsm_direct(QSM,TargetDistributions, ...
                                              LeafProperties,totalLeafArea);
 
-%% Visualize the QSM with generated foliage
+%% Visualize the generated foliage with the QSM
 
-figure(1), clf
-% Plot QSM
-hQSM = QSMbc.plot_model();
-% Set bark color
-set(hQSM,'FaceColor',[150 100 50]./255,'EdgeColor','none');
-
-hold on;
+% Initialize figure
+figure(1), clf, hold on
 
 % Plot leaves
 hLeaf = Leaves.plot_leaves();
+
 % Set leaf color
 set(hLeaf,'FaceColor',[0 150 0]./255,'EdgeColor','none');
 
+% Plot QSM
+hQSM = QSMbc.plot_model();
+
+% Set bark color
+set(hQSM,'FaceColor',[150 100 50]./255,'EdgeColor','none');
+
+% Set figure properties
 hold off;
 axis equal;
 xlabel('x')
