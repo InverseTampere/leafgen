@@ -118,14 +118,14 @@ CylinderParameters.compass_direction = ...
 relativeCylinderLeafArea = fun_leaf_area_density(CylinderParameters, ...
                                                  TargetDistributions);
 
-%% Initialize leaf object and candidate leaf area
-Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+%% Initialize leaf base area and candidate leaf area
+LeavesInit = LeafModelTriangle(LeafProperties.vertices, ...
                            LeafProperties.triangles);
 candidateArea = overSamplingFactor*totalLeafArea;
 cylinderCandidateLeafArea = candidateArea*relativeCylinderLeafArea;
 
 %% Sample leaf sizes
-[leafScaleFactors,leafParentPP] = sample_leaf_sizes(Leaves, ...
+[leafScaleFactors,leafParentPP] = sample_leaf_sizes(LeavesInit, ...
                                                 CylinderParameters, ...
                                                 TargetDistributions, ...
                                                 cylinderCandidateLeafArea);
@@ -140,6 +140,7 @@ cylinderCandidateLeafArea = candidateArea*relativeCylinderLeafArea;
                                              Phyllotaxis);
 
 %% Randomize the order of leaves
+
 randOrder = randperm(size(leafScaleFactors,1));
 leafScaleFactors = leafScaleFactors(randOrder,:);
 leafParent       = leafParentPP(randOrder,:);
@@ -149,6 +150,15 @@ petioleStart        = petioleStart(randOrder,:);
 petioleEnd          = petioleEnd(randOrder,:);
 
 %% Add leaves on QSM
+
+% Average leaf area
+avgAr = mean(LeavesInit.base_area*(leafScaleFactors(:,1).^2));
+% Estimate on total leaf count
+leafCountEst = int64(1.1*round(totalLeafArea/avgAr));
+% Initialize leaf object
+Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+                           LeafProperties.triangles, ...
+                           0,leafCountEst);
 
 % Set the correct leaf parent cylinder indices (i.e. indices before
 % pre-processing of cylinders)
@@ -175,5 +185,8 @@ else
         iLeaf = iLeaf + 1;
     end
 end
+
+% Trim excess rows
+Leaves.trim_slack;
 
 end
