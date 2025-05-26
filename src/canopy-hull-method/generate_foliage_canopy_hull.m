@@ -216,12 +216,10 @@ end
 %% Leaf size distriubtion functions
 dTypeLSD = TargetDistributions.dTypeLSD;
 fun_pLSD = TargetDistributions.fun_pLSD;
+
 %% Generate alpha shape on the point cloud
-disp('---------------------------------------')
-disp('Generating alphashape on point cloud')
-tic
 aShape = alphaShape(treePointCloud,alpha);
-toc
+
 %% Extreme points of point cloud
 % Maximum horizontal distance from origin to point cloud member
 horzDistances = sqrt(treePointCloud(:,1).^2 + treePointCloud(:,2).^2);
@@ -239,9 +237,6 @@ zMin = min(treePointCloud(:,3));
 zMax = max(treePointCloud(:,3));
 
 %% Caculating voxel array and finding which voxels contain points
-disp('Calculating point cloud voxelization')
-
-tic
 
 % Voxel parameters
 nx = ceil((xMax-xMin)/voxelEdge);
@@ -326,12 +321,10 @@ else
     PCSampling.flag = false;
 end
 
-toc 
-
-%% Initialize leaf object and candidate leaf area
-Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+%% Initialize leaf base area and candidate leaf area
+LeavesInit = LeafModelTriangle(LeafProperties.vertices, ...
                            LeafProperties.triangles);
-baseArea = Leaves.base_area;
+baseArea = LeavesInit.base_area;
 
 if intersectionPrevention == true
     candidateArea = 2*totalLeafArea;
@@ -349,8 +342,7 @@ leafDir          = zeros(nInit,3);
 leafScaleFactors = zeros(nInit,3);
 
 %% Sample leaf positions, orientations and sizes
-disp('Sampling leaf positions')
-tic
+
 iLeaf = 0;
 leafArea = 0;
 iVarExt = 0;
@@ -469,12 +461,19 @@ leafStartPoints = leafStartPoints(1:iLeaf,:);
 leafNormal = leafNormal(1:iLeaf,:);
 leafDir = leafDir(1:iLeaf,:);
 leafScaleFactors = leafScaleFactors(1:iLeaf,:);
-toc
 
-%% Add leaves to the shape without intersections
+%% Add leaves in the canopy hull
+
+% Average leaf area
+avgAr = mean(LeavesInit.base_area*(leafScaleFactors(:,1).^2));
+% Estimate on total leaf count
+leafCountEst = int64(1.1*round(totalLeafArea/avgAr));
+% Initialize leaf object
+Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+                           LeafProperties.triangles, ...
+                           0,leafCountEst);
+
 if intersectionPrevention == true
-    disp('Adding leaves to the model without intersections')
-    tic
     Leaves = add_leaves_to_alphashape(aShape, ...
                                       Leaves, ...
                                       totalLeafArea, ....
@@ -482,10 +481,7 @@ if intersectionPrevention == true
                                       leafNormal, ...
                                       leafDir, ...
                                       leafScaleFactors);
-    toc
 else
-    disp('Adding leaves to the model')
-    tic
     iLeaf = 1;
     areaAdded = 0;
     while areaAdded < totalLeafArea && iLeaf < size(leafStartPoints,1)
@@ -501,6 +497,7 @@ else
                     + (leafScaleFactors(iLeaf,1)^2)*Leaves.base_area;
         iLeaf = iLeaf + 1;
     end
-    toc
 end
-disp('Foliage generation finished')
+
+% Trim excess rows
+Leaves.trim_slack;
