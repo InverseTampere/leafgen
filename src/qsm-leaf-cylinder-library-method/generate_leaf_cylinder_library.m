@@ -181,7 +181,7 @@ LeafCylLib.Properties.VariableDescription = ...
      "(9) LOD azimuth angle distribution parameter 2",...
      "(10) LSD distribution parameter 1",...
      "(11) LSD distribution parameter 2",...
-     "(12) number of Leaves objects per library node"];
+     "(12) number of LeafModel objects per library node"];
 
 % Number of nodes per library variable
 nNodesPerLibVar = [nLen,nRad,nInc,nAz,nAr,nLODinc1,nLODinc2,nLODaz1,...
@@ -228,18 +228,19 @@ parfor iNode = 1:totalNodes
     az  = NodesLocal.cylinderAzimuthAngle(iAz);
     ar  = NodesLocal.cylinderLeafArea(iAr);
 
-    % Initialize Leaves object
-    Leaves = LeafModelTriangle(LeafPropertiesLocal.vertices, ...
+    % Initialize leaf base area and candidate leaf area
+    LeavesInit = LeafModelTriangle(LeafPropertiesLocal.vertices, ...
                                LeafPropertiesLocal.triangles);
 
     % Sample leaves from leaf size function
     leafScaleFactors = fun_leaf_size(overSamplingFactor*ar, ...
-                                     Leaves.base_area, ...
+                                     LeavesInit.base_area, ...
                                      LibraryDistributionsLocal.dTypeLSD,...
                                      [NodesLocal.pLSD1(iLSD1), ...
                                       NodesLocal.pLSD2(iLSD2)]);
     nLeaves = size(leafScaleFactors,1);
-    maxLeafSize = max(max(leafScaleFactors))*max(Leaves.base_dimensions);
+    maxLeafSize = max(max(leafScaleFactors)) ...
+                  *max(LeavesInit.base_dimensions);
 
 
     % Attach the leaves to the cylinder with leaf orientation
@@ -255,6 +256,16 @@ parfor iNode = 1:totalNodes
         PetioleDirectionDistribution, ...
         Phyllotaxis ...
         );
+
+    % Average leaf area
+    avgAr = mean(LeavesInit.base_area*(leafScaleFactors(:,1).^2));
+    % Estimate on total leaf count
+    totalLeafArea = ar;
+    leafCountEst = int64(1.1*round(totalLeafArea/avgAr));
+    % Initialize leaf object
+    Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+                               LeafProperties.triangles, ...
+                               0,leafCountEst);
 
     % Add leaves to the model
     if intersectionPrevention == true
@@ -279,8 +290,12 @@ parfor iNode = 1:totalNodes
         end
     end
 
+    % Trim excess rows
+    Leaves.trim_slack;
+
     % Add Leaves object to the library struct
     LeafObjects(iNode).Leaves = Leaves;
+    LeavesInit = [];
     Leaves = [];
 
     % Update waitbar
