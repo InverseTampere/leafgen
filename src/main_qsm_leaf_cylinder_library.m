@@ -33,16 +33,16 @@ LibraryDistributions.dTypeLSD    = 'uniform';
 %% Leaf distribution parameter nodes
 
 % Inclination angle distribution nodes
-Nodes.pLODinc1 = -1%[-1 0 1];
-Nodes.pLODinc2 = 4%[2 3 4];
+Nodes.pLODinc1 = [-1 0 1];
+Nodes.pLODinc2 = [2 3 4];
 
 % Azimuth angle distribution nodes
-Nodes.pLODaz1 = pi%[0 pi/2 pi 3*pi/2];
-Nodes.pLODaz2 = 0.01%[0.01 0.5];
+Nodes.pLODaz1 = [0 pi/2 pi 3*pi/2];
+Nodes.pLODaz2 = [0.01 0.5];
 
 % Leaf size distribution nodes
-Nodes.pLSD1 = 0.0025%[0.002 0.0025];
-Nodes.pLSD2 = 0.0030%[0.003 0.0035];
+Nodes.pLSD1 = [0.002 0.0025];
+Nodes.pLSD2 = [0.003 0.0035];
 
 %% Cylinder attribute nodes
 
