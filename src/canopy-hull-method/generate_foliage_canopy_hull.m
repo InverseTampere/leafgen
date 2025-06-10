@@ -253,6 +253,9 @@ zMax = max(treePointCloud(:,3));
 
 %% Caculating voxel array and finding which voxels contain points
 
+% Visualization
+visualizeVoxels = false;
+
 % Voxel parameters
 nx = ceil((xMax-xMin)/voxelEdge);
 ny = ceil((yMax-yMin)/voxelEdge);
@@ -307,7 +310,8 @@ for ix = 1:nx
             % voxel value to 1, otherwise 0
             if sum(inXYZvoxel) >= voxelThreshold
                 pcVoxels(ix,iy,iz) = 1;
-                if any(pcSamplingWeights) == true
+                if any(pcSamplingWeights) == true ...
+                        && visualizeVoxels == true
                     % Visualize the voxel
                     voxelVertices = voxelEdge*protoVertices ...
                                     + [xEdges(ix) yEdges(iy) zEdges(iz)];
