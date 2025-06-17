@@ -86,6 +86,7 @@ while i <= NArg
                 if PetioleDirectionDistribution.flag == true
                     warning('Petiole direction distribution cannot be used simultaneously with phyllotaxis enabled')
                 end
+                i = i + 1;
 
             otherwise
                 warning(['Skipping unknown parameters: ''' varargin{i} '''']);

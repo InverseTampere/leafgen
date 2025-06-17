@@ -111,6 +111,7 @@ while i <= NArg
                             +" used simultaneously with phyllotaxis"...
                             +" enabled.")
                 end
+                i = i + 1;
 
             case 'parallelworkers'
                 assert(i < NArg &&  isnumeric(varargin{i+1}) && ...
@@ -120,6 +121,7 @@ while i <= NArg
                        +" should be a positive integer.")
                 nWorkers = varargin{i+1};
                 defineParallelWorkers = true;
+                i = i + 1;
 
             otherwise
                 warning("Skipping unknown parameters:"...
