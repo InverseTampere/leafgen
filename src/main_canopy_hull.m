@@ -1,10 +1,10 @@
 %% Clear variables and add paths
 
+% Clear all variables from the workspace and close all open figures
 clear, close all
-addpath("canopy-hull-method")
-addpath("classes")
-addpath("common-functions")
-addpath("visualization")
+
+% Add the current directory and all the subdirectories to search path
+addpath(genpath(pwd))
 
 %% Initialize point cloud
 
