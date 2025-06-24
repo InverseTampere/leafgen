@@ -115,6 +115,10 @@ if Phyllotaxis.flag == true
     else
         nodeRotationAngle = 0;
     end
+    % Set the axial inclination angle for the petioles (if not defined)
+    if ~isfield(Phyllotaxis,'petioleAxialInclinationAngle')
+        Phyllotaxis.petioleAxialInclinationAngle = pi/2;
+    end
 end
 
 % Variable for skipping leaf indices in case of phyllotaxis
@@ -183,7 +187,7 @@ for iLeaf = 1:nLeaves
                            sin(incAngles(iLeaf))*sin(azAngles(iLeaf)+pi/2),...
                            cos(incAngles(iLeaf))];
 
-    % Define petiole and leaf direction
+    % Define the radial angle for petiole start point
     if isfield(Phyllotaxis,'nodeRotation')
         phi = nodeRotationAngle;
     elseif PetioleDirDistribution.flag == true % user-supplied distribution
@@ -259,8 +263,8 @@ for iLeaf = 1:nLeaves
         rmPetiole = rotation_matrix(rotAxis, ...
                                  Phyllotaxis.petioleAxialInclinationAngle);
         petioleDir =  (rmPetiole*cylinderAxis')';
-        leafDir(iLeaf,:) = cross(leafNormal(iLeaf,:),petioleStartSide);
-        leafDir = leafDir/norm(leafDir);
+        leafDirection = cross(leafNormal(iLeaf,:),petioleStartSide);
+        leafDir(iLeaf,:) = leafDirection/norm(leafDirection);
     else
         petioleDir = cross(leafNormal(iLeaf,:),petioleStartSide);
         petioleDir = petioleDir/norm(petioleDir);
@@ -315,12 +319,15 @@ for iLeaf = 1:nLeaves
                 rmPetiole = rotation_matrix(rotAxis, ...
                                 Phyllotaxis.petioleAxialInclinationAngle);
                 petioleDir =  (rmPetiole*cylinderAxis')';
+                leafDirection = cross(leafNormal(iLeaf,:),petioleStartSide);
+                leafDirection = leafDirection/norm(leafDirection);
             else
                 petioleDir = cross(leafNormal(iLeaf,:),petioleStartSide);
                 petioleDir = petioleDir/norm(petioleDir);
+                leafDirection = petioleDir;
             end
-            % Set leaf direction to be the same as petiole direction
-            leafDir(iLeaf+iPhyl,:) = petioleDir;
+            % Set leaf direction
+            leafDir(iLeaf+iPhyl,:) = leafDirection;
             % Start and end points of the petiole
             petioleStart(iLeaf+iPhyl,:) = petioleStartPosAxis*cylinderAxis ...
                                        + rad*petioleStartRadDir;
