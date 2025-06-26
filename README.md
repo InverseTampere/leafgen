@@ -12,7 +12,7 @@ LeafGen is a MATLAB package containing methods for generating virtual foliage on
 
 The general LeafGen framework is presented in the following article
 
-- Mönkkönen P, Van den Broeck W, Ali-Löytty S, Calders K, and Raumonen P (2025). *LeafGen*: Foliage Generation in 3D Tree Models. Methods in Ecology and Evolution. In Press. https://doi.org/10.1111/2041-210X.70080.
+- Mönkkönen P, Van den Broeck W, Ali-Löytty S, Calders K, and Raumonen P (2025). *LeafGen*: Foliage Generation in 3D Tree Models. Methods in Ecology and Evolution. https://doi.org/10.1111/2041-210X.70080.
 
 For technical details and guidance on usage, see the [LeafGen documentation].
 
