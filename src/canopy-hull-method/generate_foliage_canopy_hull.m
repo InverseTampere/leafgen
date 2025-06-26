@@ -24,9 +24,11 @@ check_inputs_canopy_hull(TargetDistributions, ...
                          LeafProperties, ...
                          totalLeafArea);
 
+
 %% Initialize values
 alpha = 1;
-stemCoordinates = [0 0 0; 0 0 max(treePointCloud(:,3))];
+stemCoordinates = [0 0 min(treePointCloud(:,3)); ...
+                   0 0 max(treePointCloud(:,3))];
 pcSamplingWeights = 0;
 voxelEdge = 0.15;
 voxelThreshold = 5;
@@ -240,9 +242,6 @@ aShape = alphaShape(treePointCloud,alpha);
 horzDistances = sqrt(treePointCloud(:,1).^2 + treePointCloud(:,2).^2);
 maxHorzDist = max(horzDistances);
 
-% Maximum height of the point cloud members
-maxHeight = max(treePointCloud(:,3));
-
 % Axiswise extreme points
 xMin = min(treePointCloud(:,1));
 xMax = max(treePointCloud(:,1));
@@ -372,17 +371,17 @@ while leafArea < candidateArea
     [leafSP,PCSampling] = sample_leaf_position(aShape, ...
                               fDist_h,fDist_d,fDist_c, ...
                               maxfDist_h,maxfDist_d,maxfDist_c, ...
-                              xMin,xMax,yMin,yMax,maxHeight, ...
+                              xMin,xMax,yMin,yMax,zMin,zMax, ...
                               maxHorzDist,stemCoordinates,PCSampling);
     leafStartPoints(iLeaf,:) = leafSP;
 
     % Leaf height value
-    hLeaf = leafStartPoints(iLeaf,3)/maxHeight;
+    hLeaf = (leafStartPoints(iLeaf,3)-zMin)/(zMax-zMin);
     % Leaf compass direction value
     cLeaf = xyz_to_compass_dir(leafStartPoints(iLeaf,:),stemCoordinates);
     % Leaf distance from stem value
     dLeaf = stem_to_alphashape_edge(aShape,hLeaf,cLeaf,maxHorzDist, ...
-                                    maxHeight,stemCoordinates);
+                                    zMin,zMax,stemCoordinates);
 
     % Sampling leaf normal orientation with LOD
     % Leaf inclination angle

@@ -16,7 +16,7 @@
 function [leafSP,PCSampling] = sample_leaf_position(aShape, ...
                                    fDist_h,fDist_d,fDist_c, ...
                                    maxfDist_h,maxfDist_d,maxfDist_c, ...
-                                   xMin,xMax,yMin,yMax,maxHeight, ...
+                                   xMin,xMax,yMin,yMax,zMin,zMax, ...
                                    maxHorzDist,stemCoordinates,PCSampling)
 
 
@@ -29,10 +29,10 @@ if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
     if PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS) ...
             && PCSampling.flag == true
         % Voxels inside the point cloud sampling bin
-        izLB = find(PCSampling.zEdges>maxHeight ...
-                    *PCSampling.binEdges(iPCS),1,'first') - 1;
-        izUB = find(PCSampling.zEdges>=maxHeight ...
-                    *PCSampling.binEdges(iPCS+1),1,'first') - 1;
+        izLB = find(PCSampling.zEdges>(zMin+(zMax-zMin) ...
+                    *PCSampling.binEdges(iPCS)),1,'first') - 1;
+        izUB = find(PCSampling.zEdges>=(zMin+(zMax-zMin) ...
+                    *PCSampling.binEdges(iPCS+1)),1,'first') - 1;
         % Cumulative sum of voxels inside sampling bin
         samplingBinVoxels = PCSampling.voxels(:,:,izLB:izUB);
         cumulativeSum = cumsum(samplingBinVoxels(:));
@@ -79,13 +79,13 @@ if isempty(fDist_h) && isempty(fDist_d) && isempty(fDist_c)
         while accepted == 0
             proposal(1) = rand(1)*(xMax-xMin) + xMin;
             proposal(2) = rand(1)*(yMax-yMin) + yMin;
-            proposal(3) = rand(1)*maxHeight;
+            proposal(3) = rand(1)*(zMax-zMin) + zMin;
             % Check if proposed point is inside the alpha shape
             if inShape(aShape,proposal)
                 % Set the sampled point as leaf start point
                 leafSP = proposal;
                 % Increment sampling counter and calculate new ratio
-                rh = proposal(3)/maxHeight;
+                rh = (proposal(3)-zMin)/(zMax-zMin);
                 iPCS = find(rh<PCSampling.binEdges,1,'first') - 1;
                 PCSampling.nTotalSampled(iPCS) = ...
                                        PCSampling.nTotalSampled(iPCS) + 1;
@@ -108,7 +108,7 @@ elseif isempty(fDist_d) && isempty(fDist_c)
     while accepted == 0
         % Sample height value from heightwise LADD
         relHeight = rejection_sampling(fDist_h,maxfDist_h);
-        hLeaf = maxHeight*relHeight;
+        hLeaf = relHeight*(zMax-zMin) + zMin;
         % Find index of point cloud sampling height bin
         iPCS = find(relHeight<PCSampling.binEdges,1,'first') - 1;
         if PCSampling.ratio(iPCS) <= PCSampling.weights(iPCS) ...
@@ -163,7 +163,7 @@ elseif isempty(fDist_d) && isempty(fDist_c)
                     % Set the proposed point as leaf start point
                     leafSP = proposal;
                     % Increment sampling counter and calculate new ratio
-                    rh = proposal(3)/maxHeight;
+                    rh = (proposal(3)-zMin)/(zMax-zMin);
                     iPCS = find(rh<PCSampling.binEdges,1,'first') - 1;
                     PCSampling.nTotalSampled(iPCS) = ...
                                        PCSampling.nTotalSampled(iPCS) + 1;
@@ -192,7 +192,7 @@ elseif isempty(fDist_d)
         if any(vertValues > funValues)
             continue
         end
-        hLeaf = maxHeight*hProposal;
+        hLeaf = hProposal*(zMax-zMin) + zMin;
         cLeaf = cProposal;
 
         % Find index of point cloud sampling height bin
@@ -249,7 +249,8 @@ elseif isempty(fDist_d)
                                                 hProposal, ...
                                                 cProposal, ...
                                                 maxHorzDist, ...
-                                                maxHeight, ...
+                                                zMin, ...
+                                                zMax, ...
                                                 stemCoordinates);
             % Uniformly sample a point inside the alphashape in the
             % defined direction
@@ -297,7 +298,8 @@ elseif isa(fDist_h,"function_handle") && isa(fDist_d,"function_handle") ...
                                                 hProposal, ...
                                                 cProposal, ...
                                                 maxHorzDist, ...
-                                                maxHeight, ...
+                                                zMin, ...
+                                                zMax, ...
                                                 stemCoordinates);
             % Check the if the distance to edge is nonzero
             if edgeValue == 0
@@ -306,7 +308,7 @@ elseif isa(fDist_h,"function_handle") && isa(fDist_d,"function_handle") ...
                 continue
             end
             % Position coordinates of the leaf start point
-            hLeaf = maxHeight*hProposal;
+            hLeaf = hProposal*(zMax-zMin) + zMin;
             dLeaf = edgeValue*dProposal;
             cLeaf = cProposal;
             % Stem center on the corresponding height
