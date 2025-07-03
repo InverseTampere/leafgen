@@ -59,6 +59,8 @@ while i <= NArg
                 leafAttLabels = logical(varargin{i+1});
             case 'intersectionprevention'
                 intersectionPrevention = varargin{i+1};
+            otherwise
+                warning(['Skipping unknown parameters: ''' varargin{i} '''']);
         end
     end
     i = i + 1;
@@ -235,7 +237,7 @@ dTypeLSD = TargetDistributions.dTypeLSD;
 fun_pLSD = TargetDistributions.fun_pLSD;
 
 %% Generate alpha shape on the point cloud
-aShape = alphaShape(treePointCloud,alpha);
+aShape = alphaShape(treePointCloud,alpha,'HoleThreshold',10);
 
 %% Extreme points of point cloud
 % Maximum horizontal distance from origin to point cloud member
@@ -267,7 +269,7 @@ yCenters = 0.5*(yEdges(1:end-1)+yEdges(2:end));
 zCenters = 0.5*(zEdges(1:end-1)+zEdges(2:end));
 
 % Initialize visualizaiton of point cloud voxelization
-if any(pcSamplingWeights) == true
+if visualizeVoxels == true
     figure, clf, hold on, grid on, axis equal, view(3)
     plot3(treePointCloud(:,1),treePointCloud(:,2),treePointCloud(:,3), ...
         'g.','MarkerSize',0.5)
