@@ -26,4 +26,4 @@ To quickly test running the method:
 
 To view a detailed tutorial on each of these files and more, see the  [LeafGen documentation].
 
-[LeafGen documentation]: https://pietari-monkkonen.github.io/
+[LeafGen documentation]: https://leafgen-docs.github.io/
