@@ -240,6 +240,8 @@ if nLADD > 0
             axis([0 2*pi 0 1.1*max(yy)])
             title("LADD compass direction")
             xlabel("compass direction [rad]")
+            xticks([0 pi/2 pi 3*pi/2 2*pi])
+            xticklabels(["0" "\pi/2" "\pi" "3\pi/2" "2\pi"])
             plottedLADD(3) = true;
         end
     end
@@ -312,6 +314,4 @@ if nLSD > 0
     title("LSD")
     xlabel("leaf area [m^2]")
 end
-
-warning("koodaa constant special case")
 end
