@@ -53,6 +53,9 @@ TargetDistributions.fun_pLODaz = @(h,d,c) [];
 TargetDistributions.dTypeLSD = 'normal';
 TargetDistributions.fun_pLSD = @(h,d,c) [0.004 0.00025^2];
 
+% Visualize the target distributions
+visualize_target_distributions(TargetDistributions,[0 0 0]);
+
 %% Set the target leaf area
 
 totalLeafArea = 50;
@@ -65,7 +68,7 @@ totalLeafArea = 50;
 %% Visualize the generated foliage with the QSM
 
 % Initialize figure
-figure(1), clf, hold on
+figure, clf, hold on
 
 % Plot leaves
 hLeaf = Leaves.plot_leaves();

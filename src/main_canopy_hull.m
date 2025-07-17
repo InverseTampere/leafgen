@@ -50,6 +50,8 @@ TargetDistributions.fun_pLODaz = @(h,d,c) [];
 TargetDistributions.dTypeLSD = 'normal';
 TargetDistributions.fun_pLSD = @(h,d,c) [0.004 0.00025^2];
 
+% Visualize the target distributions
+visualize_target_distributions(TargetDistributions,[0 0 0]);
 
 %% Define stem location
 
