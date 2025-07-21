@@ -189,8 +189,9 @@ leafHistFD = leafHistFD./diff(binEdges);
 % Plotting the histogram 
 custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.3,...
                 'DisplayName','Accepted leaf area','flipxy',0)
-xlabel("relative sub-branch distance")
+xlabel("relative branch distance")
 ylabel("leaf area frequency density [m^2]")
+title("LADD relative branch distance")
 axis tight
 legend('Location','northwest')
 

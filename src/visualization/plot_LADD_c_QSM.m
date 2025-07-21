@@ -150,7 +150,8 @@ custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.3,...
                 'DisplayName','Accepted leaf area','flipxy',0)
 xlabel("direction")
 ylabel("leaf area frequency density [m^2]")
+title("LADD compass direction")
 axis tight
-legend('Location','northwest')
+legend('Location','southwest')
 
 end

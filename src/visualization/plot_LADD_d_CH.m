@@ -239,7 +239,8 @@ custom_bar_plot(binEdges,leafHistFD,'FaceColor','b','FaceAlpha',0.3,...
                 'DisplayName','Accepted leaf area')
 xlabel("relative distance from stem")
 ylabel("leaf area frequency density [m^2]")
+title("LADD relative distance from stem")
 axis tight
-legend('Location','southeast')
+legend('Location','northwest')
 
 end
