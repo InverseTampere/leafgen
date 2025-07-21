@@ -16,7 +16,7 @@
 function fMax = weibull_upper_limit(l,k)
 % Gives maximum value of Weibull distribution limited to value 5 on closed 
 % interval [0,1]
-fun_weibull = @(x) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
+fun_weibull = @(x) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k)/(1-exp(-(1/l)^k));
 if k <= 1
     fMax = min([fun_weibull(0.001),5]); % infinite mode at 0
 elseif l*((k-1)/k).^(1/k) < 1

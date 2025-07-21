@@ -46,7 +46,8 @@ p = TargetLADD.pLADDh;
 
 % Functions
 fun_beta = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
-fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
+fun_weibull = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k) ...
+                        /(1-exp(-(1/l)^k));
 
 % Relative height discretization
 xx = 0:0.001:1;

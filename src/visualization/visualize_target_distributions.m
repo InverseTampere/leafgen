@@ -16,7 +16,8 @@ flagLSD    = isfield(TargetDistributions,'dTypeLSD');
 
 % Function definitions
 fun_beta     = @(x,a,b) (1/beta(a,b))*x.^(a-1).*(1-x).^(b-1);
-fun_weibull  = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k);
+fun_weibull  = @(x,l,k) (k/l)*(x/l).^(k-1).*exp(-(x/l).^k) ...
+                        /(1-exp(-(1/l)^k));
 fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 fun_dewit    = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
 fun_normal   = @(x,m,v) exp(-(x-m).^2/(2*v))/sqrt(2*pi*v);
