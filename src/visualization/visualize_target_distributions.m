@@ -22,6 +22,15 @@ fun_vonmises = @(x,m,k) exp(k*cos(x-m))./(2*pi*besseli(0,k));
 fun_dewit    = @(x,a,b) (1 + a*cos(b*x))/(pi/2+(a/b)*sin(b*pi/2));
 fun_normal   = @(x,m,v) exp(-(x-m).^2/(2*v))/sqrt(2*pi*v);
 
+% If any of the dTypeLADD* are 'qsm', omit LADD plotting
+if any([strcmp(TargetDistributions.dTypeLADDh,'qsm') ...
+        strcmp(TargetDistributions.dTypeLADDd,'qsm') ...
+        strcmp(TargetDistributions.dTypeLADDc,'qsm')])
+    flagLADDh = false;
+    flagLADDd = false;
+    flagLADDc = false;
+end
+
 %% Assign function handles to be plotted
 
 % LADD

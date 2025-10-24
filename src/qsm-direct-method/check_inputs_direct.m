@@ -60,7 +60,7 @@ end
 dTypeH  = TargetDistributions.dTypeLADDh;
 pLADDh = TargetDistributions.pLADDh;
 if ~any(strcmp(dTypeH,{'uniform','polynomial','polynomialmixture', ...
-        'weibull','weibullmixture','beta','betamixture'}))
+        'weibull','weibullmixture','beta','betamixture','qsm'}))
     error("LADD height distribution type not recognized.")
 end
 switch dTypeH
@@ -127,12 +127,14 @@ switch dTypeH
             error("TargetDistributions.pLADDh mixture model weight is"...
                   +" not on the interval [0,1].")
         end
+    case 'qsm'
+        % parameters have no effect for qsm-based distribution
 end
 % Relative distance along subbranch
 dTypeD  = TargetDistributions.dTypeLADDd;
 pLADDd = TargetDistributions.pLADDd;
 if ~any(strcmp(dTypeD,{'uniform','polynomial','polynomialmixture', ...
-        'weibull','weibullmixture','beta','betamixture'}))
+        'weibull','weibullmixture','beta','betamixture','qsm'}))
     error("LADD distance from stem distribution type not recognized.")
 end
 switch dTypeD
@@ -201,11 +203,13 @@ switch dTypeD
             error("TargetDistributions.pLADDd mixture model weight is"...
                   +" not on the interval [0,1].")
         end
+    case 'qsm'
+        % parameters have no effect for qsm-based distribution
 end
 % Compass direction
 dTypeC  = TargetDistributions.dTypeLADDc;
 pLADDc = TargetDistributions.pLADDc;
-if ~any(strcmp(dTypeC,{'uniform','vonmises','vonmisesmixture'}))
+if ~any(strcmp(dTypeC,{'uniform','vonmises','vonmisesmixture','qsm'}))
     error("LADD compass direction distribution type not recognized.")
 end
 switch dTypeC
@@ -230,7 +234,33 @@ switch dTypeC
             error("TargetDistributions.pLADDc mixture model weight"...
                   +" is not on the interval [0,1].")
         end
+    case 'qsm'
+        % parameters have no effect for qsm-based distribution
 end
+% Check if QSM-based LADD is configured correctly
+if any([strcmp(TargetDistributions.dTypeLADDh,'qsm'), ...
+        strcmp(TargetDistributions.dTypeLADDd,'qsm'), ...
+        strcmp(TargetDistributions.dTypeLADDc,'qsm')])
+    % Relative height
+    if ~strcmp(TargetDistributions.dTypeLADDh,'qsm')
+        error("TargetDistributions.dTypeLADDh is not 'qsm'. " ...
+            + "If any of the dTypeLADD* are set to 'qsm' all of them " ...
+            + "have to be set to 'qsm'.")
+    end
+    % Relative distance
+    if ~strcmp(TargetDistributions.dTypeLADDd,'qsm')
+        error("TargetDistributions.dTypeLADDd is not 'qsm'. " ...
+            + "If any of the dTypeLADD* are set to 'qsm' all of them " ...
+            + "have to be set to 'qsm'.")
+    end
+    % Compass direction
+    if ~strcmp(TargetDistributions.dTypeLADDc,'qsm')
+        error("TargetDistributions.dTypeLADDc is not 'qsm'. " ...
+            + "If any of the dTypeLADD* are set to 'qsm' all of them " ...
+            + "have to be set to 'qsm'.")
+    end
+end
+
 %% Check validity of LOD parameter functions
 % Assert that all fields are function handles
 if ~isa(TargetDistributions.fun_pLODinc,'function_handle')

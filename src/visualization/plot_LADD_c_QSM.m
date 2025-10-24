@@ -36,7 +36,8 @@ f = figure; clf, hold on
 
 % Check validity of distribution function type
 dType = TargetLADD.dTypeLADDc;
-if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixture'}))
+if ~any(strcmp(dType,{'none','uniform','vonmises','vonmisesmixture', ...
+        'qsm'}))
     error("LADD compass direction distribution type not recognized.")
 end
 
@@ -53,7 +54,7 @@ xx = 0:0.001:2*pi;
 binEdges = linspace(0,2*pi,nBins+1);
 
 %% Plot the target distribution function
-if dType ~= "none"
+if dType ~= "none" && dType ~= "qsm"
     switch dType
         case 'uniform'
             yy = 1/(2*pi)*ones(size(xx));

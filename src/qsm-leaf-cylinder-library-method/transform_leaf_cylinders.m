@@ -69,11 +69,18 @@ CylinderParameters.relative_distance_along_subbranch = ...
 CylinderParameters.compass_direction = ...
     calculate_compass_direction(CylinderParameters);
 
-%% Determining leaf area budgets for cylinders using LADD
+%% Determining leaf area budgets for cylinders
 
-% Relative leaf area budgets
-relativeCylinderLeafArea = fun_leaf_area_density(CylinderParameters, ...
-                                                 TargetLADD);
+if all([strcmp(TargetLADD.dTypeLADDh,'qsm') ...
+        strcmp(TargetLADD.dTypeLADDd,'qsm') ...
+        strcmp(TargetLADD.dTypeLADDc,'qsm')])
+    % Relative leaf area budgets based on QSM
+    relativeCylinderLeafArea = qsm_based_ladd(CylinderParameters);
+else
+    % Relative leaf area budgets based on parametric LADD
+    relativeCylinderLeafArea = fun_leaf_area_density(CylinderParameters,...
+                                                    TargetLADD);
+end
 
 % Scale by target area to get cylinder leaf area budgets
 cylinderLeafArea = targetLeafArea*relativeCylinderLeafArea;
