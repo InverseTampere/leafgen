@@ -13,7 +13,7 @@
 % You should have received a copy of the GNU General Public License
 % along with LeafGen.  If not, see <https://www.gnu.org/licenses/>.
 
-function relAreas = qsm_based_ladd(CylinderParameters)
+function relAreas = qsm_based_ladd(CylinderParameters,leaflessBranchInds)
 
 % Scaling function for the relative distance along subbranch (here the 
 % x^4 is arbitrarily chosen, feel free to modify this)
@@ -26,8 +26,10 @@ cylAreas = f_dist_scaling( ...
 % Scale the areas with cylinder length
 cylAreas = cylAreas.*CylinderParameters.length;
 
-% Prevent leaf generation on the tree stem
-cylAreas(CylinderParameters.branch_index == 1) = 0;
+% Prevent leaf generation on the tree stem (or other branches set leafless)
+for i = leaflessBranchInds
+    cylAreas(CylinderParameters.branch_index == i) = 0;
+end
 
 % Normalize to get the relative areas
 relAreas = cylAreas./sum(cylAreas);

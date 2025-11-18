@@ -17,7 +17,8 @@ function [Leaves,QSM] = transform_leaf_cylinders(qsm, ...
                                                  LeafCylinderLibrary, ...
                                                  TargetLADD, ...
                                                  ParamFunctions, ...
-                                                 targetLeafArea)
+                                                 targetLeafArea, ...
+                                                 varargin)
 
 %% Initialize struct-based QSM as QSMBCylindrical-class object
 
@@ -32,6 +33,38 @@ end
 
 %% Check the correctness of inputs
 QSM = check_inputs_transform(QSM,TargetLADD,ParamFunctions,targetLeafArea); 
+
+%% Optional input default values
+leaflessBranchInds = 1;
+
+%% Read optional inputs
+
+% Check additional parameters
+i = 1;
+NArg = numel(varargin);
+while i <= NArg
+
+    if ischar(varargin{i})
+
+        switch lower(varargin{i})
+
+            case 'leaflessbranchinds'
+                assert(i < NArg && isnumeric(varargin{i+1}), ...
+                       'Argument following ''LeaflessBranchInds'' should be a vector of branch indices.')
+                temp = varargin{i+1};
+                if any(temp == 1)
+                    leaflessBranchInds = temp(:)';
+                else
+                    leaflessBranchInds = [1; temp(:)]';
+                end
+                i = i + 1;
+
+            otherwise
+                warning(['Skipping unknown parameters: ''' varargin{i} '''']);
+        end
+    end
+    i = i + 1;
+end
                              
 
 %% Reading leaf cylinder library nodes
@@ -75,11 +108,13 @@ if all([strcmp(TargetLADD.dTypeLADDh,'qsm') ...
         strcmp(TargetLADD.dTypeLADDd,'qsm') ...
         strcmp(TargetLADD.dTypeLADDc,'qsm')])
     % Relative leaf area budgets based on QSM
-    relativeCylinderLeafArea = qsm_based_ladd(CylinderParameters);
+    relativeCylinderLeafArea = qsm_based_ladd(CylinderParameters,...
+                                              leaflessBranchInds);
 else
     % Relative leaf area budgets based on parametric LADD
     relativeCylinderLeafArea = fun_leaf_area_density(CylinderParameters,...
-                                                    TargetLADD);
+                                                     TargetLADD,...
+                                                     leaflessBranchInds);
 end
 
 % Scale by target area to get cylinder leaf area budgets

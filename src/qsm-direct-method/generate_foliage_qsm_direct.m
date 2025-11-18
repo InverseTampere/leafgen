@@ -45,6 +45,7 @@ intersectionPrevention = true;
 overSamplingFactor = 2;
 PetioleDirectionDistribution.flag = false;
 Phyllotaxis.flag = false;
+leaflessBranchInds = 1;
 
 %% Read optional inputs
 
@@ -84,7 +85,18 @@ while i <= NArg
                 Phyllotaxis = varargin{i+1};
                 Phyllotaxis.flag = true;
                 if PetioleDirectionDistribution.flag == true
-                    warning('Petiole direction distribution cannot be used simultaneously with phyllotaxis enabled')
+                    warning('Petiole direction distribution cannot be used simultaneously with phyllotaxis enabled.')
+                end
+                i = i + 1;
+
+            case 'leaflessbranchinds'
+                assert(i < NArg && isnumeric(varargin{i+1}), ...
+                       'Argument following ''LeaflessBranchInds'' should be a vector of branch indices.')
+                temp = varargin{i+1};
+                if any(temp == 1)
+                    leaflessBranchInds = temp(:)';
+                else
+                    leaflessBranchInds = [1; temp(:)]';
                 end
                 i = i + 1;
 
@@ -134,11 +146,13 @@ if all([strcmp(TargetDistributions.dTypeLADDh,'qsm') ...
         strcmp(TargetDistributions.dTypeLADDd,'qsm') ...
         strcmp(TargetDistributions.dTypeLADDc,'qsm')])
     % Relative leaf area budgets based on QSM
-    relativeCylinderLeafArea = qsm_based_ladd(CylinderParameters);
+    relativeCylinderLeafArea = qsm_based_ladd(CylinderParameters, ...
+                                              leaflessBranchInds);
 else
     % Relative leaf area budgets based on parametric LADD
     relativeCylinderLeafArea = fun_leaf_area_density(CylinderParameters,...
-                                                     TargetDistributions);
+                                                    TargetDistributions,...
+                                                    leaflessBranchInds);
 end
 
 %% Initialize leaf base area and candidate leaf area

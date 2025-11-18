@@ -14,7 +14,8 @@
 % along with LeafGen.  If not, see <https://www.gnu.org/licenses/>.
 
 function relAreas = fun_leaf_area_density(CylinderParameters, ...
-                                          TargetDist)
+                                          TargetDist, ...
+                                          leaflessBranchInds)
 
 %% Function definitions
 
@@ -177,6 +178,11 @@ for j = 1:nCylinders
     binIndex_h(j) = k;
 end
 
+% Remove leafless branch cylinders
+for iBranch = leaflessBranchInds
+    binIndex_h(branchIndex == iBranch) = -1;
+end
+
 %% Partition of leaf surface area with respect to along-branch distance 
 %  from the base of subbranch
 
@@ -186,7 +192,7 @@ referencePoint = "end";
 % Relative along-branch distances from base
 relativeDistanceFromBase = zeros(nCylinders,1);
 indexVector = (1:1:nCylinders)';
-for iBranch = 1:max(branchIndex) % stem index 0 is skipped automatically
+for iBranch = 1:max(branchIndex)
     % Indexes of QSM cylinders belonging in branch
     bcIndexes = indexVector(branchIndex == iBranch);
     if sum(bcIndexes) == 0
@@ -249,6 +255,11 @@ for j = 1:nCylinders
     binIndex_d(j) = k;
 end
 
+% Remove leafless branch cylinders
+for iBranch = leaflessBranchInds
+    binIndex_d(branchIndex == iBranch) = -1;
+end
+
 %% Partition of leaf surface area with respect to angular direction
 
 % Cylinder middle points
@@ -306,6 +317,11 @@ for j = 1:nCylinders
         k = k + 1;
     end
     binIndex_a(j) = k;
+end
+
+% Remove leafless branch cylinders
+for iBranch = leaflessBranchInds
+    binIndex_a(branchIndex == iBranch) = -1;
 end
 
 %% Assigned relative leaf areas for the cylinders
