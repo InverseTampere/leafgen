@@ -59,7 +59,7 @@ LeafCylinderLibrary = generate_leaf_cylinder_library( ...
 
 %% Save the library for later use
 
-save("NewLeafCyliderLibrary.mat",'-struct','LeafCylinderLibrary')
+save("NewLeafCylinderLibrary.mat",'-struct','LeafCylinderLibrary')
 
 %% Initialize QSM
 
