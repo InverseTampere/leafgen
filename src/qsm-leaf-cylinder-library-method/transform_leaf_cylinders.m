@@ -117,6 +117,27 @@ else
                                                      leaflessBranchInds);
 end
 
+% Stop if all cylinders are leafless
+if isscalar(relativeCylinderLeafArea)
+    if relativeCylinderLeafArea == 0
+        Leaves = LeafModelTriangle(LeafProperties.vertices, ...
+                                   LeafProperties.triangles);
+        if numel(leaflessBranchInds) > 1
+            warning("None of the QSM cylinders were assigned leaf " + ...
+                    "area. An empty LeafModelTriangle object was " + ...
+                    "returned. If this was not the intention, check " + ...
+                    "the leafless branch index assignments.")
+        else
+            warning("None of the QSM cylinders were assigned leaf " + ...
+                    "area. An empty LeafModelTriangle object was " + ...
+                    "returned.")
+        end
+        % Return empty LeafModelTriangle object and the QSMBCylindrical
+        % object
+        return
+    end
+end
+
 % Scale by target area to get cylinder leaf area budgets
 cylinderLeafArea = targetLeafArea*relativeCylinderLeafArea;
 

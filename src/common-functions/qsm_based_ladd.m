@@ -32,6 +32,12 @@ for i = leaflessBranchInds
 end
 
 % Normalize to get the relative areas
-relAreas = cylAreas./sum(cylAreas);
+totalArea = sum(cylAreas);
+if totalArea > 0
+    relAreas = cylAreas./totalArea;
+else
+    % All cylinders are leafless
+    relAreas = 0;
+end
 
 end

@@ -16,6 +16,10 @@
 %
 % Modified on November 13th 2024:
 % All instances of the word "twig" changed to "petiole"
+%
+% Modified on March 5th 2026:
+% In the export_geometry added a special treatment for the case when leaf 
+% count is zero
 
 classdef LeafModelTriangle < LeafModel
 % Class for storing triangular leaf geometry. Class properties define a
@@ -647,6 +651,17 @@ classdef LeafModelTriangle < LeafModel
 
                 % Export leaves in Wavefront OBJ-format.
                 case 'obj'
+
+                    % If there are no leaves export a file with no geometry
+                    if ob.leaf_count == 0
+                        fid = fopen(file, 'w');
+                        fprintf(fid, '# Exported LeafModelTriangle object contained no leaves.\n');
+                        fprintf(fid, 'o Empty\n');
+                        fprintf(fid, 'g Empty\n');
+                        fclose(fid);
+                        disp('Exported 0 vertices and 0 faces')
+                        return
+                    end
 
                     % Convert leaf transformation parameters into vertices and
                     % faces.

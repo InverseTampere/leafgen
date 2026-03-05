@@ -349,7 +349,12 @@ for iBin_h = 1:nBinsH
 end
 
 % Normalized leaf area factors
-relAreas = blockArea/sum(blockArea);
-
+totalBlockArea = sum(blockArea);
+if totalBlockArea > 0
+    relAreas = blockArea/totalBlockArea;
+else
+    % All cylinders are leafless
+    relAreas = 0;
+end
 
 end
