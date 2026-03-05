@@ -21,6 +21,20 @@ function QSM = check_inputs_transform(QSM,TargetLADD,ParamFunctions, ...
 if class(QSM) ~= "QSMBCylindrical"
     QSM = QSMBCylindrical(QSM);
 end
+% Check if the QSM contains any NaN values
+fn = fieldnames(QSM);
+for i = 1:numel(fn)
+    f = fn{i};
+    val = QSM.(f);
+    if any([isfloat(val), isinteger(val), islogical(val)])
+        if sum(isnan(val),'all') > 0
+            error_str = "QSM." + f + " contains NaN values. The input " ...
+                        + "QSM has to be free of NaN values before " ...
+                        + "running LeafGen.";
+            error(error_str)
+        end
+    end
+end
 
 %% Target LADD
 % Assert the existence of all fields of the struct
