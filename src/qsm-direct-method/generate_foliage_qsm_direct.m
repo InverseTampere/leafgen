@@ -199,13 +199,13 @@ cylinderCandidateLeafArea = candidateArea*relativeCylinderLeafArea;
 
 %% Randomize the order of leaves
 
-randOrder = randperm(size(leafScaleFactors,1));
+randOrder = randperm(size(petioleEnd,1));
 leafScaleFactors = leafScaleFactors(randOrder,:);
 leafParent       = leafParentPP(randOrder,:);
 leafDir          = leafDir(randOrder,:);
 leafNormal       = leafNormal(randOrder,:);
-petioleStart        = petioleStart(randOrder,:);
-petioleEnd          = petioleEnd(randOrder,:);
+petioleStart     = petioleStart(randOrder,:);
+petioleEnd       = petioleEnd(randOrder,:);
 
 %% Add leaves on QSM
 

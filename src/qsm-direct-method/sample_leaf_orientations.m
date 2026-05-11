@@ -87,8 +87,19 @@ for iCyl = 1:length(CylinderParameters.relative_height)
         petioleE(iLeaf:(iLeaf+(nLeavesAdded-1)),:) = ...
                               pe + CylinderParameters.start_point(iCyl,:);
 
+        % Compute the index of the next leaf
         iLeaf = iLeaf + nLeavesAdded;
+        
     end
+end
+
+% Trim excess allocations if necessary
+if iLeaf <= nLeavesTotal
+    endIndex = iLeaf - 1;
+    leafDir  = leafDir(1:endIndex,:);
+    leafNor  = leafNor(1:endIndex,:);
+    petioleS = petioleS(1:endIndex,:);
+    petioleE = petioleE(1:endIndex,:);
 end
 
 end
