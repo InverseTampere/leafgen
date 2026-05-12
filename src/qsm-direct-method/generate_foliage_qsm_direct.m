@@ -200,7 +200,7 @@ cylinderCandidateLeafArea = candidateArea*relativeCylinderLeafArea;
 
 %% Randomize the order of leaves
 
-randOrder = randperm(size(petioleEnd,1));
+randOrder = randperm(min([size(leafScaleFactors,1), size(petioleEnd,1)]));
 leafScaleFactors = leafScaleFactors(randOrder,:);
 leafParent       = leafParentPP(randOrder,:);
 leafDir          = leafDir(randOrder,:);
