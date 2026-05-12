@@ -13,11 +13,18 @@
 % You should have received a copy of the GNU General Public License
 % along with LeafGen.  If not, see <https://www.gnu.org/licenses/>.
 
-function relAreas = qsm_based_ladd(CylinderParameters,leaflessBranchInds)
+function relAreas = qsm_based_ladd(CylinderParameters, ...
+                                   TargetDistributions, ...
+                                   leaflessBranchInds)
 
 % Scaling function for the relative distance along subbranch (here the 
-% x^4 is arbitrarily chosen, feel free to modify this)
-f_dist_scaling = @(x) x.^4;
+% default x^4 is arbitrarily chosen)
+if isempty(TargetDistributions.pLADDd)
+    f_dist_scaling = @(x) x.^4;
+else
+    p = TargetDistributions.pLADDd;
+    f_dist_scaling = @(x) x.^p;
+end
 
 % Set cylinder leaf area budgets based on the scaling function
 cylAreas = f_dist_scaling( ...

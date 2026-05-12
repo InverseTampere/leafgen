@@ -142,7 +142,7 @@ switch dTypeH
                   +" not on the interval [0,1].")
         end
     case 'qsm'
-        % parameters have no effect for qsm-based distribution
+        % parameters have no effect for height-wise qsm-based distribution
 end
 % Relative distance along subbranch
 dTypeD  = TargetDistributions.dTypeLADDd;
@@ -218,7 +218,16 @@ switch dTypeD
                   +" not on the interval [0,1].")
         end
     case 'qsm'
-        % parameters have no effect for qsm-based distribution
+        % If pLADDd is left empty [], the default setting is used for
+        % along-branch positioning
+        if ~isempty(pLADDd)
+            % Check that the parameter is a scalar on the interval [0,10]
+            if any([~isscalar(pLADDd), pLADDd<0, pLADDd>10])
+                error("When using qsm-based LADD, the" + ...
+                      " TargetDistribution.pLADDd has to be a" + ...
+                      " scalar value between 0 and 10.")
+            end
+        end
 end
 % Compass direction
 dTypeC  = TargetDistributions.dTypeLADDc;
@@ -249,7 +258,8 @@ switch dTypeC
                   +" is not on the interval [0,1].")
         end
     case 'qsm'
-        % parameters have no effect for qsm-based distribution
+        % parameters have no effect for direction-wise qsm-based 
+        % distribution
 end
 % Check if QSM-based LADD is configured correctly
 if any([strcmp(TargetDistributions.dTypeLADDh,'qsm'), ...
