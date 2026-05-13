@@ -257,21 +257,37 @@ for iLeaf = 1:nLeaves
     
     % Petiole and leaf direction
     if Phyllotaxis.flag == true && isfield(Phyllotaxis, ...
-                                           'petioleAxialInclinationAngle')
+                                           'leafAxialSeparationAngle')
+        axSepAngle = Phyllotaxis.leafAxialSeparationAngle;
+        rotAxis = cross(cylinderAxis,petioleStartRadDir);
+        rotAxis = rotAxis/norm(rotAxis);
+        rmStartPointSide = rotation_matrix(rotAxis,axSepAngle+pi/2);
+        startPointSide = rmStartPointSide*cylinderAxis';
+        if abs(dot(startPointSide,leafNormal(iLeaf,:)) - 1) < 1e-3
+            startPointSide = rotation_matrix(rotAxis,pi/16)*startPointSide;
+        end
+        leafDirection = cross(leafNormal(iLeaf,:),startPointSide');
+        if dot(leafDirection,petioleStartRadDir) < 0
+            leafDirection = -leafDirection;
+        end
+        leafDirection = leafDirection/norm(leafDirection);
+        petioleDir = leafDirection;
+    elseif Phyllotaxis.flag == true
         rotAxis = cross(cylinderAxis,petioleStartRadDir);
         rotAxis = rotAxis/norm(rotAxis);
         rmPetiole = rotation_matrix(rotAxis, ...
                                  Phyllotaxis.petioleAxialInclinationAngle);
         petioleDir =  (rmPetiole*cylinderAxis')';
         leafDirection = cross(leafNormal(iLeaf,:),petioleStartSide);
-        leafDir(iLeaf,:) = leafDirection/norm(leafDirection);
+        leafDirection = leafDirection/norm(leafDirection);
     else
         petioleDir = cross(leafNormal(iLeaf,:),petioleStartSide);
         petioleDir = petioleDir/norm(petioleDir);
         % Set leaf direction to be the same as petiole direction
-        leafDir(iLeaf,:) = petioleDir;
+        leafDirection = petioleDir;
     end
-    
+    leafDir(iLeaf,:) = leafDirection;
+
     % Lengthwise petiole start location on cylinder axis
     if Phyllotaxis.flag == true
         petioleStartPosAxis = nodeRelPosAxis*len;
@@ -312,8 +328,24 @@ for iLeaf = 1:nLeaves
             end
             petioleStartSide = petioleStartSide/norm(petioleStartSide);
             % Petiole direction
-            if Phyllotaxis.flag == true && ...
-               isfield(Phyllotaxis,'petioleAxialInclinationAngle')
+            if Phyllotaxis.flag == true && isfield(Phyllotaxis, ...
+                                                'leafAxialSeparationAngle')
+                axSepAngle = Phyllotaxis.leafAxialSeparationAngle;
+                rotAxis = cross(cylinderAxis,petioleStartRadDir);
+                rotAxis = rotAxis/norm(rotAxis);
+                rmStartPointSide = rotation_matrix(rotAxis,axSepAngle+pi/2);
+                startPointSide = rmStartPointSide*cylinderAxis';
+                if abs(dot(startPointSide,leafNormal(iLeaf,:)) - 1) < 1e-3
+                    startPointSide = rotation_matrix(rotAxis,pi/16)...
+                                     *startPointSide;
+                end
+                leafDirection = cross(leafNormal(iLeaf,:),startPointSide');
+                if dot(leafDirection,petioleStartRadDir) < 0
+                    leafDirection = -leafDirection;
+                end
+                leafDirection = leafDirection/norm(leafDirection);
+                petioleDir = leafDirection;
+            elseif Phyllotaxis.flag == true
                 rotAxis = cross(cylinderAxis,petioleStartRadDir);
                 rotAxis = rotAxis/norm(rotAxis);
                 rmPetiole = rotation_matrix(rotAxis, ...
@@ -321,6 +353,7 @@ for iLeaf = 1:nLeaves
                 petioleDir =  (rmPetiole*cylinderAxis')';
                 leafDirection = cross(leafNormal(iLeaf,:),petioleStartSide);
                 leafDirection = leafDirection/norm(leafDirection);
+            
             else
                 petioleDir = cross(leafNormal(iLeaf,:),petioleStartSide);
                 petioleDir = petioleDir/norm(petioleDir);
