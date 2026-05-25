@@ -753,6 +753,100 @@ classdef LeafModelTriangle < LeafModel
             ob.export_geometry(ob, 'OBJ', true, file, d, OriginOffset, Filter);
         end
 
+        function export_leaf_transforms(ob, file, d, Filter)
+            % Export leaf transformation parameters (translation, scaling,
+            % and rotation matrix) into a TXT file.
+            %
+            % Format per row in the resulting file:
+            % id px py pz sx sy sz r11 r12 r13 r21 r22 r23 r31 r32 r33
+            %
+            % - px,py,pz : leaf origin
+            % - sx,sy,sz : scaling along local axes
+            % - R        : rotation matrix (columns = [x y z])
+            %
+            % INPUTS:
+            % file   : output filename
+            % d      : precision (optional, default = 6)
+            % Filter : logical vector for selecting leaves (optional)
+
+
+            % Defaults
+            if nargin < 3
+                d = 6;
+            end
+            if nargin < 4 || isempty(Filter)
+                Filter = true(ob.leaf_count,1);
+            end
+
+            % Handle empty case
+            if ob.leaf_count == 0 || nnz(Filter) == 0
+                fid = fopen(file,'w');
+                fprintf(fid,'# No leaves to export\n');
+                fclose(fid);
+                disp('Exported 0 leaf transforms.');
+                return;
+            end
+
+            % Open file
+            fid = fopen(file,'w');
+
+            % Header
+            fprintf(fid,'# Leaf transforms\n');
+            fprintf(fid,'# id px py pz sx sy sz r11 r12 r13 r21 r22 r23 r31 r32 r33\n');
+
+            % Format strings
+            ft = ['%' num2str(d+3) '.' num2str(d) 'f '];
+            fmt3 = repmat(ft,1,3);  % vectors
+            fmt9 = repmat(ft,1,9);  % rotation matrix
+
+            % Loop over leaves
+            for iLeaf = 1:ob.leaf_count
+
+                if ~Filter(iLeaf)
+                    continue;
+                end
+
+                % Translation
+                p = ob.leaf_start_point(iLeaf,:);
+
+                % Scaling
+                s = ob.leaf_scale(iLeaf,:);
+
+                % Direction and normal
+                y = ob.leaf_direction(iLeaf,:);
+                z = ob.leaf_normal(iLeaf,:);
+
+                % Normalize (safety)
+                y = y ./ norm(y);
+                z = z ./ norm(z);
+
+                % Construct orthonormal basis
+                x = cross(y, z);
+                x = x ./ norm(x);
+
+                % Recompute z to enforce orthogonality
+                z = cross(x, y);
+                z = z ./ norm(z);
+
+                % Rotation matrix (columns = local axes)
+                R = [x(:), y(:), z(:)];
+
+                % Write row
+                fprintf(fid,'%d ', iLeaf);
+                fprintf(fid,fmt3, p);
+                fprintf(fid,fmt3, s);
+                fprintf(fid,fmt9, R(:));
+                fprintf(fid,'\n');
+            end
+
+            fclose(fid);
+
+            disp(['Exported ' num2str(nnz(Filter)) ...
+                  ' leaf transforms to "' file '".']);
+
+        end
+
+
     end
 
     methods(Access=protected)
