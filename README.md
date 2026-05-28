@@ -27,3 +27,22 @@ To quickly test running the method:
 To view a detailed tutorial on each of these files and more, see the  [LeafGen documentation].
 
 [LeafGen documentation]: https://leafgen-docs.github.io/
+
+## Licensing
+
+### Code
+
+The code in this repository is licensed under GPLv3. See `LICENSE` for more infromation.
+
+### Example data
+
+The files in `src/example-data/` include material derived from:
+
+**Dataset:** Calders, K., Verbeeck, H., Burt, A., Origo, N., Nightingale, J., Malhi, Y., Wilkes, P., Raumonen, P., Bunce, R., & Disney, M. (2022). *Terrestrial laser scanning data Wytham Woods: individual trees and quantitative structure models (QSMs)* (Version 1.0) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.7307956
+
+**Related article:** Calders, K., Verbeeck, V., Burt, A., et al. *Laser scanning reveals potential underestimation of biomass carbon in temperate forest.* Ecological Solutions and Evidence. https://doi.org/10.1002/2688-8319.12197
+
+**License:** Creative Commons Attribution 4.0 International (CC BY 4.0). https://creativecommons.org/licenses/by/4.0/
+
+These files remain licensed under CC BY 4.0.
+

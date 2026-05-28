@@ -31,15 +31,15 @@ LeafProperties.petioleLengthLimits = [0.08 0.10];
 
 % LADD relative height
 TargetDistributions.dTypeLADDh = 'beta';
-TargetDistributions.pLADDh = [22 3];
+TargetDistributions.pLADDh = [6 2];
 
 % LADD relative branch distance
-TargetDistributions.dTypeLADDd = 'weibull';
-TargetDistributions.pLADDd = [3.3 2.8];
+TargetDistributions.dTypeLADDd = 'beta';
+TargetDistributions.pLADDd = [3 1];
 
 % LADD compass direction
 TargetDistributions.dTypeLADDc = 'vonmises';
-TargetDistributions.pLADDc = [5/4*pi 0.1];
+TargetDistributions.pLADDc = [pi/4 0.2];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';
@@ -51,14 +51,14 @@ TargetDistributions.fun_pLODaz = @(h,d,c) [];
 
 % LSD
 TargetDistributions.dTypeLSD = 'normal';
-TargetDistributions.fun_pLSD = @(h,d,c) [0.004 0.00025^2];
+TargetDistributions.fun_pLSD = @(h,d,c) [0.014 0.00025^2];
 
 % Visualize the target distributions
 visualize_target_distributions(TargetDistributions,[0 0 0]);
 
 %% Set the target leaf area
 
-totalLeafArea = 50;
+totalLeafArea = 60;
 
 %% Generate foliage on QSM
 

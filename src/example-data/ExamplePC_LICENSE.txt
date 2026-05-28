@@ -1,0 +1,7 @@
+This file (ExamplePC.mat) contains data derived from:
+
+Calders, K., Verbeeck, H., Burt, A., Origo, N., Nightingale, J., Malhi, Y., Wilkes, P., Raumonen, P., Bunce, R., & Disney, M. (2022). Terrestrial laser scanning data Wytham Woods: individual trees and quantitative structure models (QSMs) (Version 1.0) [Data set]. Zenodo.
+Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0). https://creativecommons.org/licenses/by/4.0/
+Source: https://doi.org/10.5281/zenodo.7307956
+
+The ExamplePC.mat contains the point cloud coordinates from the item DATA_QSM_opt\wytham_winter_9096-0.2-0.22-3-0.04-0.044-2-5-1-0.mat.

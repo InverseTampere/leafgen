@@ -28,15 +28,15 @@ LeafProperties.triangles = [1 2 3;
 
 % LADD relative height
 TargetDistributions.dTypeLADDh = 'beta';
-TargetDistributions.pLADDh = [22 3];
+TargetDistributions.pLADDh = [6 2];
 
 % LADD relative branch distance
-TargetDistributions.dTypeLADDd = 'weibull';
-TargetDistributions.pLADDd = [3.3 2.8];
+TargetDistributions.dTypeLADDd = 'beta';
+TargetDistributions.pLADDd = [3 1];
 
 % LADD compass direction
 TargetDistributions.dTypeLADDc = 'vonmises';
-TargetDistributions.pLADDc = [5/4*pi 0.1];
+TargetDistributions.pLADDc = [pi/4 0.2];
 
 % LOD inclination angle
 TargetDistributions.dTypeLODinc = 'dewit';
@@ -48,7 +48,7 @@ TargetDistributions.fun_pLODaz = @(h,d,c) [];
 
 % LSD
 TargetDistributions.dTypeLSD = 'normal';
-TargetDistributions.fun_pLSD = @(h,d,c) [0.004 0.00025^2];
+TargetDistributions.fun_pLSD = @(h,d,c) [0.014 0.00025^2];
 
 % Visualize the target distributions
 visualize_target_distributions(TargetDistributions,[0 0 0]);
@@ -63,13 +63,15 @@ tfBottom = ptCloud(:,3) < 1;
 ptCloud = ptCloud - [mean(ptCloud(tfBottom,1:2)) 0];
 
 % Set the coordinates for the stem
-stemCoordinates = [   0        0                   0;
-                   0.47   -0.125                11.5;
-                      0        0   max(ptCloud(:,3))];
+zMax = max(ptCloud(:,3));
+stemCoordinates = [      0         0         0
+                   -0.2586    0.2378    4.0000
+                   -0.2586    0.2378   10.0000
+                   -1.2021    1.0119      zMax];
 
 %% Set the target leaf area
 
-totalLeafArea = 25;
+totalLeafArea = 60;
 
 %% Generate foliage inside point cloud
 

@@ -41,8 +41,8 @@ Nodes.pLODaz1 = [0 pi/2 pi 3*pi/2];
 Nodes.pLODaz2 = [0.01 0.5];
 
 % Leaf size distribution nodes
-Nodes.pLSD1 = [0.002 0.0025];
-Nodes.pLSD2 = [0.003 0.0035];
+Nodes.pLSD1 = [0.010 0.012];
+Nodes.pLSD2 = [0.014 0.016];
 
 %% Cylinder attribute nodes
 
@@ -70,15 +70,15 @@ QSM = importdata(filename);
 
 % LADD relative height
 TargetLADD.dTypeLADDh = 'beta';
-TargetLADD.pLADDh = [22 3];
+TargetLADD.pLADDh = [6 2];
 
 % LADD relative distance along sub-branch
-TargetLADD.dTypeLADDd = 'weibull';
-TargetLADD.pLADDd = [3.3 2.8];
+TargetLADD.dTypeLADDd = 'beta';
+TargetLADD.pLADDd = [3 1];
 
 % LADD compass direction
 TargetLADD.dTypeLADDc = 'vonmises';
-TargetLADD.pLADDc = [5/4*pi 0.1];
+TargetLADD.pLADDc = [pi/4 0.2];
 
 %% Define parameter functions for LOD and LSD 
 
@@ -89,11 +89,11 @@ ParamFunctions.fun_pLODinc = @(h,d,c) [-1 4];
 ParamFunctions.fun_pLODaz = @(h,d,c) [pi 0.01];
 
 % LSD
-ParamFunctions.fun_pLSD = @(h,d,c) [0.0025, 0.0030];
+ParamFunctions.fun_pLSD = @(h,d,c) [0.012 0.014];
 
 %% Set the target leaf area
 
-totalLeafArea = 50;
+totalLeafArea = 60;
 
 %% Populate QSM with leaves using leaf cylinder library
 
