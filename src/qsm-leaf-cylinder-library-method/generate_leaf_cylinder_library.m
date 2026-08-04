@@ -131,6 +131,11 @@ while i <= NArg
     i = i + 1;
 end
 
+%% Pick base rng seed for seeding parallel worker's rngs
+
+rngState = rng;
+baseSeed = rngState.Seed;
+
 %% Library metadata
 
 % Leaf distributions of the library
@@ -213,6 +218,9 @@ afterEach(dq,@(varargin) waitbarUpdate(wb))
 
 % Create Leaves objects for the library
 parfor iNode = 1:totalNodes
+
+    % Initialize unique random seed for the node
+    rng(baseSeed + iNode, 'twister')
 
     % Make broadcast variables local to speed up parfor loop
     NodesLocal = Nodes;

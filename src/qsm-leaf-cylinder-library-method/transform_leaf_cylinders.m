@@ -65,7 +65,7 @@ while i <= NArg
     end
     i = i + 1;
 end
-                             
+
 
 %% Reading leaf cylinder library nodes
 
@@ -294,6 +294,16 @@ for iCyl = 1:length(cylinderLeafArea)
                     iLodAz2,iLsd1,iLsd2,iNodeObj);
     LibraryObj = LeafCylinderLibrary.LeafObjects(iNode).Leaves;
 
+    % SHUFFLE THE CYLINDER LEAF ORDER
+    randOrder = randperm(LibraryObj.leaf_count);
+    LibraryObj.leaf_start_point = LibraryObj.leaf_start_point(randOrder,:);
+    LibraryObj.leaf_scale = LibraryObj.leaf_scale(randOrder,:);
+    LibraryObj.leaf_direction = LibraryObj.leaf_direction(randOrder,:);
+    LibraryObj.leaf_normal = LibraryObj.leaf_normal(randOrder,:);
+    LibraryObj.leaf_parent = LibraryObj.leaf_parent(randOrder);
+    LibraryObj.petiole_start_point = ...
+        LibraryObj.petiole_start_point(randOrder,:);
+
     % TRANSFORM LEAF PARAMETERS TO CORRESPOND THE QSM CYLINDER SIZE AND
     % ORIENTATION
     % Library object axis
@@ -427,13 +437,14 @@ end
 % If target area is surpassed, remove leaves until target is reached
 if Leaves.leaf_area > targetLeafArea
     % Randomize leaf order
-    randOrder = randperm(Leaves.leaf_count);
-    Leaves.leaf_start_point = Leaves.leaf_start_point(randOrder,:);
-    Leaves.leaf_scale = Leaves.leaf_scale(randOrder,:);
-    Leaves.leaf_direction = Leaves.leaf_direction(randOrder,:);
-    Leaves.leaf_normal = Leaves.leaf_normal(randOrder,:);
-    Leaves.leaf_parent = Leaves.leaf_parent(randOrder);
-    Leaves.petiole_start_point = Leaves.petiole_start_point(randOrder,:);
+    randTotalOrder = randperm(Leaves.leaf_count);
+    Leaves.leaf_start_point = Leaves.leaf_start_point(randTotalOrder,:);
+    Leaves.leaf_scale = Leaves.leaf_scale(randTotalOrder,:);
+    Leaves.leaf_direction = Leaves.leaf_direction(randTotalOrder,:);
+    Leaves.leaf_normal = Leaves.leaf_normal(randTotalOrder,:);
+    Leaves.leaf_parent = Leaves.leaf_parent(randTotalOrder);
+    Leaves.petiole_start_point = ...
+        Leaves.petiole_start_point(randTotalOrder,:);
     % Remove leaves until just above target area
     reducedArea = Leaves.leaf_area;
     k = 0;
