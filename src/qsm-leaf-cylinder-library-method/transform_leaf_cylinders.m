@@ -253,8 +253,11 @@ for iCyl = 1:length(cylinderLeafArea)
                 CylinderParameters.relative_height, ...
                 CylinderParameters.relative_distance_along_subbranch, ...
                 CylinderParameters.compass_direction);
-    % Add dummy element for constant inclination angle
-    if isscalar(pInc)
+    if isempty(pInc)
+        % Add dummy elements for empty-valued function handles
+        pInc = [0 0];
+    elseif isscalar(pInc)
+        % Add dummy element for constant inclination angle
         pInc = [pInc(1) 0];
     end
     % Leaf azimuth angle distribution parameter values for the cylinder
@@ -262,8 +265,11 @@ for iCyl = 1:length(cylinderLeafArea)
                 CylinderParameters.relative_height, ...
                 CylinderParameters.relative_distance_along_subbranch, ...
                 CylinderParameters.compass_direction);
-    % Add dummy element for constant azimuth angle
-    if isscalar(pAz)
+    if isempty(pAz)
+        % Add dummy elements for empty-valued function handles
+        pAz = [0 0];
+    elseif isscalar(pAz)
+        % Add dummy element for constant azimuth angle
         pAz = [pAz(1) 0];
     end
     % LOD nodes
