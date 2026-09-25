@@ -360,18 +360,9 @@ for iCyl = 1:length(cylinderLeafArea)
     % Inclination angle rotations
     leafStartPoints = (incRM*leafStartPoints')';
     petioleStartPoints = (incRM*petioleStartPoints')';
-    leafDirections  = (incRM*leafDirections')';
-    leafNormals     = (incRM*leafNormals')';
     % Azimuth angle rotations
     leafStartPoints = (azRM*leafStartPoints')';
     petioleStartPoints = (azRM*petioleStartPoints')';
-    leafDirections  = (azRM*leafDirections')';
-    leafNormals     = (azRM*leafNormals')';
-
-    % Fix leaf inclination angles of over pi/2 radians possibly caused by
-    % the rotations
-    iIncFix = find(leafNormals(:,3) < 0);
-    leafNormals(iIncFix,:) = -leafNormals(iIncFix,:);
     
     % Leaf parent cylinder
     leafParent = originalCylIndex(iCyl);
